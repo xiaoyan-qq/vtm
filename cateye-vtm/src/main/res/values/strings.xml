@@ -1,0 +1,25 @@
+<resources>
+    <string name="app_name">CatEyeVTM</string>
+
+    <!--转移自vtm的资源-->
+    <string name="theme_default">Default</string>
+    <string name="theme_osmarender">Osmarender</string>
+    <string name="theme_osmagray">Osmagray</string>
+    <string name="theme_tubes">Tubes</string>
+    <string name="theme_newtron">NewTron</string>
+    <string name="theme_external">External theme</string>
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
+    <string name="error">Error</string>
+    <string name="file_invalid">The selected file is invalid.</string>
+    <string name="styler_mode_line">Line</string>
+    <string name="styler_mode_area">Area</string>
+    <string name="styler_mode_outline">Outline</string>
+    <string name="styler_controls_toggle">Controls</string>
+    <string name="style_1">Show nature</string>
+    <string name="style_2">Hide nature</string>
+    <string name="menu_gridlayer">Grid</string>
+    <string name="dialog_reverse_geocoding_title">Reverse Geocoding</string>
+
+    <string name="select_local_map_file">选择显示本地map文件</string>
+</resources>

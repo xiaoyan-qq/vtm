@@ -6,6 +6,8 @@ buildscript {
     dependencies {
         classpath 'com.android.tools.build:gradle:3.0.1'
         classpath 'com.github.dcendents:android-maven-gradle-plugin:2.0'
+        classpath 'com.hujiang.aspectjx:gradle-android-plugin-aspectjx:1.1.0'
+        classpath 'org.aspectj:aspectjtools:1.8.13'
     }
 }
 
@@ -45,6 +47,7 @@ subprojects {
         maven { url 'https://repo.boundlessgeo.com/main/' }
         jcenter()
         maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
+        maven { url "https://jitpack.io" }
     }
 
     tasks.withType(JavaCompile) {
