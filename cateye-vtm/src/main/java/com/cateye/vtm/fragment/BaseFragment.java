@@ -20,8 +20,9 @@ public abstract class BaseFragment extends Fragment implements BaseFragmentInter
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        rootView = inflater.inflate(getFragmentLayoutId(), container);
+        rootView = inflater.inflate(getFragmentLayoutId(), null);
         initView(rootView);
         return rootView;
     }
+
 }

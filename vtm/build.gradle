@@ -6,6 +6,10 @@ dependencies {
     compileOnly 'com.google.code.findbugs:jsr305:3.0.1'
 }
 
+tasks.withType(JavaCompile) {
+    options.encoding = "UTF-8"
+}
+
 sourceSets {
     main.java.srcDirs = ['src']
     main.resources.srcDirs = ['resources']
