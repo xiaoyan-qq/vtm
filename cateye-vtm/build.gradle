@@ -75,4 +75,9 @@ dependencies {
     //compile 'com.yanzhenjie:fragment:1.0.1'//Fragment的第三方管理框架
     //https://github.com/JustKiddingBaby/FragmentRigger/wiki/%E9%A6%96%E9%A1%B5
     compile 'com.justkiddingbaby:fragment-rigger:1.2.1'//Fragment的第三方管理框架
+    //https://github.com/vondear/RxTools
+    compile 'com.github.vondear:RxTools:v1.7.7.3'//常用android工具类
+    //https://github.com/ReactiveX/RxAndroid
+    implementation 'io.reactivex.rxjava2:rxandroid:2.0.2'
+    implementation 'io.reactivex.rxjava2:rxjava:2.x.x'
 }

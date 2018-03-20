@@ -10,6 +10,7 @@ import com.cateye.android.vtm.MainActivity;
 import com.cateye.android.vtm.R;
 import com.jkb.fragment.rigger.annotation.Puppet;
 import com.ta.utdid2.android.utils.StringUtils;
+import com.vondear.rxtools.view.RxToast;
 
 import org.oscim.android.MapPreferences;
 import org.oscim.android.MapView;
@@ -23,6 +24,7 @@ import org.oscim.core.MapElement;
 import org.oscim.core.MapPosition;
 import org.oscim.core.Tag;
 import org.oscim.core.Tile;
+import org.oscim.layers.Layer;
 import org.oscim.layers.TileGridLayer;
 import org.oscim.layers.tile.MapTile;
 import org.oscim.layers.tile.TileLayer;
@@ -48,6 +50,7 @@ import org.oscim.theme.XmlRenderThemeStyleLayer;
 import org.oscim.theme.XmlRenderThemeStyleMenu;
 import org.oscim.theme.styles.AreaStyle;
 import org.oscim.theme.styles.RenderStyle;
+import org.oscim.tiling.TileSource;
 import org.oscim.tiling.source.mapfile.MapFileTileSource;
 import org.oscim.tiling.source.mapfile.MapInfo;
 
@@ -74,7 +77,7 @@ public class CatEyeMainFragment extends BaseFragment {
     private TileGridLayer mGridLayer;
     private Menu mMenu;
     private boolean mS3db;
-    private List<TileLayer> mTileLayerList;//当前正在显示的tileLayer的集合
+    private List<TileSource> mTileSourceList;//当前正在显示的tileSource的集合
 
     //控件
     private Button btn_select_local_map_file;//选择需要显示的本地map文件
@@ -95,7 +98,7 @@ public class CatEyeMainFragment extends BaseFragment {
         mapView = rootView.findViewById(R.id.mapView);
         mMap = mapView.map();
         mPrefs = new MapPreferences(this.getTag(), getActivity());
-        mTileLayerList = new ArrayList<>();
+        mTileSourceList = new ArrayList<>();
 
         btn_select_local_map_file = rootView.findViewById(R.id.btn_select_local_map_file);
         btn_select_local_map_file.setOnClickListener(new View.OnClickListener() {
@@ -142,6 +145,16 @@ public class CatEyeMainFragment extends BaseFragment {
             MapFileTileSource mTileSource = new MapFileTileSource();
             //mTileSource.setPreferredLanguage("en");
             String file = intent.getStringExtra(FilePicker.SELECTED_FILE);
+            //过滤判断旋转的文件是否已经在显示中了
+            if (mTileSourceList != null && !mTileSourceList.isEmpty()) {
+                for (TileSource tileSource : mTileSourceList) {
+                    if (tileSource instanceof MapFileTileSource && ((MapFileTileSource) tileSource).getOption("file").equals(file)) {
+                        RxToast.error(getActivity().getResources().getString(R.string.the_local_map_file_exists));
+                        return;
+                    }
+                }
+            }
+
             if (mTileSource.setMapFile(file)) {
 
                 //设置当前的文件选择的layer为地图的基础图层(第一层)==此处去掉此设置
@@ -163,6 +176,7 @@ public class CatEyeMainFragment extends BaseFragment {
                 loadTheme(null, true);
 
                 mPrefs.clear();
+                mTileSourceList.add(mTileSource);
             }
         } else if (requestCode == SELECT_THEME_FILE) {//选择本地style文件显示
             if (resultCode != getActivity().RESULT_OK || intent == null || intent.getStringExtra(FilePicker.SELECTED_FILE) == null) {
@@ -175,10 +189,10 @@ public class CatEyeMainFragment extends BaseFragment {
             // Use tessellation with sea and land for Mapsforge themes
             if (ThemeUtils.isMapsforgeTheme(externalRenderTheme)) {
                 //遍历所有的地图图层，添加hook
-                if (mTileLayerList != null && !mTileLayerList.isEmpty()) {
-                    for (TileLayer mTileLayer : mTileLayerList) {
-                        if (mTileLayer.isEnabled() && mTileLayer instanceof OsmTileLayer)
-                            ((OsmTileLayer) mTileLayer).addHook(new VectorTileLayer.TileLoaderThemeHook() {
+                if (mMap.layers() != null && !mMap.layers().isEmpty()) {
+                    for (Layer layer : mMap.layers()) {
+                        if (layer.isEnabled() && layer instanceof OsmTileLayer)
+                            ((OsmTileLayer) layer).addHook(new VectorTileLayer.TileLoaderThemeHook() {
                                 @Override
                                 public boolean process(MapTile tile, RenderBuckets buckets, MapElement element, RenderStyle style, int level) {
                                     if (element.tags.contains(ISSEA_TAG) || element.tags.contains(SEA_TAG) || element.tags.contains(NOSEA_TAG)) {

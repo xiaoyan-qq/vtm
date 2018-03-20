@@ -12,7 +12,7 @@ import org.oscim.android.filepicker.FilterByFileExtension;
 import org.oscim.android.filepicker.ValidMapFile;
 import org.oscim.android.filepicker.ValidRenderTheme;
 
-@Puppet(containerViewId = R.id.fragment_main_container)
+@Puppet(containerViewId = R.id.fragment_main_container,bondContainerView = true)
 public class MainActivity extends AppCompatActivity {
 
     @Override
