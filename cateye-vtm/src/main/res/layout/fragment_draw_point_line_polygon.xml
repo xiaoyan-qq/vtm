@@ -1,21 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:orientation="horizontal"
-    android:layout_height="match_parent">
-    <Button
+    android:layout_height="match_parent"
+    android:orientation="horizontal">
+
+    <CheckBox
+        android:id="@+id/chk_draw_point"
         android:layout_width="0dp"
-        android:layout_weight="1"
         android:layout_height="wrap_content"
-        android:text="@string/draw_point"/>
-    <Button
+        android:layout_weight="1"
+        android:text="@string/draw_point" />
+
+    <CheckBox
+        android:id="@+id/chk_draw_line"
         android:layout_width="0dp"
-        android:layout_weight="1"
         android:layout_height="wrap_content"
-        android:text="@string/draw_line"/>
-    <Button
+        android:layout_weight="1"
+        android:text="@string/draw_line" />
+
+    <CheckBox
+        android:id="@+id/chk_draw_polygon"
         android:layout_width="0dp"
-        android:layout_weight="1"
         android:layout_height="wrap_content"
-        android:text="@string/draw_polygon"/>
+        android:layout_weight="1"
+        android:text="@string/draw_polygon" />
 </LinearLayout>
