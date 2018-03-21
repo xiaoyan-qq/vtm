@@ -9,15 +9,13 @@ import android.widget.Button;
 import com.cateye.android.vtm.MainActivity;
 import com.cateye.android.vtm.R;
 import com.jkb.fragment.rigger.annotation.Puppet;
+import com.jkb.fragment.rigger.rigger.Rigger;
 import com.ta.utdid2.android.utils.StringUtils;
 import com.vondear.rxtools.view.RxToast;
 
 import org.oscim.android.MapPreferences;
 import org.oscim.android.MapView;
 import org.oscim.android.filepicker.FilePicker;
-import org.oscim.android.filepicker.FilterByFileExtension;
-import org.oscim.android.filepicker.ValidMapFile;
-import org.oscim.android.filepicker.ValidRenderTheme;
 import org.oscim.android.theme.AssetsRenderTheme;
 import org.oscim.backend.CanvasAdapter;
 import org.oscim.core.MapElement;
@@ -27,7 +25,6 @@ import org.oscim.core.Tile;
 import org.oscim.layers.Layer;
 import org.oscim.layers.TileGridLayer;
 import org.oscim.layers.tile.MapTile;
-import org.oscim.layers.tile.TileLayer;
 import org.oscim.layers.tile.buildings.BuildingLayer;
 import org.oscim.layers.tile.buildings.S3DBLayer;
 import org.oscim.layers.tile.vector.OsmTileLayer;
@@ -81,6 +78,7 @@ public class CatEyeMainFragment extends BaseFragment {
 
     //控件
     private Button btn_select_local_map_file;//选择需要显示的本地map文件
+    private Button btn_draw_plp;//绘制点线面
 
     //地图layer的分组
     enum LAYER_GROUP_ENUM {
@@ -100,6 +98,7 @@ public class CatEyeMainFragment extends BaseFragment {
         mPrefs = new MapPreferences(this.getTag(), getActivity());
         mTileSourceList = new ArrayList<>();
 
+        //选择底图map文件
         btn_select_local_map_file = rootView.findViewById(R.id.btn_select_local_map_file);
         btn_select_local_map_file.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -113,6 +112,16 @@ public class CatEyeMainFragment extends BaseFragment {
             mMap.layers().addGroup(group_enum.ordinal());
         }
 
+        //开始绘制点线面
+        btn_draw_plp = rootView.findViewById(R.id.btn_draw_plp);
+        btn_draw_plp.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //自动弹出绘制点线面的fragment
+                Rigger.getRigger(CatEyeMainFragment.this).showFragment(DrawPointLinePolygonFragment.newInstance(new Bundle()), R.id.layer_main_cateye_bottom);
+            }
+        });
+
         //scale的图层到操作分组中
         DefaultMapScaleBar mMapScaleBar = new DefaultMapScaleBar(mMap);
         mMapScaleBar.setScaleBarMode(DefaultMapScaleBar.ScaleBarMode.BOTH);
@@ -125,6 +134,8 @@ public class CatEyeMainFragment extends BaseFragment {
         renderer.setPosition(GLViewport.Position.BOTTOM_LEFT);
         renderer.setOffset(5 * CanvasAdapter.getScale(), 0);
         mMap.layers().add(mapScaleBarLayer, LAYER_GROUP_ENUM.GROUP_OPERTOR.ordinal());
+
+
     }
 
     public static BaseFragment newInstance(Bundle bundle) {
