@@ -7,7 +7,6 @@ import android.support.v7.app.AppCompatActivity;
 import com.cateye.vtm.fragment.CatEyeMainFragment;
 import com.jkb.fragment.rigger.annotation.Puppet;
 import com.jkb.fragment.rigger.rigger.Rigger;
-import com.vondear.rxtools.view.dialog.RxDialog;
 import com.vondear.rxtools.view.dialog.RxDialogSure;
 import com.yanzhenjie.permission.Action;
 import com.yanzhenjie.permission.AndPermission;
@@ -41,13 +40,27 @@ public class MainActivity extends AppCompatActivity {
                     }
                 })
                 .onDenied(new Action() {//用户拒绝
-            @Override
-            public void onAction(List<String> permissions) {
-                if (AndPermission.hasAlwaysDeniedPermission(MainActivity.this, permissions)) {
-                    // 这些权限被用户总是拒绝。
-                }
-            }
-        }).rationale(new Rationale() {
+                    @Override
+                    public void onAction(List<String> permissions) {
+                        if (AndPermission.hasAlwaysDeniedPermission(MainActivity.this, permissions)) {
+                            StringBuilder permissionSB = new StringBuilder();
+                            if (permissions != null && !permissions.isEmpty()) {
+                                for (String p : permissions) {
+                                    permissionSB.append(p);
+                                    permissionSB.append(",");
+                                }
+                            }
+                            if (permissionSB.toString().endsWith(",")) {
+                                permissionSB.delete(permissionSB.length() - 1, permissionSB.length());
+                            }
+                            // 这些权限被用户总是拒绝。
+                            RxDialogSure sureDialog = new RxDialogSure(MainActivity.this);
+                            sureDialog.setContent("您拒绝了" + permissionSB + "权限，可能会导致某些功能无法正常使用!");
+                            sureDialog.setTitle("提示");
+                            sureDialog.show();
+                        }
+                    }
+                }).rationale(new Rationale() {
             @Override
             public void showRationale(Context context, List<String> permissions, RequestExecutor executor) {
 

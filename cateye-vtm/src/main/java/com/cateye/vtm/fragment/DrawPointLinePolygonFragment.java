@@ -31,7 +31,7 @@ public class DrawPointLinePolygonFragment extends BaseFragment {
         chk_draw_point = rootView.findViewById(R.id.chk_draw_point);
         chk_draw_line = rootView.findViewById(R.id.chk_draw_line);
         chk_draw_polygon = rootView.findViewById(R.id.chk_draw_polygon);
-        checkBoxes=new ArrayList<>();
+        checkBoxes = new ArrayList<>();
         checkBoxes.add(chk_draw_point);
         checkBoxes.add(chk_draw_line);
         checkBoxes.add(chk_draw_polygon);
@@ -41,14 +41,7 @@ public class DrawPointLinePolygonFragment extends BaseFragment {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (isChecked) {
-                    //将其他两个控件的选中状态置为未选中
-                    if (checkBoxes != null && !checkBoxes.isEmpty()) {
-                        for (CheckBox chk : checkBoxes) {
-                            if (chk != chk_draw_point) {
-                                chk.setChecked(false);
-                            }
-                        }
-                    }
+                    setCheckBoxSingleChoice((CheckBox) buttonView);
                 }
             }
         });
@@ -56,14 +49,7 @@ public class DrawPointLinePolygonFragment extends BaseFragment {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (isChecked) {
-                    //将其他两个控件的选中状态置为未选中
-                    if (checkBoxes != null && !checkBoxes.isEmpty()) {
-                        for (CheckBox chk : checkBoxes) {
-                            if (chk != chk_draw_line) {
-                                chk.setChecked(false);
-                            }
-                        }
-                    }
+                    setCheckBoxSingleChoice((CheckBox) buttonView);
                 }
             }
         });
@@ -71,14 +57,7 @@ public class DrawPointLinePolygonFragment extends BaseFragment {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (isChecked) {
-                    //将其他两个控件的选中状态置为未选中
-                    if (checkBoxes != null && !checkBoxes.isEmpty()) {
-                        for (CheckBox chk : checkBoxes) {
-                            if (chk != chk_draw_polygon) {
-                                chk.setChecked(false);
-                            }
-                        }
-                    }
+                    setCheckBoxSingleChoice((CheckBox) buttonView);
                 }
             }
         });
@@ -95,6 +74,13 @@ public class DrawPointLinePolygonFragment extends BaseFragment {
         Rigger.getRigger(this).close();
     }
 
+    /**
+     * Author : xiaoxiao
+     * Describe : 获取当前的绘制状态
+     * param :
+     * return : 返回绘制状态的枚举类型，如果为NONE则当前没有进行绘制
+     * Date : 2018/3/22
+     */
     public DRAW_STATE getCurrentDrawState() {
         if (checkBoxes != null && !checkBoxes.isEmpty()) {
             for (CheckBox chk : checkBoxes) {
@@ -112,5 +98,16 @@ public class DrawPointLinePolygonFragment extends BaseFragment {
 
     public enum DRAW_STATE {
         DRAW_NONE, DRAW_POINT, DRAW_LINE, DRAW_POLYGON
+    }
+
+    private void setCheckBoxSingleChoice(CheckBox currendChk) {
+        //将其他两个控件的选中状态置为未选中
+        if (checkBoxes != null && !checkBoxes.isEmpty()) {
+            for (CheckBox chk : checkBoxes) {
+                if (chk != currendChk) {
+                    chk.setChecked(false);
+                }
+            }
+        }
     }
 }
