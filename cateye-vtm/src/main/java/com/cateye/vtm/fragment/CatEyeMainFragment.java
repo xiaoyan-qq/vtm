@@ -7,7 +7,9 @@ import android.view.View;
 import android.widget.Button;
 
 import com.cateye.android.vtm.MainActivity;
+import com.cateye.android.vtm.MainActivity.LAYER_GROUP_ENUM;
 import com.cateye.android.vtm.R;
+import com.cateye.vtm.util.CatEyeMapManager;
 import com.jkb.fragment.rigger.annotation.Puppet;
 import com.jkb.fragment.rigger.rigger.Rigger;
 import com.ta.utdid2.android.utils.StringUtils;
@@ -80,12 +82,6 @@ public class CatEyeMainFragment extends BaseFragment {
     private Button btn_select_local_map_file;//选择需要显示的本地map文件
     private Button btn_draw_plp;//绘制点线面
 
-    //地图layer的分组
-    enum LAYER_GROUP_ENUM {
-        GROUP_VECTOR/*矢量图层分组*/, GROUP_OTHER/*其他图层分组*/, GROUP_BUILDING/*建筑图层分组*/,
-        GROUP_LABELS/*label图层分组*/, GROUP_3D_OBJECTS/*3D图层分组*/, GROUP_OPERTOR/*操作图层分组*/
-    }
-
     @Override
     public int getFragmentLayoutId() {
         return R.layout.fragment_main_cateye;
@@ -94,6 +90,10 @@ public class CatEyeMainFragment extends BaseFragment {
     @Override
     public void initView(View rootView) {
         mapView = rootView.findViewById(R.id.mapView);
+
+        //初始化MapManager，方便全局使用map对象
+        CatEyeMapManager.getInstance(getActivity()).init(mapView);
+
         mMap = mapView.map();
         mPrefs = new MapPreferences(this.getTag(), getActivity());
         mTileSourceList = new ArrayList<>();
@@ -154,7 +154,7 @@ public class CatEyeMainFragment extends BaseFragment {
             }
 
             MapFileTileSource mTileSource = new MapFileTileSource();
-            //mTileSource.setPreferredLanguage("en");
+            mTileSource.setPreferredLanguage("zh");
             String file = intent.getStringExtra(FilePicker.SELECTED_FILE);
             //过滤判断旋转的文件是否已经在显示中了
             if (mTileSourceList != null && !mTileSourceList.isEmpty()) {
@@ -263,4 +263,8 @@ public class CatEyeMainFragment extends BaseFragment {
         }
     }
 
+//    public void onRiggerBackPressed() {
+//        RxLogTool.d("onRiggerBackPressed", "点击回退按钮");
+//
+//    }
 }

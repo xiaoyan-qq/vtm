@@ -1,25 +1,47 @@
 package com.cateye.vtm.fragment;
 
 import android.os.Bundle;
+import android.support.v4.content.res.ResourcesCompat;
 import android.view.View;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
+import android.widget.Toast;
 
+import com.cateye.android.vtm.MainActivity;
 import com.cateye.android.vtm.R;
+import com.cateye.vtm.util.CatEyeMapManager;
 import com.jkb.fragment.rigger.annotation.Puppet;
 import com.jkb.fragment.rigger.rigger.Rigger;
+
+import org.oscim.backend.canvas.Bitmap;
+import org.oscim.core.GeoPoint;
+import org.oscim.event.Gesture;
+import org.oscim.event.GestureListener;
+import org.oscim.event.MotionEvent;
+import org.oscim.layers.Layer;
+import org.oscim.layers.marker.ItemizedLayer;
+import org.oscim.layers.marker.MarkerItem;
+import org.oscim.layers.marker.MarkerSymbol;
+import org.oscim.map.Map;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.oscim.android.canvas.AndroidGraphics.drawableToBitmap;
+
 /**
  * Created by xiaoxiao on 2018/3/21.
  */
-@Puppet(bondContainerView = false)
+@Puppet
 public class DrawPointLinePolygonFragment extends BaseFragment {
     private CheckBox chk_draw_point, chk_draw_line, chk_draw_polygon;
     private List<CheckBox> checkBoxes;
     private DRAW_STATE currentDrawState = DRAW_STATE.DRAW_NONE;
+
+    //overLayer图层
+    private ItemizedLayer<MarkerItem> markerLayer;
+    private MarkerSymbol pointMarker;
+    private MapEventsReceiver mapEventsReceiver;
 
     @Override
     public int getFragmentLayoutId() {
@@ -61,6 +83,15 @@ public class DrawPointLinePolygonFragment extends BaseFragment {
                 }
             }
         });
+
+        //添加一个操作图层，监听用户在地图上的点击事件
+        mapEventsReceiver = new MapEventsReceiver(CatEyeMapManager.getInstance(getActivity()).getCatEyeMap());
+        CatEyeMapManager.getInstance(getActivity()).getCatEyeMap().layers().add(mapEventsReceiver, MainActivity.LAYER_GROUP_ENUM.GROUP_OPERTOR.ordinal());
+        //打开该fragment，则自动向地图中添加marker的overlay
+        Bitmap bitmapPoi = drawableToBitmap(ResourcesCompat.getDrawable(getResources(), R.drawable.marker_poi, null));
+        pointMarker = new MarkerSymbol(bitmapPoi, MarkerSymbol.HotspotPlace.CENTER);
+        markerLayer = new ItemizedLayer<MarkerItem>(CatEyeMapManager.getInstance(getActivity()).getCatEyeMap(), pointMarker);
+        CatEyeMapManager.getInstance(getActivity()).getCatEyeMap().layers().add(markerLayer, MainActivity.LAYER_GROUP_ENUM.GROUP_BUILDING.ordinal());
     }
 
     public static BaseFragment newInstance(Bundle bundle) {
@@ -69,10 +100,6 @@ public class DrawPointLinePolygonFragment extends BaseFragment {
         return drawPointLinePolygonFragment;
     }
 
-    @Override
-    public void onRiggerBackPressed() {
-        Rigger.getRigger(this).close();
-    }
 
     /**
      * Author : xiaoxiao
@@ -109,5 +136,52 @@ public class DrawPointLinePolygonFragment extends BaseFragment {
                 }
             }
         }
+    }
+
+    private class MapEventsReceiver extends Layer implements GestureListener {
+
+        MapEventsReceiver(Map map) {
+            super(map);
+        }
+
+        @Override
+        public boolean onGesture(Gesture g, MotionEvent e) {
+            if (g instanceof Gesture.Tap) {
+
+            }
+            if (g instanceof Gesture.Press) {
+                GeoPoint p = mMap.viewport().fromScreenPoint(e.getX(), e.getY());
+                if (getCurrentDrawState() != DRAW_STATE.DRAW_NONE) {//如果当前是绘制模式，则自动添加marker
+                    markerLayer.addItem(new MarkerItem("", "", p));
+                }
+                Toast.makeText(getActivity(), "Map tap\n" + p, Toast.LENGTH_SHORT).show();
+                return true;
+            }
+//            if (g instanceof Gesture.LongPress) {//长按
+//            }
+//            if (g instanceof Gesture.TripleTap) {//双击
+//            }
+            return false;
+        }
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        //当前界面被返回时，自动移除所有的overlayer
+        if (mapEventsReceiver != null) {
+            CatEyeMapManager.getInstance(getActivity()).getCatEyeMap().layers().remove(mapEventsReceiver);
+        }
+    }
+
+    /**
+     * Author : xiaoxiao
+     * Describe : 回退按钮拦截,目前是无效的
+     * param :
+     * return :
+     * Date : 2018/3/23
+     */
+    public void onRiggerBackPressed() {
+        Rigger.getRigger(this).hideFragment(this);
     }
 }

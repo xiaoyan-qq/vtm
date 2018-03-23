@@ -8,7 +8,6 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.jkb.fragment.rigger.annotation.Puppet;
-import com.jkb.fragment.rigger.rigger.Rigger;
 
 /**
  * Created by zhangdezhi1702 on 2018/3/15.
@@ -24,10 +23,5 @@ public abstract class BaseFragment extends Fragment implements BaseFragmentInter
         rootView = inflater.inflate(getFragmentLayoutId(), null);
         initView(rootView);
         return rootView;
-    }
-
-    public void onRiggerBackPressed() {
-        //拦截回退按钮
-        Rigger.getRigger(this).onBackPressed();
     }
 }

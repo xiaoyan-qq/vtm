@@ -24,6 +24,12 @@ import java.util.List;
 @Puppet(containerViewId = R.id.fragment_main_container, bondContainerView = true)
 public class MainActivity extends AppCompatActivity {
 
+    //地图layer的分组
+    public enum LAYER_GROUP_ENUM {
+        GROUP_VECTOR/*矢量图层分组*/, GROUP_OTHER/*其他图层分组*/, GROUP_BUILDING/*建筑图层分组*/,
+        GROUP_LABELS/*label图层分组*/, GROUP_3D_OBJECTS/*3D图层分组*/, GROUP_OPERTOR/*操作图层分组*/
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -32,7 +38,7 @@ public class MainActivity extends AppCompatActivity {
         //启动fragment，显示地图界面
         Rigger.getRigger(this).startFragment(CatEyeMainFragment.newInstance(new Bundle()));
         //申请所需要的权限
-        AndPermission.with(this).permission(Permission.Group.LOCATION/*定位权限*/, Permission.Group.STORAGE/*存储权限*/, Permission.Group.SENSORS/*传感器*/)
+        AndPermission.with(this).permission(Permission.Group.LOCATION/*定位权限*/, Permission.Group.STORAGE/*存储权限*//*, Permission.Group.SENSORS*//*传感器*/)
                 .onGranted(new Action() {//用户允许
                     @Override
                     public void onAction(List<String> permissions) {
@@ -46,7 +52,7 @@ public class MainActivity extends AppCompatActivity {
                             StringBuilder permissionSB = new StringBuilder();
                             if (permissions != null && !permissions.isEmpty()) {
                                 for (String p : permissions) {
-                                    permissionSB.append(p);
+                                    permissionSB.append(Permission.transformText(MainActivity.this, p));
                                     permissionSB.append(",");
                                 }
                             }
@@ -57,6 +63,7 @@ public class MainActivity extends AppCompatActivity {
                             RxDialogSure sureDialog = new RxDialogSure(MainActivity.this);
                             sureDialog.setContent("您拒绝了" + permissionSB + "权限，可能会导致某些功能无法正常使用!");
                             sureDialog.setTitle("提示");
+                            sureDialog.getSureView().setEnabled(true);
                             sureDialog.show();
                         }
                     }
