@@ -1,5 +1,5 @@
 rootProject.name = 'vtm-parent'
-include ':vtm-android', ':cateye-vtm'
+include ':vtm-android', ':cateye-vtm', ':cateye-vtm-library'
 include ':vtm-http'
 include ':vtm-jeo'
 include ':vtm-json'

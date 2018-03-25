@@ -44,42 +44,27 @@ android {
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
-
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation 'com.android.support:appcompat-v7:26.1.0'
     implementation 'com.android.support.constraint:constraint-layout:1.0.2'
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.1'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
-
-    implementation project(':vtm-android')
-    implementation project(':vtm-http')
-    implementation project(':vtm-jeo')
-    implementation project(':vtm-json')
-    implementation project(':vtm-jts')
-    implementation project(':vtm-mvt')
-    implementation project(':vtm-themes')
-    implementation "org.slf4j:slf4j-android:$slf4jVersion"
-
-    implementation project(':vtm-android-gdx')
-    implementation project(':vtm-gdx')
-    implementation "com.badlogicgames.gdx:gdx-backend-android:$gdxVersion"
-    implementation 'org.mapsforge:mapsforge-poi-android:master-SNAPSHOT'
-    implementation 'org.mapsforge:spatialite-android:master-SNAPSHOT:natives-armeabi'
-    implementation 'org.mapsforge:spatialite-android:master-SNAPSHOT:natives-armeabi-v7a'
-    implementation 'org.mapsforge:spatialite-android:master-SNAPSHOT:natives-x86'
-
     //https://github.com/vondear/RxTools
-    compile 'com.github.vondear:RxTools:v1.7.7.3'//各种通用工具类
+    compile 'com.github.vondear:RxTools:v1.7.7.3'
+    //各种通用工具类
     // //https://github.com/yanzhenjie/NoFragment======fragment管理第三方框架
     //compile 'com.yanzhenjie:fragment:1.0.1'//Fragment的第三方管理框架
     //https://github.com/JustKiddingBaby/FragmentRigger/wiki/%E9%A6%96%E9%A1%B5
-    compile 'com.justkiddingbaby:fragment-rigger:1.2.1'//Fragment的第三方管理框架
+    compile 'com.justkiddingbaby:fragment-rigger:1.2.1'
+    //Fragment的第三方管理框架
     //https://github.com/vondear/RxTools
-    compile 'com.github.vondear:RxTools:v1.7.7.3'//常用android工具类
+    compile 'com.github.vondear:RxTools:v1.7.7.3'
+    //常用android工具类
     //https://github.com/ReactiveX/RxAndroid
     implementation 'io.reactivex.rxjava2:rxandroid:2.0.2'
     implementation 'io.reactivex.rxjava2:rxjava:2.x.x'
     //https://github.com/yanzhenjie/AndPermission
     implementation 'com.yanzhenjie:permission:2.0.0-rc3'//动态获取权限的三方库
+    api project(':cateye-vtm-library')
 }

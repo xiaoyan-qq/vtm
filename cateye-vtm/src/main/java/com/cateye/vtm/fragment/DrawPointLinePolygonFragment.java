@@ -1,7 +1,6 @@
 package com.cateye.vtm.fragment;
 
 import android.os.Bundle;
-import android.support.v4.content.res.ResourcesCompat;
 import android.view.View;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
@@ -12,8 +11,10 @@ import com.cateye.android.vtm.R;
 import com.cateye.vtm.util.CatEyeMapManager;
 import com.jkb.fragment.rigger.annotation.Puppet;
 import com.jkb.fragment.rigger.rigger.Rigger;
+import com.vtm.library.layers.PolygonLayer;
 
 import org.oscim.backend.canvas.Bitmap;
+import org.oscim.backend.canvas.Color;
 import org.oscim.core.GeoPoint;
 import org.oscim.event.Gesture;
 import org.oscim.event.GestureListener;
@@ -22,6 +23,8 @@ import org.oscim.layers.Layer;
 import org.oscim.layers.marker.ItemizedLayer;
 import org.oscim.layers.marker.MarkerItem;
 import org.oscim.layers.marker.MarkerSymbol;
+import org.oscim.layers.vector.PathLayer;
+import org.oscim.layers.vector.geometries.Style;
 import org.oscim.map.Map;
 
 import java.util.ArrayList;
@@ -40,6 +43,8 @@ public class DrawPointLinePolygonFragment extends BaseFragment {
 
     //overLayer图层
     private ItemizedLayer<MarkerItem> markerLayer;
+    private PathLayer polylineOverlay;
+    private PolygonLayer polygonOverlay;
     private MarkerSymbol pointMarker;
     private MapEventsReceiver mapEventsReceiver;
 
@@ -88,10 +93,37 @@ public class DrawPointLinePolygonFragment extends BaseFragment {
         mapEventsReceiver = new MapEventsReceiver(CatEyeMapManager.getInstance(getActivity()).getCatEyeMap());
         CatEyeMapManager.getInstance(getActivity()).getCatEyeMap().layers().add(mapEventsReceiver, MainActivity.LAYER_GROUP_ENUM.GROUP_OPERTOR.ordinal());
         //打开该fragment，则自动向地图中添加marker的overlay
-        Bitmap bitmapPoi = drawableToBitmap(ResourcesCompat.getDrawable(getResources(), R.drawable.marker_poi, null));
+        Bitmap bitmapPoi = drawableToBitmap(getResources().getDrawable(R.drawable.marker_poi));
         pointMarker = new MarkerSymbol(bitmapPoi, MarkerSymbol.HotspotPlace.CENTER);
         markerLayer = new ItemizedLayer<MarkerItem>(CatEyeMapManager.getInstance(getActivity()).getCatEyeMap(), pointMarker);
         CatEyeMapManager.getInstance(getActivity()).getCatEyeMap().layers().add(markerLayer, MainActivity.LAYER_GROUP_ENUM.GROUP_BUILDING.ordinal());
+
+        //自动添加pathLayer
+        int c = Color.RED;
+        Style lineStyle = Style.builder()
+                .stippleColor(c)
+                .stipple(24)
+                .stippleWidth(1)
+                .strokeWidth(2)
+                .strokeColor(c)
+                .fixed(true)
+                .randomOffset(false)
+                .build();
+        polylineOverlay = new PathLayer(CatEyeMapManager.getInstance(getActivity()).getCatEyeMap(), lineStyle);
+        CatEyeMapManager.getInstance(getActivity()).getCatEyeMap().layers().add(polylineOverlay, MainActivity.LAYER_GROUP_ENUM.GROUP_BUILDING.ordinal());
+
+        Style polygonStyle = Style.builder()
+                .stippleColor(c)
+                .stipple(24)
+                .stippleWidth(1)
+                .strokeWidth(2)
+                .strokeColor(c).fillColor(c).fillAlpha(0.5f)
+                .fixed(true)
+                .randomOffset(false)
+                .build();
+        polygonOverlay = new PolygonLayer(CatEyeMapManager.getInstance(getActivity()).getCatEyeMap(), polygonStyle);
+        CatEyeMapManager.getInstance(getActivity()).getCatEyeMap().layers().add(polygonOverlay, MainActivity.LAYER_GROUP_ENUM.GROUP_BUILDING.ordinal());
+
     }
 
     public static BaseFragment newInstance(Bundle bundle) {
@@ -111,12 +143,14 @@ public class DrawPointLinePolygonFragment extends BaseFragment {
     public DRAW_STATE getCurrentDrawState() {
         if (checkBoxes != null && !checkBoxes.isEmpty()) {
             for (CheckBox chk : checkBoxes) {
-                if (chk == chk_draw_point) {
-                    return DRAW_STATE.DRAW_POINT;
-                } else if (chk == chk_draw_line) {
-                    return DRAW_STATE.DRAW_LINE;
-                } else if (chk == chk_draw_polygon) {
-                    return DRAW_STATE.DRAW_POLYGON;
+                if (chk.isChecked()) {
+                    if (chk == chk_draw_point) {
+                        return DRAW_STATE.DRAW_POINT;
+                    } else if (chk == chk_draw_line) {
+                        return DRAW_STATE.DRAW_LINE;
+                    } else if (chk == chk_draw_polygon) {
+                        return DRAW_STATE.DRAW_POLYGON;
+                    }
                 }
             }
         }
@@ -151,8 +185,27 @@ public class DrawPointLinePolygonFragment extends BaseFragment {
             }
             if (g instanceof Gesture.Press) {
                 GeoPoint p = mMap.viewport().fromScreenPoint(e.getX(), e.getY());
-                if (getCurrentDrawState() != DRAW_STATE.DRAW_NONE) {//如果当前是绘制模式，则自动添加marker
+                DRAW_STATE currentState = getCurrentDrawState();
+                if (currentState != DRAW_STATE.DRAW_NONE) {//如果当前是绘制模式，则自动添加marker
                     markerLayer.addItem(new MarkerItem("", "", p));
+                    //如果当前是绘制线模式，则增加pathLayer
+                    if (currentState == DRAW_STATE.DRAW_LINE) {
+                        polylineOverlay.addPoint(p);
+                        if (polylineOverlay.getPoints() != null && polylineOverlay.getPoints().size() > 1) {
+                            polylineOverlay.setLineString(getPointArray(polylineOverlay.getPoints()));
+                        }
+                    }
+                    if (currentState == DRAW_STATE.DRAW_POLYGON) {
+                        polygonOverlay.addPoint(p);
+                        if (polygonOverlay.getPoints() != null) {
+                            if (polygonOverlay.getPoints().size() > 2) {
+                                polygonOverlay.setPolygonString(polygonOverlay.getPoints(), true);
+                            } else if (polygonOverlay.getPoints().size() == 2) {
+                                polygonOverlay.setLineString(getPointArray(polygonOverlay.getPoints()));
+                            }
+                        }
+                    }
+                    markerLayer.map().updateMap(true);//重绘
                 }
                 Toast.makeText(getActivity(), "Map tap\n" + p, Toast.LENGTH_SHORT).show();
                 return true;
@@ -172,6 +225,18 @@ public class DrawPointLinePolygonFragment extends BaseFragment {
         if (mapEventsReceiver != null) {
             CatEyeMapManager.getInstance(getActivity()).getCatEyeMap().layers().remove(mapEventsReceiver);
         }
+    }
+
+    private double[] getPointArray(List<GeoPoint> geoPointList) {
+        if (geoPointList != null && !geoPointList.isEmpty()) {
+            double[] lonLatArray = new double[geoPointList.size() * 2];
+            for (int i = 0; i < geoPointList.size(); i++) {
+                lonLatArray[i * 2] = geoPointList.get(i).getLongitude();
+                lonLatArray[i * 2 + 1] = geoPointList.get(i).getLatitude();
+            }
+            return lonLatArray;
+        }
+        return null;
     }
 
     /**

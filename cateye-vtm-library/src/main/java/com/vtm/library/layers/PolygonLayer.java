@@ -1,0 +1,64 @@
+package com.vtm.library.layers;
+
+import org.oscim.core.GeoPoint;
+import org.oscim.layers.vector.PathLayer;
+import org.oscim.layers.vector.geometries.PolygonDrawable;
+import org.oscim.layers.vector.geometries.Style;
+import org.oscim.map.Map;
+
+import java.util.List;
+
+/**
+ * Created by xiaoxiao on 2018/3/26.
+ */
+
+public class PolygonLayer extends PathLayer {
+    private PolygonDrawable polygonDrawable;
+    public PolygonLayer(Map map, Style style) {
+        super(map, style);
+        mStyle = style;
+    }
+
+    public PolygonLayer(Map map, int lineColor, float lineWidth) {
+        this(map, Style.builder()
+                .fixed(true)
+                .strokeColor(lineColor)
+                .strokeWidth(lineWidth)
+                .build());
+    }
+
+    public PolygonLayer(Map map, int lineColor) {
+        this(map, lineColor, 2);
+    }
+
+    /**
+     * 设置polygon的点位
+     * */
+    public void setPolygonString(List<GeoPoint> pointList,boolean isClose){
+        if (pointList==null||pointList.size()<3){
+            return;
+        }
+        if (isClose&&pointList!=null&&pointList.get(0)!=pointList.get(pointList.size()-1)){
+            pointList.add(pointList.get(0));
+        }
+        synchronized (this) {
+            if (mDrawable != null){
+                remove(mDrawable);
+                mDrawable=null;
+            }
+            if (polygonDrawable!=null){
+                remove(polygonDrawable);
+            }
+            polygonDrawable = new PolygonDrawable(pointList,mStyle);
+            add(polygonDrawable);
+
+//            mPoints.clear();
+            if (pointList.get(0)==pointList.get(pointList.size()-1)){
+                pointList.remove(pointList.size()-1);
+            }
+//            for (int i = 0; i < pointList.size(); i++)
+//                mPoints.addAll(pointList);
+        }
+        mWorker.submit(0);
+    }
+}
