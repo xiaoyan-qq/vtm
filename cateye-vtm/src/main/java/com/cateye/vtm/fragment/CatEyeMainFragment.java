@@ -1,5 +1,6 @@
 package com.cateye.vtm.fragment;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
@@ -13,10 +14,12 @@ import com.cateye.vtm.util.CatEyeMapManager;
 import com.jkb.fragment.rigger.annotation.Puppet;
 import com.jkb.fragment.rigger.rigger.Rigger;
 import com.ta.utdid2.android.utils.StringUtils;
+import com.vondear.rxtools.RxLogTool;
 import com.vondear.rxtools.view.RxToast;
 
 import org.oscim.android.MapPreferences;
 import org.oscim.android.MapView;
+import org.oscim.android.cache.TileCache;
 import org.oscim.android.filepicker.FilePicker;
 import org.oscim.android.theme.AssetsRenderTheme;
 import org.oscim.backend.CanvasAdapter;
@@ -27,6 +30,7 @@ import org.oscim.core.Tile;
 import org.oscim.layers.Layer;
 import org.oscim.layers.TileGridLayer;
 import org.oscim.layers.tile.MapTile;
+import org.oscim.layers.tile.bitmap.BitmapTileLayer;
 import org.oscim.layers.tile.buildings.BuildingLayer;
 import org.oscim.layers.tile.buildings.S3DBLayer;
 import org.oscim.layers.tile.vector.OsmTileLayer;
@@ -50,6 +54,7 @@ import org.oscim.theme.XmlRenderThemeStyleMenu;
 import org.oscim.theme.styles.AreaStyle;
 import org.oscim.theme.styles.RenderStyle;
 import org.oscim.tiling.TileSource;
+import org.oscim.tiling.source.bitmap.BitmapTileSource;
 import org.oscim.tiling.source.mapfile.MapFileTileSource;
 import org.oscim.tiling.source.mapfile.MapInfo;
 
@@ -80,6 +85,7 @@ public class CatEyeMainFragment extends BaseFragment {
 
     //控件
     private Button btn_select_local_map_file;//选择需要显示的本地map文件
+    private Button btn_select_net_map_file;//选择需要显示的在线map文件
     private Button btn_draw_plp;//绘制点线面
 
     @Override
@@ -122,6 +128,19 @@ public class CatEyeMainFragment extends BaseFragment {
             }
         });
 
+        //选择网络地图显示
+        btn_select_net_map_file = rootView.findViewById(R.id.btn_select_net_map_file);
+        btn_select_net_map_file.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                BitmapTileSource mTileSource = BitmapTileSource.builder()
+                        .url("http://39.107.104.63:8080/xyz/1.0.0/world_satellite_raster@EPSG:900913@jpeg").tilePath("/{X}/{Y}/{Z}.png")
+                        .zoomMax(18).build();
+//                BitmapTileSource mTileSource= DefaultSources.OPENSTREETMAP.build();
+                createTileLayer(getActivity(), mTileSource, true);
+            }
+        });
+
         //scale的图层到操作分组中
         DefaultMapScaleBar mMapScaleBar = new DefaultMapScaleBar(mMap);
         mMapScaleBar.setScaleBarMode(DefaultMapScaleBar.ScaleBarMode.BOTH);
@@ -134,8 +153,6 @@ public class CatEyeMainFragment extends BaseFragment {
         renderer.setPosition(GLViewport.Position.BOTTOM_LEFT);
         renderer.setOffset(5 * CanvasAdapter.getScale(), 0);
         mMap.layers().add(mapScaleBarLayer, LAYER_GROUP_ENUM.GROUP_OPERTOR.ordinal());
-
-
     }
 
     public static BaseFragment newInstance(Bundle bundle) {
@@ -154,9 +171,9 @@ public class CatEyeMainFragment extends BaseFragment {
             }
 
             MapFileTileSource mTileSource = new MapFileTileSource();
-            mTileSource.setPreferredLanguage("zh");
+//            mTileSource.setPreferredLanguage("zh");
             String file = intent.getStringExtra(FilePicker.SELECTED_FILE);
-            //过滤判断旋转的文件是否已经在显示中了
+            //过滤判断选中的文件是否已经在显示中了
             if (mTileSourceList != null && !mTileSourceList.isEmpty()) {
                 for (TileSource tileSource : mTileSourceList) {
                     if (tileSource instanceof MapFileTileSource && ((MapFileTileSource) tileSource).getOption("file").equals(file)) {
@@ -261,6 +278,27 @@ public class CatEyeMainFragment extends BaseFragment {
         } else {
             mMap.setTheme(VtmThemes.DEFAULT, isAllLayers);
         }
+    }
+
+    private void createTileLayer(Context mContext, BitmapTileSource mTileSource, boolean USE_CACHE) {
+        if (mTileSource == null)
+            return;
+
+        if (USE_CACHE) {
+            String cacheFile = mTileSource.getUrl()
+                    .toString()
+                    .replaceFirst("https?://", "")
+                    .replaceAll("/", "-");
+
+            RxLogTool.i("use bitmap cache {}", cacheFile);
+            TileCache mCache = new TileCache(mContext, null, cacheFile);
+            mCache.setCacheSize(512 * (1 << 10));
+            mTileSource.setCache(mCache);
+        }
+
+        BitmapTileLayer mBitmapLayer = new BitmapTileLayer(mMap, mTileSource);
+        mMap.layers().add(mBitmapLayer, LAYER_GROUP_ENUM.GROUP_VECTOR.ordinal());
+        mMap.updateMap(true);
     }
 
 //    public void onRiggerBackPressed() {

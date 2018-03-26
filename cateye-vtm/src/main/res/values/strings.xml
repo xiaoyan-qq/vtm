@@ -23,6 +23,7 @@
     <string name="dialog_reverse_geocoding_title">Reverse Geocoding</string>
 
     <string name="select_local_map_file">选择本地map文件</string>
+    <string name="select_net_map_file">选择在线map文件</string>
     <string name="draw_point_line_polygon">绘制点线面</string>
     <string name="draw_point">绘制点</string>
     <string name="draw_line">绘制线</string>
