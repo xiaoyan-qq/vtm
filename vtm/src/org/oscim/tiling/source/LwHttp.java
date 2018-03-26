@@ -42,7 +42,7 @@ public class LwHttp implements HttpEngine {
     static final Logger log = LoggerFactory.getLogger(LwHttp.class);
     static final boolean dbg = false;
 
-    private final static byte[] HEADER_HTTP_OK = "200 OK".getBytes();
+    private final static byte[] HEADER_HTTP_OK = "200".getBytes();
     private final static byte[] HEADER_CONTENT_LENGTH = "Content-Length".getBytes();
     private final static byte[] HEADER_CONNECTION_CLOSE = "Connection: close".getBytes();
     private final static byte[] HEADER_ENCODING_GZIP = "Content-Encoding: gzip".getBytes();
@@ -278,6 +278,7 @@ public class LwHttp implements HttpEngine {
                 (len = is.read(buf, read, BUFFER_SIZE - read)) >= 0); len = 0) {
 
             read += len;
+            String bufStr=new String(buf);
             /* end of header lines */
             while (end < read && (buf[end] != '\n'))
                 end++;
@@ -297,7 +298,7 @@ public class LwHttp implements HttpEngine {
 
             if (first) {
                 first = false;
-                /* check only for OK ("HTTP/1.? ".length == 9) */
+                /* check only for OK (" HTTP/1.? ".length == 10)*/
                 if (!check(HEADER_HTTP_OK, buf, pos + 9, end)) {
                     throw new IOException("HTTP Error: "
                             + new String(buf, pos, end - pos - 1));
@@ -477,7 +478,7 @@ public class LwHttp implements HttpEngine {
 
         int length = string.length;
 
-        if (available - position < length)
+        if (available - position <= length)
             return false;
 
         for (int i = 0; i < length; i++)

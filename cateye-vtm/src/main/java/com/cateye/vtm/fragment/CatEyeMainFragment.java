@@ -134,7 +134,7 @@ public class CatEyeMainFragment extends BaseFragment {
             @Override
             public void onClick(View view) {
                 BitmapTileSource mTileSource = BitmapTileSource.builder()
-                        .url("http://39.107.104.63:8080/xyz/1.0.0/world_satellite_raster@EPSG:900913@jpeg").tilePath("/{X}/{Y}/{Z}.png")
+                        .url("http://39.107.104.63:8080/tms/1.0.0/world_satellite_raster@EPSG:900913@jpeg").tilePath("/{Z}/{X}/{Y}.png")
                         .zoomMax(18).build();
 //                BitmapTileSource mTileSource= DefaultSources.OPENSTREETMAP.build();
                 createTileLayer(getActivity(), mTileSource, true);
