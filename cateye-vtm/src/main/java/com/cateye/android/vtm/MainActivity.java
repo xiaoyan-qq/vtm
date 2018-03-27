@@ -94,4 +94,14 @@ public class MainActivity extends AppCompatActivity {
             setFileSelectFilter(new ValidRenderTheme());
         }
     }
+
+    /**
+     * 选择本地地图文件的文件选择过滤器
+     */
+    public static class GeoJsonFilePicker extends FilePicker {
+        public GeoJsonFilePicker() {
+            setFileDisplayFilter(new FilterByFileExtension(".json"));
+            setFileSelectFilter(new ValidMapFile());
+        }
+    }
 }

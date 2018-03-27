@@ -33,6 +33,12 @@
                 android:text="@string/select_net_map_file" />
 
             <Button
+                android:id="@+id/btn_select_geoJson"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/select_geoJson_file" />
+
+            <Button
                 android:id="@+id/btn_draw_plp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
