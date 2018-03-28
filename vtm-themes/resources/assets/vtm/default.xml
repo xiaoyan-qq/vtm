@@ -40,6 +40,9 @@
     <style-text style="bold" fill="#606060" id="ferry" k="name" size="12" stroke="#ffffff"
         stroke-width="2.0" />
 
+    <!--等高线文字-->
+    <style-text caption="true" dy="20" fill="#2d51bc" font-family="medium" id="CONTOUR"
+        k="name" size="14" stroke="#ffffff" stroke-width="2.0" />
 
     <!--###### AREA styles ######-->
 
