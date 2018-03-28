@@ -37,10 +37,7 @@ import org.oscim.utils.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
-import java.net.URLConnection;
 import java.util.Arrays;
 
 public class JeoIndoorActivity extends BaseMapActivity {
@@ -69,11 +66,12 @@ public class JeoIndoorActivity extends BaseMapActivity {
                     //        .getAbsolutePath(), "osmindoor.json");
                     //    is = new FileInputStream(file);
 
-                    URL url = new URL(PATH);
-                    URLConnection conn = url.openConnection();
-                    is = conn.getInputStream();
+//                    URL url = new URL(PATH);
+//                    URLConnection conn = url.openConnection();
+//                    is = conn.getInputStream();
+                    is=getResources().openRawResource(R.raw.test123);
                     loadJson(is);
-                } catch (IOException e) {
+                } catch (Exception e) {
                     e.printStackTrace();
                 } finally {
                     IOUtils.closeQuietly(is);

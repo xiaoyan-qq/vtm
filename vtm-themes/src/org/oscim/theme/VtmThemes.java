@@ -36,7 +36,8 @@ public enum VtmThemes implements ThemeFile {
     OPENMAPTILES("vtm/openmaptiles.xml"),
     OSMAGRAY("vtm/osmagray.xml"),
     OSMARENDER("vtm/osmarender.xml"),
-    TRONRENDER("vtm/tronrender.xml");
+    TRONRENDER("vtm/tronrender.xml"),
+    CATEYERENDER("vtm/cateyerender.xml");
 
     private final String mPath;
 
