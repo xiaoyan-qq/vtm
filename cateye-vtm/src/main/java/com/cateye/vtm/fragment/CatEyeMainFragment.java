@@ -30,8 +30,8 @@ import org.oscim.core.MapElement;
 import org.oscim.core.MapPosition;
 import org.oscim.core.Tag;
 import org.oscim.core.Tile;
+import org.oscim.layers.JeoVectorLayer;
 import org.oscim.layers.Layer;
-import org.oscim.layers.OSMIndoorLayer;
 import org.oscim.layers.TileGridLayer;
 import org.oscim.layers.tile.MapTile;
 import org.oscim.layers.tile.bitmap.BitmapTileLayer;
@@ -71,6 +71,8 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+
+import static com.vondear.rxtools.view.RxToast.showToast;
 
 /**
  * Created by zhangdezhi1702 on 2018/3/15.
@@ -154,7 +156,7 @@ public class CatEyeMainFragment extends BaseFragment {
         });
 
         //选择显示GeoJson文件
-        btn_select_geoJson_file=rootView.findViewById(R.id.btn_select_geoJson);
+        btn_select_geoJson_file = rootView.findViewById(R.id.btn_select_geoJson);
         btn_select_geoJson_file.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -223,7 +225,8 @@ public class CatEyeMainFragment extends BaseFragment {
                 MapPosition pos = new MapPosition();
                 pos.setByBoundingBox(info.boundingBox, Tile.SIZE * 4, Tile.SIZE * 4);
                 mMap.setMapPosition(pos);
-                loadTheme(null, true);
+//                loadTheme(VtmThemes.DEFAULT, true);
+                mMap.setTheme(VtmThemes.DEFAULT);
 
                 mPrefs.clear();
                 mTileSourceList.add(mTileSource);
@@ -262,16 +265,16 @@ public class CatEyeMainFragment extends BaseFragment {
             }
             mMap.setTheme(externalRenderTheme);
 //            mMenu.findItem(R.id.theme_external).setChecked(true);
-        }else if (requestCode==SELECT_GEOJSON_FILE){
+        } else if (requestCode == SELECT_GEOJSON_FILE) {
             if (resultCode != getActivity().RESULT_OK || intent == null || intent.getStringExtra(FilePicker.SELECTED_FILE) == null) {
                 return;
             }
             String filePath = intent.getStringExtra(FilePicker.SELECTED_FILE);
-            File geoJsonFile=new File(filePath);
-            if (geoJsonFile.exists()&&geoJsonFile.isFile()){
-                FileInputStream geoInputStream=null;
+            File geoJsonFile = new File(filePath);
+            if (geoJsonFile.exists() && geoJsonFile.isFile()) {
+                FileInputStream geoInputStream = null;
                 try {
-                    geoInputStream=new FileInputStream(geoJsonFile);
+                    geoInputStream = new FileInputStream(geoJsonFile);
                     loadJson(geoInputStream);
                 } catch (FileNotFoundException e) {
                     e.printStackTrace();
@@ -340,8 +343,10 @@ public class CatEyeMainFragment extends BaseFragment {
 
     /**
      * 加载指定的GeoJsonlayer
-     * */
+     */
     private void loadJson(InputStream is) {
+        RxToast.info("加载古交等高线");
+
         VectorDataset data = JeoTest.readGeoJson(is);
         Style style = JeoTest.getStyle();
         TextStyle textStyle = TextStyle.builder()
@@ -349,13 +354,10 @@ public class CatEyeMainFragment extends BaseFragment {
                 .fontSize(16 * CanvasAdapter.getScale()).color(Color.BLACK)
                 .strokeWidth(2.2f * CanvasAdapter.getScale()).strokeColor(Color.WHITE)
                 .build();
-        OSMIndoorLayer mIndoorLayer = new OSMIndoorLayer(mMap, data, style, textStyle);
-        mMap.layers().add(mIndoorLayer);
+        JeoVectorLayer jeoVectorLayer = new JeoVectorLayer(mMap, data, style);
+        mMap.layers().add(jeoVectorLayer);
 
+        showToast("加载完成");
         mMap.updateMap(true);
     }
-//    public void onRiggerBackPressed() {
-//        RxLogTool.d("onRiggerBackPressed", "点击回退按钮");
-//
-//    }
 }

@@ -101,7 +101,7 @@ public class MainActivity extends AppCompatActivity {
     public static class GeoJsonFilePicker extends FilePicker {
         public GeoJsonFilePicker() {
             setFileDisplayFilter(new FilterByFileExtension(".json"));
-            setFileSelectFilter(new ValidMapFile());
+//            setFileSelectFilter(new ValidRenderTheme());
         }
     }
 }

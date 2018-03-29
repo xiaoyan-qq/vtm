@@ -30,6 +30,10 @@
         <activity
             android:name="com.cateye.android.vtm.MainActivity$ThemeFilePicker"
             android:configChanges="keyboardHidden|orientation|screenSize" />
+        <!--GeoJson文件选择筛选类-->
+        <activity
+            android:name="com.cateye.android.vtm.MainActivity$GeoJsonFilePicker"
+            android:configChanges="keyboardHidden|orientation|screenSize" />
     </application>
 
 </manifest>

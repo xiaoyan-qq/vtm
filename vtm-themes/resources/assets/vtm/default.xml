@@ -155,7 +155,9 @@
     <!--water-->
     <style-line cap="butt" fix="true" id="water" stroke="#a4bbcc" width="1.0" />
     <style-line fix="false" id="river" stroke="#a4bbcc" use="water" />
-
+    <style-line id="CONTOUR_50" use="residential" width="1.0" fix="false" stroke="#662266" />
+    <style-line id="CONTOUR_100" use="residential" width="1.0" fix="false" stroke="#664466" />
+    <style-line id="CONTOUR_200" use="residential" width="1.0" fix="false" stroke="#666666" />
 
     <!--###### ASSIGNMENT ######-->
 
@@ -1457,4 +1459,17 @@
         </m>
     </m>
 
+    <m k="CONTOUR">
+        <text use="CONTOUR"></text>
+        <line use="CONTOUR_200"></line>
+        <!--<m v="50">-->
+            <!--<line use="CONTOUR_50"></line>-->
+        <!--</m>-->
+        <!--<m v="100">-->
+            <!--<line use="CONTOUR_100"></line>-->
+        <!--</m>-->
+        <!--<m v="200">-->
+            <!--<line use="CONTOUR_200"></line>-->
+        <!--</m>-->
+    </m>
 </rendertheme>
