@@ -39,6 +39,12 @@
                 android:text="@string/select_geoJson_file" />
 
             <Button
+                android:id="@+id/btn_select_theme"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/select_theme_file" />
+
+            <Button
                 android:id="@+id/btn_draw_plp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

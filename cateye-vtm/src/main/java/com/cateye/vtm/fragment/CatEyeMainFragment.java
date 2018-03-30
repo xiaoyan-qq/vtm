@@ -17,6 +17,7 @@ import com.ta.utdid2.android.utils.StringUtils;
 import com.vondear.rxtools.RxLogTool;
 import com.vondear.rxtools.view.RxToast;
 
+import org.jeo.geojson.GeoJSONReader;
 import org.jeo.map.Style;
 import org.jeo.vector.VectorDataset;
 import org.oscim.android.MapPreferences;
@@ -34,6 +35,7 @@ import org.oscim.layers.JeoVectorLayer;
 import org.oscim.layers.Layer;
 import org.oscim.layers.TileGridLayer;
 import org.oscim.layers.tile.MapTile;
+import org.oscim.layers.tile.VectorTileRenderer;
 import org.oscim.layers.tile.bitmap.BitmapTileLayer;
 import org.oscim.layers.tile.buildings.BuildingLayer;
 import org.oscim.layers.tile.buildings.S3DBLayer;
@@ -61,6 +63,7 @@ import org.oscim.theme.styles.RenderStyle;
 import org.oscim.theme.styles.TextStyle;
 import org.oscim.tiling.TileSource;
 import org.oscim.tiling.source.bitmap.BitmapTileSource;
+import org.oscim.tiling.source.geojson.GeojsonTileSource;
 import org.oscim.tiling.source.mapfile.MapFileTileSource;
 import org.oscim.tiling.source.mapfile.MapInfo;
 
@@ -100,6 +103,7 @@ public class CatEyeMainFragment extends BaseFragment {
     private Button btn_select_local_map_file;//选择需要显示的本地map文件
     private Button btn_select_net_map_file;//选择需要显示的在线map文件
     private Button btn_select_geoJson_file;//选择需要显示的geoJson文件
+    private Button btn_select_theme_file;//选择需要显示的geoJson文件
     private Button btn_draw_plp;//绘制点线面
 
     @Override
@@ -165,6 +169,15 @@ public class CatEyeMainFragment extends BaseFragment {
             }
         });
 
+        //选择theme文件
+        btn_select_theme_file=rootView.findViewById(R.id.btn_select_theme);
+        btn_select_theme_file.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startActivityForResult(new Intent(getActivity(), MainActivity.ThemeFilePicker.class),
+                        SELECT_THEME_FILE);
+            }
+        });
         //scale的图层到操作分组中
         DefaultMapScaleBar mMapScaleBar = new DefaultMapScaleBar(mMap);
         mMapScaleBar.setScaleBarMode(DefaultMapScaleBar.ScaleBarMode.BOTH);
@@ -195,7 +208,7 @@ public class CatEyeMainFragment extends BaseFragment {
             }
 
             MapFileTileSource mTileSource = new MapFileTileSource();
-//            mTileSource.setPreferredLanguage("zh");
+            mTileSource.setPreferredLanguage("zh_CN");
             String file = intent.getStringExtra(FilePicker.SELECTED_FILE);
             //过滤判断选中的文件是否已经在显示中了
             if (mTileSourceList != null && !mTileSourceList.isEmpty()) {
@@ -348,12 +361,14 @@ public class CatEyeMainFragment extends BaseFragment {
         RxToast.info("加载古交等高线");
 
         VectorDataset data = JeoTest.readGeoJson(is);
-        Style style = JeoTest.getStyle();
-        TextStyle textStyle = TextStyle.builder()
-                .isCaption(true)
-                .fontSize(16 * CanvasAdapter.getScale()).color(Color.BLACK)
-                .strokeWidth(2.2f * CanvasAdapter.getScale()).strokeColor(Color.WHITE)
-                .build();
+//        Style style = JeoTest.getStyle();
+//        TextStyle textStyle = TextStyle.builder()
+//                .isCaption(true)
+//                .fontSize(16 * CanvasAdapter.getScale()).color(Color.BLACK)
+//                .strokeWidth(2.2f * CanvasAdapter.getScale()).strokeColor(Color.WHITE)
+//                .build();
+                VectorTileRenderer tileRenderer=new VectorTileRenderer();
+        VectorTileLayer geoVectorTileLayer=new VectorTileLayer(mMap,data)
         JeoVectorLayer jeoVectorLayer = new JeoVectorLayer(mMap, data, style);
         mMap.layers().add(jeoVectorLayer);
 
