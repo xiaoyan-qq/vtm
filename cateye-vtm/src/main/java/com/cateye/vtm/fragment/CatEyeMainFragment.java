@@ -17,6 +17,7 @@ import com.ta.utdid2.android.utils.StringUtils;
 import com.vondear.rxtools.RxLogTool;
 import com.vondear.rxtools.view.RxToast;
 
+import org.jeo.geojson.GeoJSONReader;
 import org.jeo.map.Style;
 import org.jeo.vector.VectorDataset;
 import org.oscim.android.MapPreferences;
@@ -61,6 +62,8 @@ import org.oscim.theme.styles.RenderStyle;
 import org.oscim.theme.styles.TextStyle;
 import org.oscim.tiling.TileSource;
 import org.oscim.tiling.source.bitmap.BitmapTileSource;
+import org.oscim.tiling.source.geojson.GeojsonTileSource;
+import org.oscim.tiling.source.geojson.MapzenGeojsonTileSource;
 import org.oscim.tiling.source.mapfile.MapFileTileSource;
 import org.oscim.tiling.source.mapfile.MapInfo;
 
@@ -193,7 +196,7 @@ public class CatEyeMainFragment extends BaseFragment {
             }
 
             MapFileTileSource mTileSource = new MapFileTileSource();
-//            mTileSource.setPreferredLanguage("zh");
+            mTileSource.setPreferredLanguage("zh_cn");
             String file = intent.getStringExtra(FilePicker.SELECTED_FILE);
             //过滤判断选中的文件是否已经在显示中了
             if (mTileSourceList != null && !mTileSourceList.isEmpty()) {
