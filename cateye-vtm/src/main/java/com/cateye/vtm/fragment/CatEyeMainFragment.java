@@ -17,8 +17,6 @@ import com.ta.utdid2.android.utils.StringUtils;
 import com.vondear.rxtools.RxLogTool;
 import com.vondear.rxtools.view.RxToast;
 
-import org.jeo.geojson.GeoJSONReader;
-import org.jeo.map.Style;
 import org.jeo.vector.VectorDataset;
 import org.oscim.android.MapPreferences;
 import org.oscim.android.MapView;
@@ -26,16 +24,13 @@ import org.oscim.android.cache.TileCache;
 import org.oscim.android.filepicker.FilePicker;
 import org.oscim.android.theme.AssetsRenderTheme;
 import org.oscim.backend.CanvasAdapter;
-import org.oscim.backend.canvas.Color;
 import org.oscim.core.MapElement;
 import org.oscim.core.MapPosition;
 import org.oscim.core.Tag;
 import org.oscim.core.Tile;
-import org.oscim.layers.JeoVectorLayer;
 import org.oscim.layers.Layer;
 import org.oscim.layers.TileGridLayer;
 import org.oscim.layers.tile.MapTile;
-import org.oscim.layers.tile.VectorTileRenderer;
 import org.oscim.layers.tile.bitmap.BitmapTileLayer;
 import org.oscim.layers.tile.buildings.BuildingLayer;
 import org.oscim.layers.tile.buildings.S3DBLayer;
@@ -60,10 +55,8 @@ import org.oscim.theme.XmlRenderThemeStyleLayer;
 import org.oscim.theme.XmlRenderThemeStyleMenu;
 import org.oscim.theme.styles.AreaStyle;
 import org.oscim.theme.styles.RenderStyle;
-import org.oscim.theme.styles.TextStyle;
 import org.oscim.tiling.TileSource;
 import org.oscim.tiling.source.bitmap.BitmapTileSource;
-import org.oscim.tiling.source.geojson.GeojsonTileSource;
 import org.oscim.tiling.source.mapfile.MapFileTileSource;
 import org.oscim.tiling.source.mapfile.MapInfo;
 
@@ -74,8 +67,6 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-
-import static com.vondear.rxtools.view.RxToast.showToast;
 
 /**
  * Created by zhangdezhi1702 on 2018/3/15.
@@ -367,12 +358,12 @@ public class CatEyeMainFragment extends BaseFragment {
 //                .fontSize(16 * CanvasAdapter.getScale()).color(Color.BLACK)
 //                .strokeWidth(2.2f * CanvasAdapter.getScale()).strokeColor(Color.WHITE)
 //                .build();
-                VectorTileRenderer tileRenderer=new VectorTileRenderer();
-        VectorTileLayer geoVectorTileLayer=new VectorTileLayer(mMap,data)
-        JeoVectorLayer jeoVectorLayer = new JeoVectorLayer(mMap, data, style);
-        mMap.layers().add(jeoVectorLayer);
-
-        showToast("加载完成");
-        mMap.updateMap(true);
+//                VectorTileRenderer tileRenderer=new VectorTileRenderer();
+//        VectorTileLayer geoVectorTileLayer=new VectorTileLayer(mMap,data)
+//        JeoVectorLayer jeoVectorLayer = new JeoVectorLayer(mMap, data, style);
+//        mMap.layers().add(jeoVectorLayer);
+//
+//        showToast("加载完成");
+//        mMap.updateMap(true);
     }
 }
