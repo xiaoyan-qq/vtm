@@ -17,7 +17,7 @@ import com.ta.utdid2.android.utils.StringUtils;
 import com.vondear.rxtools.RxLogTool;
 import com.vondear.rxtools.view.RxToast;
 
-import org.jeo.geojson.GeoJSONReader;
+import org.jeo.carto.Carto;
 import org.jeo.map.Style;
 import org.jeo.vector.VectorDataset;
 import org.oscim.android.MapPreferences;
@@ -31,6 +31,7 @@ import org.oscim.core.MapElement;
 import org.oscim.core.MapPosition;
 import org.oscim.core.Tag;
 import org.oscim.core.Tile;
+import org.oscim.layers.ContourLineLayer;
 import org.oscim.layers.Layer;
 import org.oscim.layers.OSMIndoorLayer;
 import org.oscim.layers.TileGridLayer;
@@ -62,14 +63,13 @@ import org.oscim.theme.styles.RenderStyle;
 import org.oscim.theme.styles.TextStyle;
 import org.oscim.tiling.TileSource;
 import org.oscim.tiling.source.bitmap.BitmapTileSource;
-import org.oscim.tiling.source.geojson.GeojsonTileSource;
-import org.oscim.tiling.source.geojson.MapzenGeojsonTileSource;
 import org.oscim.tiling.source.mapfile.MapFileTileSource;
 import org.oscim.tiling.source.mapfile.MapInfo;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -344,18 +344,45 @@ public class CatEyeMainFragment extends BaseFragment {
     /**
      * 加载指定的GeoJsonlayer
      * */
-    private void loadJson(InputStream is) {
+    void loadJson(InputStream is) {
+        RxToast.info("got data");
+
         VectorDataset data = JeoTest.readGeoJson(is);
-        Style style = JeoTest.getStyle();
+
+        Style style = null;
+
+        try {
+            style = Carto.parse("" +
+                    "#qqq {" +
+                    "  line-width: 2;" +
+                    "  line-color: #f09;" +
+                    "  polygon-fill: #44111111;" +
+                    "  " +
+                    "}" +
+                    "#states {" +
+                    "  line-width: 2.2;" +
+                    "  line-color: #c80;" +
+                    "  polygon-fill: #44111111;" +
+                    "  " +
+                    "}"
+            );
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
         TextStyle textStyle = TextStyle.builder()
                 .isCaption(true)
                 .fontSize(16 * CanvasAdapter.getScale()).color(Color.BLACK)
                 .strokeWidth(2.2f * CanvasAdapter.getScale()).strokeColor(Color.WHITE)
                 .build();
-        OSMIndoorLayer mIndoorLayer = new OSMIndoorLayer(mMap, data, style, textStyle);
-        mMap.layers().add(mIndoorLayer);
+        ContourLineLayer contourLineLayer=new ContourLineLayer(mMap, data, style, textStyle);
+        mMap.layers().add(contourLineLayer,LAYER_GROUP_ENUM.GROUP_OPERTOR.ordinal());
 
+        RxToast.info("data ready");
         mMap.updateMap(true);
+
+//        mIndoorLayer.activeLevels[0] = true;
+//        shift();
     }
 //    public void onRiggerBackPressed() {
 //        RxLogTool.d("onRiggerBackPressed", "点击回退按钮");

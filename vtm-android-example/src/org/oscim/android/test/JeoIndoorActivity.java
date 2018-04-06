@@ -23,10 +23,12 @@ import android.view.View;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
+import org.jeo.carto.Carto;
 import org.jeo.map.Style;
 import org.jeo.vector.VectorDataset;
 import org.oscim.backend.CanvasAdapter;
 import org.oscim.backend.canvas.Color;
+import org.oscim.layers.ContourLineLayer;
 import org.oscim.layers.OSMIndoorLayer;
 import org.oscim.layers.tile.buildings.BuildingLayer;
 import org.oscim.layers.tile.vector.labeling.LabelLayer;
@@ -37,6 +39,7 @@ import org.oscim.utils.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 
@@ -94,20 +97,43 @@ public class JeoIndoorActivity extends BaseMapActivity {
         showToast("got data");
 
         VectorDataset data = JeoTest.readGeoJson(is);
-        Style style = JeoTest.getStyle();
+
+        Style style = null;
+
+        try {
+            style = Carto.parse("" +
+                    "#qqq {" +
+                    "  line-width: 2;" +
+                    "  line-color: #f09;" +
+                    "  polygon-fill: #44111111;" +
+                    "  " +
+                    "}" +
+                    "#states {" +
+                    "  line-width: 2.2;" +
+                    "  line-color: #c80;" +
+                    "  polygon-fill: #44111111;" +
+                    "  " +
+                    "}"
+            );
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+//        Style style = JeoTest.getStyle();
         TextStyle textStyle = TextStyle.builder()
                 .isCaption(true)
                 .fontSize(16 * CanvasAdapter.getScale()).color(Color.BLACK)
                 .strokeWidth(2.2f * CanvasAdapter.getScale()).strokeColor(Color.WHITE)
                 .build();
-        mIndoorLayer = new OSMIndoorLayer(mMap, data, style, textStyle);
-        mMap.layers().add(mIndoorLayer);
+        ContourLineLayer contourLineLayer=new ContourLineLayer(mMap, data, style, textStyle);
+//        mIndoorLayer = new Co(mMap, data, style, textStyle);
+        mMap.layers().add(contourLineLayer);
 
         showToast("data ready");
         mMap.updateMap(true);
 
-        mIndoorLayer.activeLevels[0] = true;
-        shift();
+//        mIndoorLayer.activeLevels[0] = true;
+//        shift();
     }
 
     public void showToast(final String text) {
