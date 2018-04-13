@@ -199,7 +199,7 @@ public class CatEyeMainFragment extends BaseFragment {
             }
 
             MapFileTileSource mTileSource = new MapFileTileSource();
-            mTileSource.setPreferredLanguage("zh_CN");
+            mTileSource.setPreferredLanguage("zh");
             String file = intent.getStringExtra(FilePicker.SELECTED_FILE);
             //过滤判断选中的文件是否已经在显示中了
             if (mTileSourceList != null && !mTileSourceList.isEmpty()) {

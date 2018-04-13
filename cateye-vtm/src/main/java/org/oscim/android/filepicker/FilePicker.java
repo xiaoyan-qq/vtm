@@ -26,6 +26,7 @@ import android.os.Environment;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.GridView;
+import android.widget.ImageView;
 
 import com.cateye.android.vtm.R;
 
@@ -187,6 +188,13 @@ public class FilePicker extends Activity implements AdapterView.OnItemClickListe
         gridView.setOnItemClickListener(this);
         gridView.setAdapter(mFilePickerIconAdapter);
 
+        ImageView img_close = (ImageView) findViewById(R.id.img_close);
+        img_close.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                FilePicker.this.finish();
+            }
+        });
         // if (savedInstanceState == null) {
         // // first start of this instance
         // showDialog(DIALOG_FILE_SELECT);
