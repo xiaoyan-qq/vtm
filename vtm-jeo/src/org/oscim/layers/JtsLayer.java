@@ -44,7 +44,7 @@ public abstract class JtsLayer extends AbstractVectorLayer<Geometry> {
 
     @Override
     protected void processFeatures(Task t, Box bbox) {
-        processFeatures(t, new Envelope(bbox.xmin, bbox.ymin, bbox.xmax, bbox.ymax));
+        processFeatures(t, new Envelope(bbox.xmin, bbox.xmax, bbox.ymin, bbox.ymax));
 
     }
 
