@@ -102,9 +102,9 @@ public class JeoIndoorActivity extends BaseMapActivity {
 
         try {
             style = Carto.parse("" +
-                    "[CONTOUR='1200'] {" +
+                    "#qqq {" +
                     "  line-width: 2;" +
-                    "  line-color: #c80;" +
+                    "  line-color: #f09;" +
                     "  polygon-fill: #44111111;" +
                     "  " +
                     "}" +

@@ -17,6 +17,8 @@ import com.ta.utdid2.android.utils.StringUtils;
 import com.vondear.rxtools.RxLogTool;
 import com.vondear.rxtools.view.RxToast;
 
+import org.jeo.carto.Carto;
+import org.jeo.map.Style;
 import org.jeo.vector.VectorDataset;
 import org.oscim.android.MapPreferences;
 import org.oscim.android.MapView;
@@ -24,11 +26,14 @@ import org.oscim.android.cache.TileCache;
 import org.oscim.android.filepicker.FilePicker;
 import org.oscim.android.theme.AssetsRenderTheme;
 import org.oscim.backend.CanvasAdapter;
+import org.oscim.backend.canvas.Color;
 import org.oscim.core.MapElement;
 import org.oscim.core.MapPosition;
 import org.oscim.core.Tag;
 import org.oscim.core.Tile;
+import org.oscim.layers.ContourLineLayer;
 import org.oscim.layers.Layer;
+import org.oscim.layers.OSMIndoorLayer;
 import org.oscim.layers.TileGridLayer;
 import org.oscim.layers.tile.MapTile;
 import org.oscim.layers.tile.bitmap.BitmapTileLayer;
@@ -55,6 +60,7 @@ import org.oscim.theme.XmlRenderThemeStyleLayer;
 import org.oscim.theme.XmlRenderThemeStyleMenu;
 import org.oscim.theme.styles.AreaStyle;
 import org.oscim.theme.styles.RenderStyle;
+import org.oscim.theme.styles.TextStyle;
 import org.oscim.tiling.TileSource;
 import org.oscim.tiling.source.bitmap.BitmapTileSource;
 import org.oscim.tiling.source.mapfile.MapFileTileSource;
@@ -63,6 +69,7 @@ import org.oscim.tiling.source.mapfile.MapInfo;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -94,7 +101,6 @@ public class CatEyeMainFragment extends BaseFragment {
     private Button btn_select_local_map_file;//选择需要显示的本地map文件
     private Button btn_select_net_map_file;//选择需要显示的在线map文件
     private Button btn_select_geoJson_file;//选择需要显示的geoJson文件
-    private Button btn_select_theme_file;//选择需要显示的geoJson文件
     private Button btn_draw_plp;//绘制点线面
 
     @Override
@@ -151,7 +157,7 @@ public class CatEyeMainFragment extends BaseFragment {
         });
 
         //选择显示GeoJson文件
-        btn_select_geoJson_file = rootView.findViewById(R.id.btn_select_geoJson);
+        btn_select_geoJson_file=rootView.findViewById(R.id.btn_select_geoJson);
         btn_select_geoJson_file.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -160,15 +166,6 @@ public class CatEyeMainFragment extends BaseFragment {
             }
         });
 
-        //选择theme文件
-        btn_select_theme_file=rootView.findViewById(R.id.btn_select_theme);
-        btn_select_theme_file.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                startActivityForResult(new Intent(getActivity(), MainActivity.ThemeFilePicker.class),
-                        SELECT_THEME_FILE);
-            }
-        });
         //scale的图层到操作分组中
         DefaultMapScaleBar mMapScaleBar = new DefaultMapScaleBar(mMap);
         mMapScaleBar.setScaleBarMode(DefaultMapScaleBar.ScaleBarMode.BOTH);
@@ -229,8 +226,7 @@ public class CatEyeMainFragment extends BaseFragment {
                 MapPosition pos = new MapPosition();
                 pos.setByBoundingBox(info.boundingBox, Tile.SIZE * 4, Tile.SIZE * 4);
                 mMap.setMapPosition(pos);
-//                loadTheme(VtmThemes.DEFAULT, true);
-                mMap.setTheme(VtmThemes.DEFAULT);
+                loadTheme(null, true);
 
                 mPrefs.clear();
                 mTileSourceList.add(mTileSource);
@@ -269,16 +265,16 @@ public class CatEyeMainFragment extends BaseFragment {
             }
             mMap.setTheme(externalRenderTheme);
 //            mMenu.findItem(R.id.theme_external).setChecked(true);
-        } else if (requestCode == SELECT_GEOJSON_FILE) {
+        }else if (requestCode==SELECT_GEOJSON_FILE){
             if (resultCode != getActivity().RESULT_OK || intent == null || intent.getStringExtra(FilePicker.SELECTED_FILE) == null) {
                 return;
             }
             String filePath = intent.getStringExtra(FilePicker.SELECTED_FILE);
-            File geoJsonFile = new File(filePath);
-            if (geoJsonFile.exists() && geoJsonFile.isFile()) {
-                FileInputStream geoInputStream = null;
+            File geoJsonFile=new File(filePath);
+            if (geoJsonFile.exists()&&geoJsonFile.isFile()){
+                FileInputStream geoInputStream=null;
                 try {
-                    geoInputStream = new FileInputStream(geoJsonFile);
+                    geoInputStream=new FileInputStream(geoJsonFile);
                     loadJson(geoInputStream);
                 } catch (FileNotFoundException e) {
                     e.printStackTrace();
@@ -347,23 +343,49 @@ public class CatEyeMainFragment extends BaseFragment {
 
     /**
      * 加载指定的GeoJsonlayer
-     */
-    private void loadJson(InputStream is) {
-        RxToast.info("加载古交等高线");
+     * */
+    void loadJson(InputStream is) {
+        RxToast.info("got data");
 
         VectorDataset data = JeoTest.readGeoJson(is);
-//        Style style = JeoTest.getStyle();
-//        TextStyle textStyle = TextStyle.builder()
-//                .isCaption(true)
-//                .fontSize(16 * CanvasAdapter.getScale()).color(Color.BLACK)
-//                .strokeWidth(2.2f * CanvasAdapter.getScale()).strokeColor(Color.WHITE)
-//                .build();
-//                VectorTileRenderer tileRenderer=new VectorTileRenderer();
-//        VectorTileLayer geoVectorTileLayer=new VectorTileLayer(mMap,data)
-//        JeoVectorLayer jeoVectorLayer = new JeoVectorLayer(mMap, data, style);
-//        mMap.layers().add(jeoVectorLayer);
-//
-//        showToast("加载完成");
-//        mMap.updateMap(true);
+
+        Style style = null;
+
+        try {
+            style = Carto.parse("" +
+                    "#qqq {" +
+                    "  line-width: 2;" +
+                    "  line-color: #f09;" +
+                    "  polygon-fill: #44111111;" +
+                    "  " +
+                    "}" +
+                    "#states {" +
+                    "  line-width: 2.2;" +
+                    "  line-color: #c80;" +
+                    "  polygon-fill: #44111111;" +
+                    "  " +
+                    "}"
+            );
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        TextStyle textStyle = TextStyle.builder()
+                .isCaption(true)
+                .fontSize(16 * CanvasAdapter.getScale()).color(Color.BLACK)
+                .strokeWidth(2.2f * CanvasAdapter.getScale()).strokeColor(Color.WHITE)
+                .build();
+        ContourLineLayer contourLineLayer=new ContourLineLayer(mMap, data, style, textStyle);
+        mMap.layers().add(contourLineLayer,LAYER_GROUP_ENUM.GROUP_OPERTOR.ordinal());
+
+        RxToast.info("data ready");
+        mMap.updateMap(true);
+
+//        mIndoorLayer.activeLevels[0] = true;
+//        shift();
     }
+//    public void onRiggerBackPressed() {
+//        RxLogTool.d("onRiggerBackPressed", "点击回退按钮");
+//
+//    }
 }

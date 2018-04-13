@@ -112,13 +112,13 @@ public class ContourLineLayer extends JtsLayer {
             float y = 0;
             int n = mGeom.index[0];
             if (n > 0) {
-                for (int i = 0; i < n; ) {
-                    x += mGeom.points[i++];
-                    y += mGeom.points[i++];
+                for (int i = 0; i < n / 2; ) {
+                    x = mGeom.points[i++];
+                    y = mGeom.points[i++];
                 }
 
                 TextItem ti = TextItem.pool.get();
-                ti.set(x / (n / 2), y / (n / 2), (String) o, mText);
+                ti.set(x, y, (String) o, mText);
 
                 mTextLayer.addText(ti);
             }
