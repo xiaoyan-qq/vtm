@@ -26,7 +26,7 @@ public class MainActivity extends AppCompatActivity {
 
     //地图layer的分组
     public enum LAYER_GROUP_ENUM {
-        GROUP_VECTOR/*矢量图层分组*/, GROUP_OTHER/*其他图层分组*/, GROUP_BUILDING/*建筑图层分组*/,
+        GROUP_BASE/*基础图层*/, GROUP_VECTOR/*矢量图层分组*/, GROUP_OTHER/*其他图层分组*/, GROUP_BUILDING/*建筑图层分组*/,
         GROUP_LABELS/*label图层分组*/, GROUP_3D_OBJECTS/*3D图层分组*/, GROUP_OPERTOR/*操作图层分组*/
     }
 
