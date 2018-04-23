@@ -38,7 +38,7 @@ public class MainActivity extends AppCompatActivity {
         //启动fragment，显示地图界面
         Rigger.getRigger(this).startFragment(CatEyeMainFragment.newInstance(new Bundle()));
         //申请所需要的权限
-        AndPermission.with(this).permission(Permission.Group.LOCATION/*定位权限*/, Permission.Group.STORAGE/*存储权限*//*, Permission.Group.SENSORS*//*传感器*/)
+        AndPermission.with(this).permission(Permission.Group.LOCATION/*定位权限*/, Permission.Group.STORAGE/*存储权限*/, Permission.Group.PHONE/*电话相关权限*/, Permission.Group.MICROPHONE/*录音权限*/)
                 .onGranted(new Action() {//用户允许
                     @Override
                     public void onAction(List<String> permissions) {
