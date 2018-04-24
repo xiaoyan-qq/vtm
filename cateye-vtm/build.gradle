@@ -60,11 +60,17 @@ dependencies {
     //Fragment的第三方管理框架
     //https://github.com/vondear/RxTools
     compile 'com.github.vondear:RxTools:v1.7.7.3'
-    //常用android工具类
-    //https://github.com/ReactiveX/RxAndroid
+    //常用android工具类https://github.com/ReactiveX/RxAndroid
     implementation 'io.reactivex.rxjava2:rxandroid:2.0.2'
     implementation 'io.reactivex.rxjava2:rxjava:2.x.x'
     //https://github.com/yanzhenjie/AndPermission
     implementation 'com.yanzhenjie:permission:2.0.0-rc3'//动态获取权限的三方库
+    compile 'com.github.lazylibrary:lazylibrary:1.0.2'//https://github.com/l123456789jy/Lazy常用工具箱
+    //okhttp-OkGo
+    // https://github.com/jeasonlzy/okhttp-OkGo/wiki
+    compile 'com.lzy.net:okgo:3.0.4'
+    //以下三个选择添加，okrx和okrx2不能同时使用
+    compile 'com.lzy.net:okrx2:2.0.2'
+    compile 'com.lzy.net:okserver:2.0.5'
     api project(':cateye-vtm-library')
 }

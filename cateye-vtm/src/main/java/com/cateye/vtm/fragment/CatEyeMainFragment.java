@@ -3,7 +3,6 @@ package com.cateye.vtm.fragment;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.Menu;
 import android.view.View;
 import android.widget.Button;
 
@@ -33,12 +32,8 @@ import org.oscim.core.Tag;
 import org.oscim.core.Tile;
 import org.oscim.layers.ContourLineLayer;
 import org.oscim.layers.Layer;
-import org.oscim.layers.OSMIndoorLayer;
-import org.oscim.layers.TileGridLayer;
 import org.oscim.layers.tile.MapTile;
 import org.oscim.layers.tile.bitmap.BitmapTileLayer;
-import org.oscim.layers.tile.buildings.BuildingLayer;
-import org.oscim.layers.tile.buildings.S3DBLayer;
 import org.oscim.layers.tile.vector.OsmTileLayer;
 import org.oscim.layers.tile.vector.VectorTileLayer;
 import org.oscim.layers.tile.vector.labeling.LabelLayer;
@@ -46,7 +41,7 @@ import org.oscim.map.Map;
 import org.oscim.renderer.BitmapRenderer;
 import org.oscim.renderer.GLViewport;
 import org.oscim.renderer.bucket.RenderBuckets;
-import org.oscim.scalebar.DefaultMapScaleBar;
+import org.oscim.scalebar.CatEyeMapScaleBar;
 import org.oscim.scalebar.ImperialUnitAdapter;
 import org.oscim.scalebar.MapScaleBar;
 import org.oscim.scalebar.MapScaleBarLayer;
@@ -92,9 +87,6 @@ public class CatEyeMainFragment extends BaseFragment {
     private static final Tag NOSEA_TAG = new Tag("natural", "nosea");
     private static final Tag SEA_TAG = new Tag("natural", "sea");
 
-    private TileGridLayer mGridLayer;
-    private Menu mMenu;
-    private boolean mS3db;
     private List<TileSource> mTileSourceList;//当前正在显示的tileSource的集合
 
     //控件
@@ -148,6 +140,8 @@ public class CatEyeMainFragment extends BaseFragment {
         btn_select_net_map_file.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                //首先请求服务器，获取最新的服务列表
+
                 BitmapTileSource mTileSource = BitmapTileSource.builder()
                         .url("http://39.107.104.63:8080/tms/1.0.0/world_satellite_raster@EPSG:900913@jpeg").tilePath("/{Z}/{X}/{Y}.png")
                         .zoomMax(18).build();
@@ -157,7 +151,7 @@ public class CatEyeMainFragment extends BaseFragment {
         });
 
         //选择显示GeoJson文件
-        btn_select_geoJson_file=rootView.findViewById(R.id.btn_select_geoJson);
+        btn_select_geoJson_file = rootView.findViewById(R.id.btn_select_geoJson);
         btn_select_geoJson_file.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -167,8 +161,8 @@ public class CatEyeMainFragment extends BaseFragment {
         });
 
         //scale的图层到操作分组中
-        DefaultMapScaleBar mMapScaleBar = new DefaultMapScaleBar(mMap);
-        mMapScaleBar.setScaleBarMode(DefaultMapScaleBar.ScaleBarMode.BOTH);
+        CatEyeMapScaleBar mMapScaleBar = new CatEyeMapScaleBar(mMap);
+        mMapScaleBar.setScaleBarMode(CatEyeMapScaleBar.ScaleBarMode.BOTH);
         mMapScaleBar.setDistanceUnitAdapter(MetricUnitAdapter.INSTANCE);
         mMapScaleBar.setSecondaryDistanceUnitAdapter(ImperialUnitAdapter.INSTANCE);
         mMapScaleBar.setScaleBarPosition(MapScaleBar.ScaleBarPosition.BOTTOM_LEFT);
@@ -196,7 +190,7 @@ public class CatEyeMainFragment extends BaseFragment {
             }
 
             MapFileTileSource mTileSource = new MapFileTileSource();
-            mTileSource.setPreferredLanguage("zh_cn");
+            mTileSource.setPreferredLanguage("zh");
             String file = intent.getStringExtra(FilePicker.SELECTED_FILE);
             //过滤判断选中的文件是否已经在显示中了
             if (mTileSourceList != null && !mTileSourceList.isEmpty()) {
@@ -209,17 +203,16 @@ public class CatEyeMainFragment extends BaseFragment {
             }
 
             if (mTileSource.setMapFile(file)) {
-
                 //设置当前的文件选择的layer为地图的基础图层(第一层)==此处去掉此设置
                 //VectorTileLayer mTileLayer = mMap.setBaseMap(mTileSource);
                 VectorTileLayer mTileLayer = new OsmTileLayer(mMap);
                 mTileLayer.setTileSource(mTileSource);
                 mMap.layers().add(mTileLayer, LAYER_GROUP_ENUM.GROUP_VECTOR.ordinal());
 
-                if (mS3db)
-                    mMap.layers().add(new S3DBLayer(mMap, mTileLayer), LAYER_GROUP_ENUM.GROUP_3D_OBJECTS.ordinal());
-                else
-                    mMap.layers().add(new BuildingLayer(mMap, mTileLayer), LAYER_GROUP_ENUM.GROUP_BUILDING.ordinal());
+//                if (mS3db)
+//                    mMap.layers().add(new S3DBLayer(mMap, mTileLayer), LAYER_GROUP_ENUM.GROUP_3D_OBJECTS.ordinal());
+//                else
+//                mMap.layers().add(new BuildingLayer(mMap, mTileLayer), LAYER_GROUP_ENUM.GROUP_BUILDING.ordinal());
                 mMap.layers().add(new LabelLayer(mMap, mTileLayer), LAYER_GROUP_ENUM.GROUP_LABELS.ordinal());
 
                 MapInfo info = mTileSource.getMapInfo();
@@ -265,16 +258,16 @@ public class CatEyeMainFragment extends BaseFragment {
             }
             mMap.setTheme(externalRenderTheme);
 //            mMenu.findItem(R.id.theme_external).setChecked(true);
-        }else if (requestCode==SELECT_GEOJSON_FILE){
+        } else if (requestCode == SELECT_GEOJSON_FILE) {
             if (resultCode != getActivity().RESULT_OK || intent == null || intent.getStringExtra(FilePicker.SELECTED_FILE) == null) {
                 return;
             }
             String filePath = intent.getStringExtra(FilePicker.SELECTED_FILE);
-            File geoJsonFile=new File(filePath);
-            if (geoJsonFile.exists()&&geoJsonFile.isFile()){
-                FileInputStream geoInputStream=null;
+            File geoJsonFile = new File(filePath);
+            if (geoJsonFile.exists() && geoJsonFile.isFile()) {
+                FileInputStream geoInputStream = null;
                 try {
-                    geoInputStream=new FileInputStream(geoJsonFile);
+                    geoInputStream = new FileInputStream(geoJsonFile);
                     loadJson(geoInputStream);
                 } catch (FileNotFoundException e) {
                     e.printStackTrace();
@@ -343,7 +336,7 @@ public class CatEyeMainFragment extends BaseFragment {
 
     /**
      * 加载指定的GeoJsonlayer
-     * */
+     */
     void loadJson(InputStream is) {
         RxToast.info("got data");
 
@@ -375,17 +368,11 @@ public class CatEyeMainFragment extends BaseFragment {
                 .fontSize(16 * CanvasAdapter.getScale()).color(Color.BLACK)
                 .strokeWidth(2.2f * CanvasAdapter.getScale()).strokeColor(Color.WHITE)
                 .build();
-        ContourLineLayer contourLineLayer=new ContourLineLayer(mMap, data, style, textStyle);
-        mMap.layers().add(contourLineLayer,LAYER_GROUP_ENUM.GROUP_OPERTOR.ordinal());
+        ContourLineLayer contourLineLayer = new ContourLineLayer(mMap, data, style, textStyle);
+        mMap.layers().add(contourLineLayer, LAYER_GROUP_ENUM.GROUP_OPERTOR.ordinal());
 
         RxToast.info("data ready");
         mMap.updateMap(true);
 
-//        mIndoorLayer.activeLevels[0] = true;
-//        shift();
     }
-//    public void onRiggerBackPressed() {
-//        RxLogTool.d("onRiggerBackPressed", "点击回退按钮");
-//
-//    }
 }
