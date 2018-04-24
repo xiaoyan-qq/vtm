@@ -63,8 +63,24 @@
             android:layout_alignParentBottom="true"
             android:orientation="vertical">
             <CheckBox
+                android:id="@+id/chk_draw_vector_point"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
+                android:layout_height="wrap_content"
+                android:text="@string/draw_point"
+                android:drawableLeft="@drawable/selector_vector_point"/>
+            <CheckBox
+                android:id="@+id/chk_draw_vector_line"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/draw_line"
+                android:drawableLeft="@drawable/selector_vector_polyline"/>
+            <CheckBox
+                android:id="@+id/chk_draw_vector_polygon"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/draw_polygon"
+                android:layout_marginBottom="@dimen/activity_vertical_margin"
+                android:drawableLeft="@drawable/selector_vector_polygon"/>
             <ImageView
                 android:id="@+id/img_location"
                 android:layout_width="wrap_content"
