@@ -1,10 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <color name="primary">#9E9E9E</color>
+    <color name="primary_dark">#616161</color>
+    <color name="primary_light">#F5F5F5</color>
+    <color name="accent">#607D8B</color>
+    <color name="primary_text">#212121</color>
+    <color name="secondary_text">#757575</color>
+    <color name="icons">#212121</color>
+    <color name="divider">#BDBDBD</color>
+
     <color name="colorPrimary">#1976d2</color>
     <color name="colorPrimaryLight">#63a4ff</color>
     <color name="colorPrimaryDark">#004ba0</color>
     <color name="colorPrimaryText">#ffffff</color>
     <color name="colorAccent">#2962ff</color>
+    <color name="colorPrimary_alpha">#1976d2</color>
+    <color name="colorPrimaryLight_alpha">#cc63a4ff</color>
+    <color name="colorPrimaryDark_alpha">#cc004ba0</color>
+    <color name="colorPrimaryText_alpha">#ccffffff</color>
+    <color name="colorAccent_alpha">#cc2962ff</color>
 
     <color name="secondColor">#651fff</color>
     <color name="secondLightColor">#a255ff</color>
@@ -21,8 +35,11 @@
     <color name="color_blue_700">#1976d2</color>
     <color name="color_blue_800">#1565c0</color>
     <color name="color_blue_900">#0d47a1</color>
-    <color name="color_blue_alpha_100">#82b1ff</color>
-    <color name="color_blue_alpha_200">#448aff</color>
-    <color name="color_blue_alpha_400">#2979ff</color>
-    <color name="color_blue_alpha_700">#2962ff</color>
+    <color name="color_blue_alpha_100">#ee82b1ff</color>
+    <color name="color_blue_alpha_200">#dd448aff</color>
+    <color name="color_blue_alpha_400">#aa2979ff</color>
+    <color name="color_blue_alpha_700">#662962ff</color>
+
+    <color name="bg_color_white_alpha">#ccffffff</color>
+    <color name="bg_color_gray_alpha">#cc9e9e9e</color>
 </resources>

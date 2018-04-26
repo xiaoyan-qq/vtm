@@ -1,6 +1,7 @@
 package com.cateye.vtm.fragment;
 
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.view.View;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
@@ -10,7 +11,6 @@ import com.cateye.android.vtm.MainActivity;
 import com.cateye.android.vtm.R;
 import com.cateye.vtm.util.CatEyeMapManager;
 import com.jkb.fragment.rigger.annotation.Puppet;
-import com.jkb.fragment.rigger.rigger.Rigger;
 import com.vtm.library.layers.PolygonLayer;
 
 import org.oscim.backend.canvas.Bitmap;
@@ -27,6 +27,7 @@ import org.oscim.layers.vector.PathLayer;
 import org.oscim.layers.vector.geometries.Style;
 import org.oscim.map.Map;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -51,6 +52,15 @@ public class DrawPointLinePolygonFragment extends BaseFragment {
     @Override
     public int getFragmentLayoutId() {
         return R.layout.fragment_draw_point_line_polygon;
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        if (savedInstanceState != null) {
+            //获取当前的绘制状态
+            currentDrawState = (DRAW_STATE) savedInstanceState.getSerializable(DRAW_STATE.class.getSimpleName());
+        }
     }
 
     @Override
@@ -141,24 +151,21 @@ public class DrawPointLinePolygonFragment extends BaseFragment {
      * Date : 2018/3/22
      */
     public DRAW_STATE getCurrentDrawState() {
-        if (checkBoxes != null && !checkBoxes.isEmpty()) {
-            for (CheckBox chk : checkBoxes) {
-                if (chk.isChecked()) {
-                    if (chk == chk_draw_point) {
-                        return DRAW_STATE.DRAW_POINT;
-                    } else if (chk == chk_draw_line) {
-                        return DRAW_STATE.DRAW_LINE;
-                    } else if (chk == chk_draw_polygon) {
-                        return DRAW_STATE.DRAW_POLYGON;
-                    }
-                }
-            }
-        }
-        return DRAW_STATE.DRAW_NONE;
+        return currentDrawState;
     }
 
-    public enum DRAW_STATE {
-        DRAW_NONE, DRAW_POINT, DRAW_LINE, DRAW_POLYGON
+    public enum DRAW_STATE implements Serializable {
+        DRAW_NONE("DRAW_NONE"), DRAW_POINT("DRAW_POINT"), DRAW_LINE("DRAW_LINE"), DRAW_POLYGON("DRAW_POLYGON");
+
+        DRAW_STATE(String name) {
+            this.name = name;
+        }
+
+        private String name;
+
+        public String getName() {
+            return name;
+        }
     }
 
     private void setCheckBoxSingleChoice(CheckBox currendChk) {
@@ -237,16 +244,5 @@ public class DrawPointLinePolygonFragment extends BaseFragment {
             return lonLatArray;
         }
         return null;
-    }
-
-    /**
-     * Author : xiaoxiao
-     * Describe : 回退按钮拦截,目前是无效的
-     * param :
-     * return :
-     * Date : 2018/3/23
-     */
-    public void onRiggerBackPressed() {
-        Rigger.getRigger(this).hideFragment(this);
     }
 }

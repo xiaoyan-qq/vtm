@@ -5,6 +5,8 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
 
 import com.cateye.android.vtm.MainActivity;
 import com.cateye.android.vtm.MainActivity.LAYER_GROUP_ENUM;
@@ -73,7 +75,7 @@ import java.util.Set;
 /**
  * Created by zhangdezhi1702 on 2018/3/15.
  */
-@Puppet
+@Puppet(containerViewId = R.id.layer_main_cateye_bottom, bondContainerView = false)
 public class CatEyeMainFragment extends BaseFragment {
     private MapView mapView;//地图控件
     private Map mMap;
@@ -95,6 +97,11 @@ public class CatEyeMainFragment extends BaseFragment {
     private Button btn_select_geoJson_file;//选择需要显示的geoJson文件
     private Button btn_draw_plp;//绘制点线面
 
+    private ImageView chk_draw_point, chk_draw_line, chk_draw_polygon;
+    private List chkDrawPointLinePolygonList;
+    private FrameLayout layer_fragment;//用来显示fragment的布局文件
+    private DrawPointLinePolygonFragment drawPointLinePolygonFragment;//绘制点线面的fragment
+
     @Override
     public int getFragmentLayoutId() {
         return R.layout.fragment_main_cateye;
@@ -104,15 +111,46 @@ public class CatEyeMainFragment extends BaseFragment {
     public void initView(View rootView) {
         mapView = rootView.findViewById(R.id.mapView);
 
-        //初始化MapManager，方便全局使用map对象
-        CatEyeMapManager.getInstance(getActivity()).init(mapView);
-
         mMap = mapView.map();
-        mPrefs = new MapPreferences(this.getTag(), getActivity());
-        mTileSourceList = new ArrayList<>();
 
         //选择底图map文件
         btn_select_local_map_file = rootView.findViewById(R.id.btn_select_local_map_file);
+
+        //开始绘制点线面
+        btn_draw_plp = rootView.findViewById(R.id.btn_draw_plp);
+        btn_draw_plp.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //自动弹出绘制点线面的fragment
+                Rigger.getRigger(CatEyeMainFragment.this).showFragment(DrawPointLinePolygonFragment.newInstance(new Bundle()), R.id.layer_main_cateye_bottom);
+            }
+        });
+        //选择网络地图显示
+        btn_select_net_map_file = rootView.findViewById(R.id.btn_select_net_map_file);
+        //选择显示GeoJson文件
+        btn_select_geoJson_file = rootView.findViewById(R.id.btn_select_geoJson);
+
+        layer_fragment = rootView.findViewById(R.id.layer_main_cateye_bottom);
+
+        chk_draw_point = rootView.findViewById(R.id.chk_draw_vector_point);
+        chk_draw_line = rootView.findViewById(R.id.chk_draw_vector_line);
+        chk_draw_polygon = rootView.findViewById(R.id.chk_draw_vector_polygon);
+        chkDrawPointLinePolygonList = new ArrayList();
+        chkDrawPointLinePolygonList.add(chk_draw_point);
+        chkDrawPointLinePolygonList.add(chk_draw_line);
+        chkDrawPointLinePolygonList.add(chk_draw_polygon);
+
+        initData();
+        initScaleBar();
+    }
+
+    //初始化数据
+    private void initData() {
+        //初始化MapManager，方便全局使用map对象
+        CatEyeMapManager.getInstance(getActivity()).init(mapView);
+        mPrefs = new MapPreferences(this.getTag(), getActivity());
+        mTileSourceList = new ArrayList<>();
+
         btn_select_local_map_file.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -125,18 +163,6 @@ public class CatEyeMainFragment extends BaseFragment {
             mMap.layers().addGroup(group_enum.ordinal());
         }
 
-        //开始绘制点线面
-        btn_draw_plp = rootView.findViewById(R.id.btn_draw_plp);
-        btn_draw_plp.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                //自动弹出绘制点线面的fragment
-                Rigger.getRigger(CatEyeMainFragment.this).showFragment(DrawPointLinePolygonFragment.newInstance(new Bundle()), R.id.layer_main_cateye_bottom);
-            }
-        });
-
-        //选择网络地图显示
-        btn_select_net_map_file = rootView.findViewById(R.id.btn_select_net_map_file);
         btn_select_net_map_file.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -149,9 +175,6 @@ public class CatEyeMainFragment extends BaseFragment {
                 createTileLayer(getActivity(), mTileSource, true);
             }
         });
-
-        //选择显示GeoJson文件
-        btn_select_geoJson_file = rootView.findViewById(R.id.btn_select_geoJson);
         btn_select_geoJson_file.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -160,6 +183,78 @@ public class CatEyeMainFragment extends BaseFragment {
             }
         });
 
+        chk_draw_point.setOnClickListener(mainFragmentClickListener);
+        chk_draw_line.setOnClickListener(mainFragmentClickListener);
+        chk_draw_polygon.setOnClickListener(mainFragmentClickListener);
+        drawPointLinePolygonFragment = (DrawPointLinePolygonFragment) DrawPointLinePolygonFragment.newInstance(new Bundle());
+    }
+
+    View.OnClickListener mainFragmentClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+            setDrawPointLinePolygonButtonState(view, chkDrawPointLinePolygonList);
+            if (view.getId() == R.id.chk_draw_vector_point) {//开始绘制点
+                if (view.isSelected()) {//选中
+                    //自动弹出绘制点线面的fragment
+                    Bundle pointBundle = new Bundle();
+                    pointBundle.putSerializable(DrawPointLinePolygonFragment.DRAW_STATE.class.getSimpleName(), DrawPointLinePolygonFragment.DRAW_STATE.DRAW_POINT);
+                    drawPointLinePolygonFragment.setArguments(pointBundle);
+                    Rigger.getRigger(CatEyeMainFragment.this).startFragment(drawPointLinePolygonFragment);
+                } else {//不选中
+                    Rigger.getRigger(CatEyeMainFragment.this).hideFragment(drawPointLinePolygonFragment);
+                }
+            } else if (view.getId() == R.id.chk_draw_vector_line) {//开始绘制线
+                if (view.isSelected()) {//选中
+                    //自动弹出绘制点线面的fragment
+                    Bundle pointBundle = new Bundle();
+                    pointBundle.putSerializable(DrawPointLinePolygonFragment.DRAW_STATE.class.getSimpleName(), DrawPointLinePolygonFragment.DRAW_STATE.DRAW_LINE);
+                    drawPointLinePolygonFragment.setArguments(pointBundle);
+                    Rigger.getRigger(CatEyeMainFragment.this).startFragment(drawPointLinePolygonFragment);
+                } else {//不选中
+                    Rigger.getRigger(CatEyeMainFragment.this).hideFragment(drawPointLinePolygonFragment);
+                }
+            } else if (view.getId() == R.id.chk_draw_vector_polygon) {//开始绘制面
+                if (view.isSelected()) {//选中
+                    //自动弹出绘制点线面的fragment
+                    Bundle pointBundle = new Bundle();
+                    pointBundle.putSerializable(DrawPointLinePolygonFragment.DRAW_STATE.class.getSimpleName(), DrawPointLinePolygonFragment.DRAW_STATE.DRAW_POLYGON);
+                    drawPointLinePolygonFragment.setArguments(pointBundle);
+                    Rigger.getRigger(CatEyeMainFragment.this).startFragment(drawPointLinePolygonFragment);
+                } else {//不选中
+                    Rigger.getRigger(CatEyeMainFragment.this).hideFragment(drawPointLinePolygonFragment);
+                }
+            }
+        }
+    };
+
+    /**
+     * method : setDrawPointLinePolygonButtonState
+     * Author : xiaoxiao
+     * Describe : 设置绘制点线面时三个按钮的状态
+     * param :
+     * return :
+     * Date : 2018/4/26
+     */
+    private void setDrawPointLinePolygonButtonState(View clickView, List<View> radioButtonViewList) {
+        if (clickView != null) {
+            if (clickView.isSelected()) {
+                clickView.setSelected(false);
+                for (View v : radioButtonViewList) {
+                    v.setEnabled(true);
+                    v.setSelected(false);
+                }
+            } else {
+                clickView.setSelected(true);
+                for (View v : radioButtonViewList) {
+                    if (v != clickView) {
+                        v.setEnabled(false);
+                    }
+                }
+            }
+        }
+    }
+
+    private void initScaleBar() {
         //scale的图层到操作分组中
         CatEyeMapScaleBar mMapScaleBar = new CatEyeMapScaleBar(mMap);
         mMapScaleBar.setScaleBarMode(CatEyeMapScaleBar.ScaleBarMode.BOTH);
@@ -375,4 +470,19 @@ public class CatEyeMainFragment extends BaseFragment {
         mMap.updateMap(true);
 
     }
+
+//    /**
+//     * Author : xiaoxiao
+//     * Describe : 回退按钮拦截,目前是无效的
+//     * param :
+//     * return :
+//     * Date : 2018/3/23
+//     */
+//    public void onRiggerBackPressed() {
+//        if (Rigger.getRigger(this).getFragmentStack().contains(drawPointLinePolygonFragment)) {
+//            Rigger.getRigger(this).hideFragment(drawPointLinePolygonFragment);
+//        } else {
+//            Rigger.getRigger(this).hideFragment(this);
+//        }
+//    }
 }

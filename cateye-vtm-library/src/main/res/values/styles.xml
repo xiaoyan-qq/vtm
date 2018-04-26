@@ -1,0 +1,15 @@
+<resources>
+
+    <style name="button_4_radius" parent="@android:style/TextAppearance.Widget.Button">
+        <item name="android:textColor">@color/selector_tvcolor_blue_frame_white_bg_4_radius</item>
+        <item name="android:background">@drawable/selector_bg_blue_frame_white_bg_4_radius</item>
+        <item name="android:padding">@dimen/button_padding_default</item>
+    </style>
+
+    <style name="text_4_radius" parent="@android:style/TextAppearance.Widget.TextView">
+        <item name="android:textColor">@color/selector_tvcolor_blue_frame_white_bg_4_radius</item>
+        <item name="android:background">@drawable/selector_bg_blue_frame_white_bg_4_radius</item>
+        <item name="android:padding">@dimen/button_padding_default</item>
+    </style>
+
+</resources>
