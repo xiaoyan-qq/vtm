@@ -11,6 +11,7 @@ import com.cateye.android.vtm.MainActivity;
 import com.cateye.android.vtm.R;
 import com.cateye.vtm.util.CatEyeMapManager;
 import com.jkb.fragment.rigger.annotation.Puppet;
+import com.jkb.fragment.rigger.rigger.Rigger;
 import com.vtm.library.layers.PolygonLayer;
 
 import org.oscim.backend.canvas.Bitmap;
@@ -244,5 +245,16 @@ public class DrawPointLinePolygonFragment extends BaseFragment {
             return lonLatArray;
         }
         return null;
+    }
+
+    /**
+     * Author : xiaoxiao
+     * Describe : 回退按钮拦截,目前是无效的
+     * param :
+     * return :
+     * Date : 2018/3/23
+     */
+    public void onRiggerBackPressed() {
+        clo
     }
 }

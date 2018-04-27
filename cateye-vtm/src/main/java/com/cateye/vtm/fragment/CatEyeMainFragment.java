@@ -75,7 +75,7 @@ import java.util.Set;
 /**
  * Created by zhangdezhi1702 on 2018/3/15.
  */
-@Puppet(containerViewId = R.id.layer_main_cateye_bottom, bondContainerView = false)
+@Puppet
 public class CatEyeMainFragment extends BaseFragment {
     private MapView mapView;//地图控件
     private Map mMap;
@@ -192,6 +192,7 @@ public class CatEyeMainFragment extends BaseFragment {
     View.OnClickListener mainFragmentClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View view) {
+            //判断是否被添加进Reggier
             setDrawPointLinePolygonButtonState(view, chkDrawPointLinePolygonList);
             if (view.getId() == R.id.chk_draw_vector_point) {//开始绘制点
                 if (view.isSelected()) {//选中
@@ -199,9 +200,9 @@ public class CatEyeMainFragment extends BaseFragment {
                     Bundle pointBundle = new Bundle();
                     pointBundle.putSerializable(DrawPointLinePolygonFragment.DRAW_STATE.class.getSimpleName(), DrawPointLinePolygonFragment.DRAW_STATE.DRAW_POINT);
                     drawPointLinePolygonFragment.setArguments(pointBundle);
-                    Rigger.getRigger(CatEyeMainFragment.this).startFragment(drawPointLinePolygonFragment);
+                    Rigger.getRigger(CatEyeMainFragment.this).replaceFragment(drawPointLinePolygonFragment,R.id.layer_main_cateye_bottom);
                 } else {//不选中
-                    Rigger.getRigger(CatEyeMainFragment.this).hideFragment(drawPointLinePolygonFragment);
+                    Rigger.getRigger(CatEyeMainFragment.this).onBackPressed();
                 }
             } else if (view.getId() == R.id.chk_draw_vector_line) {//开始绘制线
                 if (view.isSelected()) {//选中
@@ -209,9 +210,9 @@ public class CatEyeMainFragment extends BaseFragment {
                     Bundle pointBundle = new Bundle();
                     pointBundle.putSerializable(DrawPointLinePolygonFragment.DRAW_STATE.class.getSimpleName(), DrawPointLinePolygonFragment.DRAW_STATE.DRAW_LINE);
                     drawPointLinePolygonFragment.setArguments(pointBundle);
-                    Rigger.getRigger(CatEyeMainFragment.this).startFragment(drawPointLinePolygonFragment);
+                    Rigger.getRigger(CatEyeMainFragment.this).replaceFragment(drawPointLinePolygonFragment,R.id.layer_main_cateye_bottom);
                 } else {//不选中
-                    Rigger.getRigger(CatEyeMainFragment.this).hideFragment(drawPointLinePolygonFragment);
+                    Rigger.getRigger(CatEyeMainFragment.this).onBackPressed();
                 }
             } else if (view.getId() == R.id.chk_draw_vector_polygon) {//开始绘制面
                 if (view.isSelected()) {//选中
@@ -219,9 +220,9 @@ public class CatEyeMainFragment extends BaseFragment {
                     Bundle pointBundle = new Bundle();
                     pointBundle.putSerializable(DrawPointLinePolygonFragment.DRAW_STATE.class.getSimpleName(), DrawPointLinePolygonFragment.DRAW_STATE.DRAW_POLYGON);
                     drawPointLinePolygonFragment.setArguments(pointBundle);
-                    Rigger.getRigger(CatEyeMainFragment.this).startFragment(drawPointLinePolygonFragment);
+                    Rigger.getRigger(CatEyeMainFragment.this).replaceFragment(drawPointLinePolygonFragment,R.id.layer_main_cateye_bottom);
                 } else {//不选中
-                    Rigger.getRigger(CatEyeMainFragment.this).hideFragment(drawPointLinePolygonFragment);
+                    Rigger.getRigger(CatEyeMainFragment.this).onBackPressed();
                 }
             }
         }
@@ -471,18 +472,18 @@ public class CatEyeMainFragment extends BaseFragment {
 
     }
 
-//    /**
-//     * Author : xiaoxiao
-//     * Describe : 回退按钮拦截,目前是无效的
-//     * param :
-//     * return :
-//     * Date : 2018/3/23
-//     */
-//    public void onRiggerBackPressed() {
-//        if (Rigger.getRigger(this).getFragmentStack().contains(drawPointLinePolygonFragment)) {
-//            Rigger.getRigger(this).hideFragment(drawPointLinePolygonFragment);
-//        } else {
-//            Rigger.getRigger(this).hideFragment(this);
-//        }
-//    }
+    /**
+     * Author : xiaoxiao
+     * Describe :
+     * param :
+     * return :
+     * Date : 2018/3/23
+     */
+    public void onRiggerBackPressed() {
+        if (Rigger.getRigger(drawPointLinePolygonFragment).getFragmentStack().contains(drawPointLinePolygonFragment)) {
+            Rigger.getRigger(drawPointLinePolygonFragment).getFragmentStack().pop();
+        } else {
+            Rigger.getRigger(this).onBackPressed();
+        }
+    }
 }
