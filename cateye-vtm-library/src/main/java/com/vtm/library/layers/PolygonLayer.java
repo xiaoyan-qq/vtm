@@ -14,6 +14,7 @@ import java.util.List;
 
 public class PolygonLayer extends PathLayer {
     private PolygonDrawable polygonDrawable;
+
     public PolygonLayer(Map map, Style style) {
         super(map, style);
         mStyle = style;
@@ -33,32 +34,52 @@ public class PolygonLayer extends PathLayer {
 
     /**
      * 设置polygon的点位
-     * */
-    public void setPolygonString(List<GeoPoint> pointList,boolean isClose){
-        if (pointList==null||pointList.size()<3){
+     */
+    public void setPolygonString(List<GeoPoint> pointList, boolean isClose) {
+        if (pointList == null || pointList.size() < 3) {
             return;
         }
-        if (isClose&&pointList!=null&&pointList.get(0)!=pointList.get(pointList.size()-1)){
+        if (isClose && pointList != null && pointList.get(0) != pointList.get(pointList.size() - 1)) {
             pointList.add(pointList.get(0));
         }
         synchronized (this) {
-            if (mDrawable != null){
+            if (mDrawable != null) {
                 remove(mDrawable);
-                mDrawable=null;
+                mDrawable = null;
             }
-            if (polygonDrawable!=null){
+            if (polygonDrawable != null) {
                 remove(polygonDrawable);
             }
-            polygonDrawable = new PolygonDrawable(pointList,mStyle);
+            polygonDrawable = new PolygonDrawable(pointList, mStyle);
             add(polygonDrawable);
 
 //            mPoints.clear();
-            if (pointList.get(0)==pointList.get(pointList.size()-1)){
-                pointList.remove(pointList.size()-1);
+            if (pointList.get(0) == pointList.get(pointList.size() - 1)) {
+                pointList.remove(pointList.size() - 1);
             }
 //            for (int i = 0; i < pointList.size(); i++)
 //                mPoints.addAll(pointList);
         }
         mWorker.submit(0);
+    }
+
+    /**
+     * 移除正在绘制的polygon的图形
+     */
+    public void removeCurrentPolygonDrawable() {
+        if (polygonDrawable != null) {
+            remove(polygonDrawable);
+            polygonDrawable = null;
+        }
+    }
+
+    /**
+     * 移除正在绘制的polyline的图形
+     */
+    public void removeCurrentPolylineDrawable() {
+        if (mDrawable != null) {
+            remove(mDrawable);
+            mDrawable = null;
+        }
     }
 }

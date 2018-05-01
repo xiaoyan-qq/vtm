@@ -3,21 +3,40 @@ package com.cateye.vtm.fragment;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Message;
+import android.support.v4.util.LogWriter;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.TextView;
+import android.widget.Toast;
 
+import com.alibaba.fastjson.JSON;
+import com.cateye.android.entity.MapSourceFromNet;
 import com.cateye.android.vtm.MainActivity;
 import com.cateye.android.vtm.MainActivity.LAYER_GROUP_ENUM;
 import com.cateye.android.vtm.R;
 import com.cateye.vtm.util.CatEyeMapManager;
-import com.jkb.fragment.rigger.annotation.Puppet;
-import com.jkb.fragment.rigger.rigger.Rigger;
+import com.cateye.vtm.util.SystemConstant;
+import com.lzy.okgo.OkGo;
+import com.lzy.okgo.callback.StringCallback;
+import com.lzy.okgo.convert.StringConvert;
+import com.lzy.okgo.model.Response;
+import com.lzy.okgo.request.base.Request;
+import com.lzy.okrx2.adapter.ObservableResponse;
 import com.ta.utdid2.android.utils.StringUtils;
 import com.vondear.rxtools.RxLogTool;
 import com.vondear.rxtools.view.RxToast;
+import com.vondear.rxtools.view.dialog.RxDialog;
+import com.vondear.rxtools.view.dialog.RxDialogLoading;
+import com.vondear.rxtools.view.popupwindows.tools.RxPopupView;
+import com.vondear.rxtools.view.popupwindows.tools.RxPopupViewManager;
 
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
 import org.jeo.carto.Carto;
 import org.jeo.map.Style;
 import org.jeo.vector.VectorDataset;
@@ -32,6 +51,7 @@ import org.oscim.core.MapElement;
 import org.oscim.core.MapPosition;
 import org.oscim.core.Tag;
 import org.oscim.core.Tile;
+import org.oscim.event.Event;
 import org.oscim.layers.ContourLineLayer;
 import org.oscim.layers.Layer;
 import org.oscim.layers.tile.MapTile;
@@ -72,10 +92,20 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import io.reactivex.Observer;
+import io.reactivex.Scheduler;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Consumer;
+import io.reactivex.schedulers.Schedulers;
+import me.yokeyword.fragmentation.Fragmentation;
+
+import static com.cateye.vtm.util.SystemConstant.URL_MAP_SOURCE_NET;
+
 /**
  * Created by zhangdezhi1702 on 2018/3/15.
  */
-@Puppet
+//@Puppet(containerViewId = R.id.layer_main_cateye_bottom)
 public class CatEyeMainFragment extends BaseFragment {
     private MapView mapView;//地图控件
     private Map mMap;
@@ -97,10 +127,10 @@ public class CatEyeMainFragment extends BaseFragment {
     private Button btn_select_geoJson_file;//选择需要显示的geoJson文件
     private Button btn_draw_plp;//绘制点线面
 
-    private ImageView chk_draw_point, chk_draw_line, chk_draw_polygon;
-    private List chkDrawPointLinePolygonList;
+    private ImageView chk_draw_point, chk_draw_line, chk_draw_polygon;//绘制点线面
+    private ImageView img_map_source_selector;
+    private List<ImageView> chkDrawPointLinePolygonList;
     private FrameLayout layer_fragment;//用来显示fragment的布局文件
-    private DrawPointLinePolygonFragment drawPointLinePolygonFragment;//绘制点线面的fragment
 
     @Override
     public int getFragmentLayoutId() {
@@ -121,8 +151,8 @@ public class CatEyeMainFragment extends BaseFragment {
         btn_draw_plp.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                //自动弹出绘制点线面的fragment
-                Rigger.getRigger(CatEyeMainFragment.this).showFragment(DrawPointLinePolygonFragment.newInstance(new Bundle()), R.id.layer_main_cateye_bottom);
+//                //自动弹出绘制点线面的fragment
+//                Rigger.getRigger(CatEyeMainFragment.this).showFragment(DrawPointLinePolygonFragment.newInstance(new Bundle()), R.id.layer_main_cateye_bottom);
             }
         });
         //选择网络地图显示
@@ -135,13 +165,33 @@ public class CatEyeMainFragment extends BaseFragment {
         chk_draw_point = rootView.findViewById(R.id.chk_draw_vector_point);
         chk_draw_line = rootView.findViewById(R.id.chk_draw_vector_line);
         chk_draw_polygon = rootView.findViewById(R.id.chk_draw_vector_polygon);
-        chkDrawPointLinePolygonList = new ArrayList();
+        chkDrawPointLinePolygonList = new ArrayList<>();
         chkDrawPointLinePolygonList.add(chk_draw_point);
         chkDrawPointLinePolygonList.add(chk_draw_line);
         chkDrawPointLinePolygonList.add(chk_draw_polygon);
 
+        //选择地图资源
+        img_map_source_selector = rootView.findViewById(R.id.img_map_source_select);
+
         initData();
         initScaleBar();
+        if (!EventBus.getDefault().isRegistered(this)) {
+            EventBus.getDefault().register(this);
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (EventBus.getDefault().isRegistered(this)) {
+            EventBus.getDefault().unregister(this);
+        }
+    }
+
+    public static CatEyeMainFragment newInstance(Bundle bundle) {
+        CatEyeMainFragment catEyeMainFragment = new CatEyeMainFragment();
+        catEyeMainFragment.setArguments(bundle);
+        return catEyeMainFragment;
     }
 
     //初始化数据
@@ -186,47 +236,124 @@ public class CatEyeMainFragment extends BaseFragment {
         chk_draw_point.setOnClickListener(mainFragmentClickListener);
         chk_draw_line.setOnClickListener(mainFragmentClickListener);
         chk_draw_polygon.setOnClickListener(mainFragmentClickListener);
-        drawPointLinePolygonFragment = (DrawPointLinePolygonFragment) DrawPointLinePolygonFragment.newInstance(new Bundle());
+
+        img_map_source_selector.setOnClickListener(mainFragmentClickListener);
     }
 
     View.OnClickListener mainFragmentClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View view) {
-            //判断是否被添加进Reggier
-            setDrawPointLinePolygonButtonState(view, chkDrawPointLinePolygonList);
             if (view.getId() == R.id.chk_draw_vector_point) {//开始绘制点
+                //判断是否被添加进Reggier
+                setDrawPointLinePolygonButtonState(view, chkDrawPointLinePolygonList);
                 if (view.isSelected()) {//选中
+//                    DrawPointLinePolygonFragment drawPointLinePolygonFragment = (DrawPointLinePolygonFragment) DrawPointLinePolygonFragment.newInstance(new Bundle());
                     //自动弹出绘制点线面的fragment
                     Bundle pointBundle = new Bundle();
                     pointBundle.putSerializable(DrawPointLinePolygonFragment.DRAW_STATE.class.getSimpleName(), DrawPointLinePolygonFragment.DRAW_STATE.DRAW_POINT);
-                    drawPointLinePolygonFragment.setArguments(pointBundle);
-                    Rigger.getRigger(CatEyeMainFragment.this).replaceFragment(drawPointLinePolygonFragment,R.id.layer_main_cateye_bottom);
+//                    drawPointLinePolygonFragment.setArguments(pointBundle);
+//                    Rigger.getRigger(CatEyeMainFragment.this).startFragment(drawPointLinePolygonFragment);
+//                    DrawPointLinePolygonFragment drawPointLinePolygonFragment=fragment(DrawPointLinePolygonFragment.class,pointBundle);
+//                    startFragment(drawPointLinePolygonFragment);
+                    loadRootFragment(R.id.layer_main_cateye_bottom, DrawPointLinePolygonFragment.newInstance(pointBundle));
                 } else {//不选中
-                    Rigger.getRigger(CatEyeMainFragment.this).onBackPressed();
+                    popChild();
                 }
             } else if (view.getId() == R.id.chk_draw_vector_line) {//开始绘制线
+                //判断是否被添加进Reggier
+                setDrawPointLinePolygonButtonState(view, chkDrawPointLinePolygonList);
                 if (view.isSelected()) {//选中
+//                    DrawPointLinePolygonFragment drawPointLinePolygonFragment = (DrawPointLinePolygonFragment) DrawPointLinePolygonFragment.newInstance(new Bundle());
                     //自动弹出绘制点线面的fragment
-                    Bundle pointBundle = new Bundle();
-                    pointBundle.putSerializable(DrawPointLinePolygonFragment.DRAW_STATE.class.getSimpleName(), DrawPointLinePolygonFragment.DRAW_STATE.DRAW_LINE);
-                    drawPointLinePolygonFragment.setArguments(pointBundle);
-                    Rigger.getRigger(CatEyeMainFragment.this).replaceFragment(drawPointLinePolygonFragment,R.id.layer_main_cateye_bottom);
+                    Bundle lineBundle = new Bundle();
+                    lineBundle.putSerializable(DrawPointLinePolygonFragment.DRAW_STATE.class.getSimpleName(), DrawPointLinePolygonFragment.DRAW_STATE.DRAW_LINE);
+//                    drawPointLinePolygonFragment.setArguments(pointBundle);
+//                    Rigger.getRigger(CatEyeMainFragment.this).startFragment(drawPointLinePolygonFragment);
+                    loadRootFragment(R.id.layer_main_cateye_bottom, DrawPointLinePolygonFragment.newInstance(lineBundle));
                 } else {//不选中
-                    Rigger.getRigger(CatEyeMainFragment.this).onBackPressed();
+                    popChild();
                 }
             } else if (view.getId() == R.id.chk_draw_vector_polygon) {//开始绘制面
+                //判断是否被添加进Reggier
+                setDrawPointLinePolygonButtonState(view, chkDrawPointLinePolygonList);
                 if (view.isSelected()) {//选中
+//                    DrawPointLinePolygonFragment drawPointLinePolygonFragment = (DrawPointLinePolygonFragment) DrawPointLinePolygonFragment.newInstance(new Bundle());
                     //自动弹出绘制点线面的fragment
-                    Bundle pointBundle = new Bundle();
-                    pointBundle.putSerializable(DrawPointLinePolygonFragment.DRAW_STATE.class.getSimpleName(), DrawPointLinePolygonFragment.DRAW_STATE.DRAW_POLYGON);
-                    drawPointLinePolygonFragment.setArguments(pointBundle);
-                    Rigger.getRigger(CatEyeMainFragment.this).replaceFragment(drawPointLinePolygonFragment,R.id.layer_main_cateye_bottom);
+                    Bundle polygonBundle = new Bundle();
+                    polygonBundle.putSerializable(DrawPointLinePolygonFragment.DRAW_STATE.class.getSimpleName(), DrawPointLinePolygonFragment.DRAW_STATE.DRAW_POLYGON);
+//                    drawPointLinePolygonFragment.setArguments(pointBundle);
+//                    Rigger.getRigger(CatEyeMainFragment.this).startFragment(drawPointLinePolygonFragment);
+                    loadRootFragment(R.id.layer_main_cateye_bottom, DrawPointLinePolygonFragment.newInstance(polygonBundle));
                 } else {//不选中
-                    Rigger.getRigger(CatEyeMainFragment.this).onBackPressed();
+                    popChild();
                 }
+            } else if (view.getId() == R.id.img_map_source_select) {//选择地图资源
+                final RxDialog dialog = new RxDialog(getContext());
+                View layer_select_map_source = LayoutInflater.from(getContext()).inflate(R.layout.layer_select_map_source, null);
+                dialog.setContentView(layer_select_map_source);
+                dialog.setCancelable(true);
+                dialog.show();
+                //本地地图资源
+                layer_select_map_source.findViewById(R.id.tv_map_source_local).setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        startActivityForResult(new Intent(getActivity(), MainActivity.MapFilePicker.class),
+                                SELECT_MAP_FILE);
+                        dialog.dismiss();
+                    }
+                });
+                //网络地图资源
+                layer_select_map_source.findViewById(R.id.tv_map_source_net).setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        dialog.dismiss();
+                        getMapDataSourceFromNet();
+                    }
+                });
             }
         }
     };
+
+    /**
+     * 从网络获取地图资源
+     */
+    private void getMapDataSourceFromNet() {
+        final RxDialogLoading rxDialogLoading = new RxDialogLoading(getContext());
+        OkGo.<String>get(URL_MAP_SOURCE_NET).tag(this).converter(new StringConvert()).adapt(new ObservableResponse<String>()).subscribeOn(Schedulers.io()).doOnSubscribe(new Consumer<Disposable>() {
+            @Override
+            public void accept(Disposable disposable) throws Exception {
+                rxDialogLoading.show();
+            }
+        }).observeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<Response<String>>() {
+            @Override
+            public void onSubscribe(Disposable d) {
+
+            }
+
+            @Override
+            public void onNext(Response<String> stringResponse) {
+                String resultStr = stringResponse.body();
+                MapSourceFromNet mapSourceFromNet=JSON.parseObject(resultStr, MapSourceFromNet.class);
+                if (mapSourceFromNet!=null){
+                    List<MapSourceFromNet.DataBean> dataBeanList=mapSourceFromNet.getData();
+                    if (dataBeanList!=null&&!dataBeanList.isEmpty()){
+
+                    }
+                }
+            }
+
+            @Override
+            public void onError(Throwable e) {
+                RxToast.info("请求失败，请检查网络!", Toast.LENGTH_SHORT);
+                RxLogTool.saveLogFile(e.toString());
+            }
+
+            @Override
+            public void onComplete() {
+                rxDialogLoading.dismiss();
+            }
+        });
+    }
 
     /**
      * method : setDrawPointLinePolygonButtonState
@@ -236,7 +363,7 @@ public class CatEyeMainFragment extends BaseFragment {
      * return :
      * Date : 2018/4/26
      */
-    private void setDrawPointLinePolygonButtonState(View clickView, List<View> radioButtonViewList) {
+    private void setDrawPointLinePolygonButtonState(View clickView, List<ImageView> radioButtonViewList) {
         if (clickView != null) {
             if (clickView.isSelected()) {
                 clickView.setSelected(false);
@@ -268,12 +395,6 @@ public class CatEyeMainFragment extends BaseFragment {
         renderer.setPosition(GLViewport.Position.BOTTOM_LEFT);
         renderer.setOffset(5 * CanvasAdapter.getScale(), 0);
         mMap.layers().add(mapScaleBarLayer, LAYER_GROUP_ENUM.GROUP_OPERTOR.ordinal());
-    }
-
-    public static BaseFragment newInstance(Bundle bundle) {
-        CatEyeMainFragment catEyeMainFragment = new CatEyeMainFragment();
-        catEyeMainFragment.setArguments(bundle);
-        return catEyeMainFragment;
     }
 
     @Override
@@ -469,21 +590,28 @@ public class CatEyeMainFragment extends BaseFragment {
 
         RxToast.info("data ready");
         mMap.updateMap(true);
-
     }
 
-    /**
-     * Author : xiaoxiao
-     * Describe :
-     * param :
-     * return :
-     * Date : 2018/3/23
-     */
-    public void onRiggerBackPressed() {
-        if (Rigger.getRigger(drawPointLinePolygonFragment).getFragmentStack().contains(drawPointLinePolygonFragment)) {
-            Rigger.getRigger(drawPointLinePolygonFragment).getFragmentStack().pop();
-        } else {
-            Rigger.getRigger(this).onBackPressed();
+    @Override
+    public boolean onBackPressedSupport() {
+        return false;
+    }
+
+    @Subscribe
+    public void onEventMainThread(Message msg) {
+        switch (msg.what) {
+            case SystemConstant.MSG_WHAT_DRAW_POINT_LINE_POLYGON_DESTROY:
+                if (chkDrawPointLinePolygonList != null) {
+                    for (ImageView chk : chkDrawPointLinePolygonList) {
+                        if (!chk.isEnabled()) {
+                            chk.setEnabled(true);
+                        }
+                        if (chk.isSelected()) {
+                            chk.setSelected(false);
+                        }
+                    }
+                }
+                break;
         }
     }
 }

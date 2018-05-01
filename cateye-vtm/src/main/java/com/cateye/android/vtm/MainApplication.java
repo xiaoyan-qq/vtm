@@ -13,6 +13,7 @@ import com.vondear.rxtools.RxTool;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
+import me.yokeyword.fragmentation.Fragmentation;
 import okhttp3.OkHttpClient;
 
 /**
@@ -24,6 +25,13 @@ public class MainApplication extends Application {
     public void onCreate() {
         super.onCreate();
         RxTool.init(this);
+
+        Fragmentation.builder()
+                // 显示悬浮球 ; 其他Mode:SHAKE: 摇一摇唤出   NONE：隐藏
+                .stackViewMode(Fragmentation.NONE)
+                .debug(BuildConfig.DEBUG)
+                .install();
+
         //Okhttp的配置
         OkGo.getInstance().init(this);
         OkHttpClient.Builder builder = new OkHttpClient.Builder();

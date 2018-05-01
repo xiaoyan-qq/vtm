@@ -3,6 +3,6 @@
     <item android:drawable="@mipmap/vector_polyline_press" android:state_pressed="true" />
     <item android:drawable="@mipmap/vector_polyline_press" android:state_selected="true" />
     <item android:drawable="@mipmap/vector_polyline_press" android:state_checked="true" />
-    <item android:drawable="@mipmap/vector_polyline_press" android:state_enabled="false" />
+    <item android:drawable="@mipmap/vector_polyline_disable" android:state_enabled="false" />
     <item android:drawable="@mipmap/vector_polyline" />
 </selector>

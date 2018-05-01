@@ -2,11 +2,8 @@ package com.cateye.android.vtm;
 
 import android.content.Context;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
 
 import com.cateye.vtm.fragment.CatEyeMainFragment;
-import com.jkb.fragment.rigger.annotation.Puppet;
-import com.jkb.fragment.rigger.rigger.Rigger;
 import com.vondear.rxtools.view.dialog.RxDialogSure;
 import com.yanzhenjie.permission.Action;
 import com.yanzhenjie.permission.AndPermission;
@@ -21,8 +18,10 @@ import org.oscim.android.filepicker.ValidRenderTheme;
 
 import java.util.List;
 
-@Puppet(containerViewId = R.id.fragment_main_container, bondContainerView = true)
-public class MainActivity extends AppCompatActivity {
+import me.yokeyword.fragmentation.SupportActivity;
+
+//@Puppet(containerViewId = R.id.fragment_main_container, bondContainerView = true)
+public class MainActivity extends SupportActivity {
 
     //地图layer的分组
     public enum LAYER_GROUP_ENUM {
@@ -36,7 +35,9 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         //启动fragment，显示地图界面
-        Rigger.getRigger(this).startFragment(CatEyeMainFragment.newInstance(new Bundle()));
+//        Rigger.getRigger(this).startFragment(CatEyeMainFragment.newInstance(new Bundle()));
+//        startFragment(CatEyeMainFragment.class);
+        loadRootFragment(R.id.fragment_main_container, CatEyeMainFragment.newInstance(new Bundle()));
         //申请所需要的权限
         AndPermission.with(this).permission(Permission.Group.LOCATION/*定位权限*/, Permission.Group.STORAGE/*存储权限*/ /*, Permission.Group.PHONE*//*电话相关权限*//*, Permission.Group.MICROPHONE*//*录音权限*/)
                 .onGranted(new Action() {//用户允许
@@ -103,5 +104,10 @@ public class MainActivity extends AppCompatActivity {
             setFileDisplayFilter(new FilterByFileExtension(".json"));
             setFileSelectFilter(null);
         }
+    }
+
+    @Override
+    public void onBackPressedSupport() {
+        super.onBackPressedSupport();
     }
 }

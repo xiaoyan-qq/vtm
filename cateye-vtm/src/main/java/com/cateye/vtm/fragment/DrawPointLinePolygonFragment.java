@@ -1,19 +1,22 @@
 package com.cateye.vtm.fragment;
 
 import android.os.Bundle;
+import android.os.Message;
 import android.support.annotation.Nullable;
 import android.view.View;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.cateye.android.vtm.MainActivity;
 import com.cateye.android.vtm.R;
 import com.cateye.vtm.util.CatEyeMapManager;
-import com.jkb.fragment.rigger.annotation.Puppet;
-import com.jkb.fragment.rigger.rigger.Rigger;
+import com.cateye.vtm.util.SystemConstant;
+import com.vondear.rxtools.view.RxToast;
 import com.vtm.library.layers.PolygonLayer;
 
+import org.greenrobot.eventbus.EventBus;
 import org.oscim.backend.canvas.Bitmap;
 import org.oscim.backend.canvas.Color;
 import org.oscim.core.GeoPoint;
@@ -29,7 +32,6 @@ import org.oscim.layers.vector.geometries.Style;
 import org.oscim.map.Map;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.List;
 
 import static org.oscim.android.canvas.AndroidGraphics.drawableToBitmap;
@@ -37,10 +39,9 @@ import static org.oscim.android.canvas.AndroidGraphics.drawableToBitmap;
 /**
  * Created by xiaoxiao on 2018/3/21.
  */
-@Puppet
+//@Puppet
 public class DrawPointLinePolygonFragment extends BaseFragment {
-    private CheckBox chk_draw_point, chk_draw_line, chk_draw_polygon;
-    private List<CheckBox> checkBoxes;
+    private TextView tv_last, tv_clear, tv_finish;
     private DRAW_STATE currentDrawState = DRAW_STATE.DRAW_NONE;
 
     //overLayer图层
@@ -62,40 +63,94 @@ public class DrawPointLinePolygonFragment extends BaseFragment {
             //获取当前的绘制状态
             currentDrawState = (DRAW_STATE) savedInstanceState.getSerializable(DRAW_STATE.class.getSimpleName());
         }
+        if (getArguments() != null) {
+            Bundle bundle = getArguments();
+            currentDrawState = (DRAW_STATE) bundle.getSerializable(DRAW_STATE.class.getSimpleName());
+        }
+    }
+
+    @Override
+    public void onNewBundle(Bundle args) {
+        super.onNewBundle(args);
+        if (args != null) {
+            //获取当前的绘制状态
+            currentDrawState = (DRAW_STATE) args.getSerializable(DRAW_STATE.class.getSimpleName());
+        }
     }
 
     @Override
     public void initView(View rootView) {
-        chk_draw_point = rootView.findViewById(R.id.chk_draw_point);
-        chk_draw_line = rootView.findViewById(R.id.chk_draw_line);
-        chk_draw_polygon = rootView.findViewById(R.id.chk_draw_polygon);
-        checkBoxes = new ArrayList<>();
-        checkBoxes.add(chk_draw_point);
-        checkBoxes.add(chk_draw_line);
-        checkBoxes.add(chk_draw_polygon);
+        tv_last = rootView.findViewById(R.id.tv_draw_last);
+        tv_clear = rootView.findViewById(R.id.tv_draw_clear);
+        tv_finish = rootView.findViewById(R.id.tv_draw_finish);
 
+        if (currentDrawState == DRAW_STATE.DRAW_POINT) {
+            tv_last.setVisibility(View.GONE);
+            tv_clear.setVisibility(View.GONE);
+        }
 
-        chk_draw_point.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+        tv_last.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked) {
-                    setCheckBoxSingleChoice((CheckBox) buttonView);
+            public void onClick(View v) {
+                if (currentDrawState != DRAW_STATE.DRAW_NONE) {
+                    if (markerLayer.getItemList() == null || markerLayer.getItemList().isEmpty()) {
+                        RxToast.info("没有需要清除的点!", Toast.LENGTH_SHORT);
+                        return;
+                    }
+                    if (markerLayer.getItemList() != null && !markerLayer.getItemList().isEmpty()) {
+                        markerLayer.removeItem(markerLayer.getItemList().size() - 1);
+                        markerLayer.map().updateMap(true);//重绘
+                    }
+                    if (currentDrawState == DRAW_STATE.DRAW_LINE) {//绘制线
+                        if (polylineOverlay.getPoints() != null && !polylineOverlay.getPoints().isEmpty()) {
+                            polylineOverlay.getPoints().remove(polylineOverlay.getPoints().size() - 1);
+                            redrawPolyline(polylineOverlay);
+                        }
+                    } else if (currentDrawState == DRAW_STATE.DRAW_POLYGON) {//绘制面
+                        if (polygonOverlay.getPoints() != null && !polygonOverlay.getPoints().isEmpty()) {
+                            polygonOverlay.getPoints().remove(polygonOverlay.getPoints().size() - 1);
+                            redrawPolygon(polygonOverlay);
+                        }
+                    }
                 }
             }
         });
-        chk_draw_line.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+
+        tv_clear.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked) {
-                    setCheckBoxSingleChoice((CheckBox) buttonView);
+            public void onClick(View v) {
+                if (markerLayer.getItemList() == null || markerLayer.getItemList().isEmpty()) {
+                    RxToast.info("没有需要清除的点!", Toast.LENGTH_SHORT);
+                    return;
+                }
+                if (markerLayer.getItemList() != null && !markerLayer.getItemList().isEmpty()) {
+                    markerLayer.removeAllItems();
+                    markerLayer.map().updateMap(true);//重绘
+                }
+                if (currentDrawState == DRAW_STATE.DRAW_LINE) {
+                    polylineOverlay.getPoints().clear();
+                    redrawPolyline(polylineOverlay);
+                } else if (currentDrawState == DRAW_STATE.DRAW_POLYGON) {
+                    polygonOverlay.getPoints().clear();
+                    redrawPolygon(polygonOverlay);
                 }
             }
         });
-        chk_draw_polygon.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+
+        tv_finish.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked) {
-                    setCheckBoxSingleChoice((CheckBox) buttonView);
+            public void onClick(View v) {
+                if (currentDrawState==DRAW_STATE.DRAW_LINE&&polylineOverlay.getPoints().size()<2){
+                    markerLayer.removeAllItems();
+                    markerLayer.map().updateMap(true);
+                    polylineOverlay.clearPath();
+                    redrawPolyline(polylineOverlay);
+                }
+                if (currentDrawState==DRAW_STATE.DRAW_POLYGON&&polylineOverlay.getPoints().size()<3){
+                    markerLayer.removeAllItems();
+                    markerLayer.map().updateMap(true);
+                    polygonOverlay.getPoints().clear();
+                    redrawPolygon(polygonOverlay);
                 }
             }
         });
@@ -169,16 +224,6 @@ public class DrawPointLinePolygonFragment extends BaseFragment {
         }
     }
 
-    private void setCheckBoxSingleChoice(CheckBox currendChk) {
-        //将其他两个控件的选中状态置为未选中
-        if (checkBoxes != null && !checkBoxes.isEmpty()) {
-            for (CheckBox chk : checkBoxes) {
-                if (chk != currendChk) {
-                    chk.setChecked(false);
-                }
-            }
-        }
-    }
 
     private class MapEventsReceiver extends Layer implements GestureListener {
 
@@ -188,41 +233,56 @@ public class DrawPointLinePolygonFragment extends BaseFragment {
 
         @Override
         public boolean onGesture(Gesture g, MotionEvent e) {
-            if (g instanceof Gesture.Tap) {
-
-            }
             if (g instanceof Gesture.Press) {
                 GeoPoint p = mMap.viewport().fromScreenPoint(e.getX(), e.getY());
                 DRAW_STATE currentState = getCurrentDrawState();
                 if (currentState != DRAW_STATE.DRAW_NONE) {//如果当前是绘制模式，则自动添加marker
                     markerLayer.addItem(new MarkerItem("", "", p));
+                    markerLayer.map().updateMap(true);//重绘
                     //如果当前是绘制线模式，则增加pathLayer
                     if (currentState == DRAW_STATE.DRAW_LINE) {
                         polylineOverlay.addPoint(p);
-                        if (polylineOverlay.getPoints() != null && polylineOverlay.getPoints().size() > 1) {
-                            polylineOverlay.setLineString(getPointArray(polylineOverlay.getPoints()));
-                        }
+                        redrawPolyline(polylineOverlay);
                     }
                     if (currentState == DRAW_STATE.DRAW_POLYGON) {
                         polygonOverlay.addPoint(p);
-                        if (polygonOverlay.getPoints() != null) {
-                            if (polygonOverlay.getPoints().size() > 2) {
-                                polygonOverlay.setPolygonString(polygonOverlay.getPoints(), true);
-                            } else if (polygonOverlay.getPoints().size() == 2) {
-                                polygonOverlay.setLineString(getPointArray(polygonOverlay.getPoints()));
-                            }
-                        }
+                        redrawPolygon(polygonOverlay);
                     }
-                    markerLayer.map().updateMap(true);//重绘
                 }
                 Toast.makeText(getActivity(), "Map tap\n" + p, Toast.LENGTH_SHORT).show();
                 return true;
             }
-//            if (g instanceof Gesture.LongPress) {//长按
-//            }
-//            if (g instanceof Gesture.TripleTap) {//双击
-//            }
             return false;
+        }
+    }
+
+    //根据polyline的点位自动绘制线
+    private void redrawPolyline(PathLayer polylineOverlay) {
+        if (polylineOverlay.getPoints() != null && polylineOverlay.getPoints().size() > 1) {
+            polylineOverlay.setLineString(getPointArray(polylineOverlay.getPoints()));
+        }else if (polylineOverlay.getPoints() != null && polylineOverlay.getPoints().size() == 1){
+            GeoPoint firstPoint=polylineOverlay.getPoints().get(0);
+            polylineOverlay.clearPath();
+            polylineOverlay.addPoint(firstPoint);
+        }else {
+            polylineOverlay.clearPath();
+        }
+    }
+
+    //根据polygon的点位自动绘制线或者面
+    private void redrawPolygon(PolygonLayer polygonOverlay) {
+        if (polygonOverlay.getPoints() != null) {
+            if (polygonOverlay.getPoints().size() > 2) {
+                polygonOverlay.setPolygonString(polygonOverlay.getPoints(), true);
+            } else if (polygonOverlay.getPoints().size() == 2) {
+                polygonOverlay.removeCurrentPolygonDrawable();
+                polygonOverlay.setLineString(getPointArray(polygonOverlay.getPoints()));
+            }else if (polygonOverlay.getPoints() != null && polygonOverlay.getPoints().size() == 1){
+                polygonOverlay.removeCurrentPolylineDrawable();
+                polygonOverlay.update();
+            }else {
+                polygonOverlay.clearPath();
+            }
         }
     }
 
@@ -247,14 +307,11 @@ public class DrawPointLinePolygonFragment extends BaseFragment {
         return null;
     }
 
-    /**
-     * Author : xiaoxiao
-     * Describe : 回退按钮拦截,目前是无效的
-     * param :
-     * return :
-     * Date : 2018/3/23
-     */
-    public void onRiggerBackPressed() {
-        clo
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        Message msg = new Message();
+        msg.what = SystemConstant.MSG_WHAT_DRAW_POINT_LINE_POLYGON_DESTROY;
+        EventBus.getDefault().post(msg);
     }
 }
