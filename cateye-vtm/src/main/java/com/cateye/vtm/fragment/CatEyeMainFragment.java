@@ -4,17 +4,16 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Message;
-import android.support.v4.util.LogWriter;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
-import android.widget.CheckBox;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.alibaba.fastjson.JSON;
+import com.canyinghao.candialog.CanDialog;
+import com.canyinghao.candialog.CanDialogInterface;
 import com.cateye.android.entity.MapSourceFromNet;
 import com.cateye.android.vtm.MainActivity;
 import com.cateye.android.vtm.MainActivity.LAYER_GROUP_ENUM;
@@ -22,18 +21,14 @@ import com.cateye.android.vtm.R;
 import com.cateye.vtm.util.CatEyeMapManager;
 import com.cateye.vtm.util.SystemConstant;
 import com.lzy.okgo.OkGo;
-import com.lzy.okgo.callback.StringCallback;
 import com.lzy.okgo.convert.StringConvert;
 import com.lzy.okgo.model.Response;
-import com.lzy.okgo.request.base.Request;
 import com.lzy.okrx2.adapter.ObservableResponse;
 import com.ta.utdid2.android.utils.StringUtils;
 import com.vondear.rxtools.RxLogTool;
 import com.vondear.rxtools.view.RxToast;
 import com.vondear.rxtools.view.dialog.RxDialog;
 import com.vondear.rxtools.view.dialog.RxDialogLoading;
-import com.vondear.rxtools.view.popupwindows.tools.RxPopupView;
-import com.vondear.rxtools.view.popupwindows.tools.RxPopupViewManager;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -51,7 +46,6 @@ import org.oscim.core.MapElement;
 import org.oscim.core.MapPosition;
 import org.oscim.core.Tag;
 import org.oscim.core.Tile;
-import org.oscim.event.Event;
 import org.oscim.layers.ContourLineLayer;
 import org.oscim.layers.Layer;
 import org.oscim.layers.tile.MapTile;
@@ -92,13 +86,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import io.reactivex.Observable;
 import io.reactivex.Observer;
-import io.reactivex.Scheduler;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Consumer;
+import io.reactivex.functions.Function;
+import io.reactivex.functions.Predicate;
 import io.reactivex.schedulers.Schedulers;
-import me.yokeyword.fragmentation.Fragmentation;
 
 import static com.cateye.vtm.util.SystemConstant.URL_MAP_SOURCE_NET;
 
@@ -337,7 +332,41 @@ public class CatEyeMainFragment extends BaseFragment {
                 if (mapSourceFromNet!=null){
                     List<MapSourceFromNet.DataBean> dataBeanList=mapSourceFromNet.getData();
                     if (dataBeanList!=null&&!dataBeanList.isEmpty()){
+                        Observable.fromIterable(dataBeanList).subscribeOn(Schedulers.computation()).filter(new Predicate<MapSourceFromNet.DataBean>() {
+                            @Override
+                            public boolean test(MapSourceFromNet.DataBean dataBean) throws Exception {
+                                if (dataBean!=null&&dataBean.getExtension()!=null&&(dataBean.getExtension().contains("png")||dataBean.getExtension().contains("json"))){
+                                    return true;
+                                }
+                                return false;
+                            }
+                        }).toMap(new Function<MapSourceFromNet.DataBean, String>() {
+                            @Override
+                            public String apply(MapSourceFromNet.DataBean dataBean) throws Exception {
+                                return dataBean.getHref();
+                            }
+                        }).observeOn(AndroidSchedulers.mainThread()).subscribe(new Consumer<java.util.Map<String, MapSourceFromNet.DataBean>>() {
+                            @Override
+                            public void accept(java.util.Map<String, MapSourceFromNet.DataBean> stringDataBeanMap) throws Exception {
+                                Set<String> keySet=stringDataBeanMap.keySet();
+                                List<String> multiCheckTextList=new ArrayList<>();
+                                List<Boolean> multiCheckStateList=new ArrayList<>();
+                                for (String key:keySet){
+                                    if (stringDataBeanMap.get(key)!=null){
+                                        multiCheckTextList.add(stringDataBeanMap.get(key).get_abstract());
+                                        multiCheckStateList.add(stringDataBeanMap.get(key).isShow());
+                                    }
+                                }
+                                String[] multiCheckTexts= (String[]) multiCheckTextList.toArray();
+                                boolean[] multiCheckStates=
+                                CanDialog canDialog=new CanDialog.Builder(getActivity()).setTitle("地图服务资源").setMultiChoiceItems((String[])multiCheckTexts.toArray(), (boolean[]) (multiCheckState.toArray()), new CanDialogInterface.OnMultiChoiceClickListener() {
+                                    @Override
+                                    public void onClick(CanDialog dialog, int position, boolean flag) {
 
+                                    }
+                                }).show();
+                            }
+                        });
                     }
                 }
             }

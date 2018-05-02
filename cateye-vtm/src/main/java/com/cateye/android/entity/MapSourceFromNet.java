@@ -103,6 +103,7 @@ public class MapSourceFromNet {
         private String source;
         private String fileExtension;
         private String abstractX;
+        private boolean isShow=false;//本地字段，用来标识是否已经添加到地图界面上
 
         public int getId() {
             return id;
@@ -288,6 +289,14 @@ public class MapSourceFromNet {
         @JSONField(name = "abstract")
         public void setAbstractX(String abstractX) {
             this.abstractX = abstractX;
+        }
+
+        public boolean isShow() {
+            return isShow;
+        }
+
+        public void setShow(boolean show) {
+            isShow = show;
         }
     }
 }
