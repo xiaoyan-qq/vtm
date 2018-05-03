@@ -129,10 +129,12 @@ public class MapSourceFromNet {
             this.title = title;
         }
 
+        @JSONField(name = "_abstract")
         public String get_abstract() {
             return _abstract;
         }
 
+        @JSONField(name = "_abstract")
         public void set_abstract(String _abstract) {
             this._abstract = _abstract;
         }

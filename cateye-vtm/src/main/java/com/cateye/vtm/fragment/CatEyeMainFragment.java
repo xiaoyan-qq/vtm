@@ -83,6 +83,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
@@ -338,7 +339,7 @@ public class CatEyeMainFragment extends BaseFragment {
                         Observable.fromIterable(dataBeanList).subscribeOn(Schedulers.computation()).filter(new Predicate<MapSourceFromNet.DataBean>() {
                             @Override
                             public boolean test(MapSourceFromNet.DataBean dataBean) throws Exception {
-                                if (dataBean != null && dataBean.getExtension() != null && (dataBean.getExtension().contains("png") || dataBean.getExtension().contains("json"))) {
+                                if (dataBean != null && dataBean.getExtension() != null && (dataBean.getExtension().contains("png") || dataBean.getExtension().contains("json")) && dataBean.getHref() != null && dataBean.getHref().contains("/xyz/")) {
                                     return true;
                                 }
                                 return false;
@@ -346,7 +347,7 @@ public class CatEyeMainFragment extends BaseFragment {
                         }).map(new Function<MapSourceFromNet.DataBean, MapSourceFromNet.DataBean>() {
                             @Override
                             public MapSourceFromNet.DataBean apply(MapSourceFromNet.DataBean dataBean) throws Exception {
-                                if (netDataSourceMap!=null&&netDataSourceMap.containsKey(dataBean.getHref())){
+                                if (netDataSourceMap != null && netDataSourceMap.containsKey(dataBean.getHref())) {
                                     dataBean.setShow(true);
                                 }
                                 return dataBean;
@@ -365,7 +366,7 @@ public class CatEyeMainFragment extends BaseFragment {
                                 final List<String> keyList = new ArrayList<>();
                                 for (String key : keySet) {
                                     if (stringDataBeanMap.get(key) != null) {
-                                        multiCheckTextList.add(stringDataBeanMap.get(key).get_abstract());
+                                        multiCheckTextList.add(stringDataBeanMap.get(key).getAbstractX() + "(" + stringDataBeanMap.get(key).getHref() + ")");
                                         multiCheckStateList.add(stringDataBeanMap.get(key).isShow());
                                         keyList.add(key);
                                     }
@@ -380,21 +381,46 @@ public class CatEyeMainFragment extends BaseFragment {
                                 for (int i = 0; i < multiCheckStateList.size(); i++) {
                                     multiCheckStates[i] = multiCheckStateList.get(i);
                                 }
-                                CanDialog canDialog = new CanDialog.Builder(getActivity()).setTitle("地图服务资源").setMultiChoiceItems(multiCheckTexts, multiCheckStates, new CanDialogInterface.OnMultiChoiceClickListener() {
-                                    @Override
-                                    public void onClick(CanDialog dialog, int position, boolean flag) {
-                                        if (flag) {
-                                            netDataSourceMap.put(keyList.get(position), stringDataBeanMap.get(keyList.get(position)));
-                                        } else {
-                                            if (netDataSourceMap.containsKey(keyList.get(position))) {
-                                                netDataSourceMap.remove(keyList.get(position));
-                                            }
-                                        }
-                                    }
-                                }).setNegativeButton("取消",true,null).setPositiveButton("确定", true, new CanDialogInterface.OnClickListener() {
+                                CanDialog canDialog = new CanDialog.Builder(getActivity()).setTitle("地图服务资源").setMultiChoiceItems(multiCheckTexts, multiCheckStates, null).setNegativeButton("取消", true, null).setPositiveButton("确定", true, new CanDialogInterface.OnClickListener() {
                                     @Override
                                     public void onClick(CanDialog dialog, int checkItem, CharSequence text, boolean[] checkItems) {
                                         RxLogTool.i(checkItems);
+                                        for (int i = 0; i < checkItems.length; i++) {
+                                            if (checkItems[i]) {
+                                                stringDataBeanMap.get(keyList.get(i)).setShow(true);
+                                            } else {
+                                                stringDataBeanMap.get(keyList.get(i)).setShow(false);
+                                            }
+                                            netDataSourceMap.put(keyList.get(i), stringDataBeanMap.get(keyList.get(i)));
+                                        }
+                                        //根据当前的网络资源选择，显示对应的图层
+                                        Set<String> keySet=stringDataBeanMap.keySet();
+                                        for (String key:keySet){
+                                            boolean isShow=stringDataBeanMap.get(key).isShow();
+                                            boolean isHasThisLayer=false;//标识当前是否存在指定的layer
+                                            Iterator<Layer> layerIterator=mMap.layers().iterator();
+                                            b: while (layerIterator.hasNext()){
+                                                Layer layer=layerIterator.next();
+                                                if (layer instanceof BitmapTileLayer&&((BitmapTileLayer)layer).getmTileSource()!=null&&((BitmapTileLayer)layer).getmTileSource().getDataSource()!=null&&((BitmapTileLayer)layer).getmTileSource() instanceof BitmapTileSource){
+                                                    String url=((BitmapTileSource)((BitmapTileLayer)layer).getmTileSource()).getUrl().toString();
+                                                    if (url.contains(key)){
+                                                        isHasThisLayer=true;
+                                                        if (isShow){
+                                                            break b;
+                                                        }else {
+                                                            layerIterator.remove();
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            if (!isHasThisLayer&&isShow){
+                                                BitmapTileSource mTileSource = BitmapTileSource.builder()
+                                                        .url(stringDataBeanMap.get(key).getHref()).tilePath("/{Z}/{X}/{Y}"+stringDataBeanMap.get(key).getExtension())
+                                                        .zoomMax(18).build();
+                                                createTileLayer(getActivity(),mTileSource,true);
+                                            }
+                                        }
+                                        mMap.updateMap(true);
                                     }
                                 }).show();
                             }
@@ -535,7 +561,6 @@ public class CatEyeMainFragment extends BaseFragment {
 
             }
             mMap.setTheme(externalRenderTheme);
-//            mMenu.findItem(R.id.theme_external).setChecked(true);
         } else if (requestCode == SELECT_GEOJSON_FILE) {
             if (resultCode != getActivity().RESULT_OK || intent == null || intent.getStringExtra(FilePicker.SELECTED_FILE) == null) {
                 return;
