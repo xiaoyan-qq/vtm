@@ -83,6 +83,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 
@@ -126,6 +127,7 @@ public class CatEyeMainFragment extends BaseFragment {
     private ImageView img_map_source_selector;
     private List<ImageView> chkDrawPointLinePolygonList;
     private FrameLayout layer_fragment;//用来显示fragment的布局文件
+    private java.util.Map<String, MapSourceFromNet.DataBean> netDataSourceMap;//用来记录用户勾选了哪些网络数据显示
 
     @Override
     public int getFragmentLayoutId() {
@@ -191,6 +193,7 @@ public class CatEyeMainFragment extends BaseFragment {
 
     //初始化数据
     private void initData() {
+        netDataSourceMap = new LinkedHashMap<String, MapSourceFromNet.DataBean>();
         //初始化MapManager，方便全局使用map对象
         CatEyeMapManager.getInstance(getActivity()).init(mapView);
         mPrefs = new MapPreferences(this.getTag(), getActivity());
@@ -328,17 +331,25 @@ public class CatEyeMainFragment extends BaseFragment {
             @Override
             public void onNext(Response<String> stringResponse) {
                 String resultStr = stringResponse.body();
-                MapSourceFromNet mapSourceFromNet=JSON.parseObject(resultStr, MapSourceFromNet.class);
-                if (mapSourceFromNet!=null){
-                    List<MapSourceFromNet.DataBean> dataBeanList=mapSourceFromNet.getData();
-                    if (dataBeanList!=null&&!dataBeanList.isEmpty()){
+                MapSourceFromNet mapSourceFromNet = JSON.parseObject(resultStr, MapSourceFromNet.class);
+                if (mapSourceFromNet != null) {
+                    List<MapSourceFromNet.DataBean> dataBeanList = mapSourceFromNet.getData();
+                    if (dataBeanList != null && !dataBeanList.isEmpty()) {
                         Observable.fromIterable(dataBeanList).subscribeOn(Schedulers.computation()).filter(new Predicate<MapSourceFromNet.DataBean>() {
                             @Override
                             public boolean test(MapSourceFromNet.DataBean dataBean) throws Exception {
-                                if (dataBean!=null&&dataBean.getExtension()!=null&&(dataBean.getExtension().contains("png")||dataBean.getExtension().contains("json"))){
+                                if (dataBean != null && dataBean.getExtension() != null && (dataBean.getExtension().contains("png") || dataBean.getExtension().contains("json"))) {
                                     return true;
                                 }
                                 return false;
+                            }
+                        }).map(new Function<MapSourceFromNet.DataBean, MapSourceFromNet.DataBean>() {
+                            @Override
+                            public MapSourceFromNet.DataBean apply(MapSourceFromNet.DataBean dataBean) throws Exception {
+                                if (netDataSourceMap!=null&&netDataSourceMap.containsKey(dataBean.getHref())){
+                                    dataBean.setShow(true);
+                                }
+                                return dataBean;
                             }
                         }).toMap(new Function<MapSourceFromNet.DataBean, String>() {
                             @Override
@@ -347,22 +358,43 @@ public class CatEyeMainFragment extends BaseFragment {
                             }
                         }).observeOn(AndroidSchedulers.mainThread()).subscribe(new Consumer<java.util.Map<String, MapSourceFromNet.DataBean>>() {
                             @Override
-                            public void accept(java.util.Map<String, MapSourceFromNet.DataBean> stringDataBeanMap) throws Exception {
-                                Set<String> keySet=stringDataBeanMap.keySet();
-                                List<String> multiCheckTextList=new ArrayList<>();
-                                List<Boolean> multiCheckStateList=new ArrayList<>();
-                                for (String key:keySet){
-                                    if (stringDataBeanMap.get(key)!=null){
+                            public void accept(final java.util.Map<String, MapSourceFromNet.DataBean> stringDataBeanMap) throws Exception {
+                                Set<String> keySet = stringDataBeanMap.keySet();
+                                final List<String> multiCheckTextList = new ArrayList<>();
+                                final List<Boolean> multiCheckStateList = new ArrayList<>();
+                                final List<String> keyList = new ArrayList<>();
+                                for (String key : keySet) {
+                                    if (stringDataBeanMap.get(key) != null) {
                                         multiCheckTextList.add(stringDataBeanMap.get(key).get_abstract());
                                         multiCheckStateList.add(stringDataBeanMap.get(key).isShow());
+                                        keyList.add(key);
                                     }
                                 }
-                                String[] multiCheckTexts= (String[]) multiCheckTextList.toArray();
-                                boolean[] multiCheckStates=
-                                CanDialog canDialog=new CanDialog.Builder(getActivity()).setTitle("地图服务资源").setMultiChoiceItems((String[])multiCheckTexts.toArray(), (boolean[]) (multiCheckState.toArray()), new CanDialogInterface.OnMultiChoiceClickListener() {
+                                final String[] multiCheckTexts = new String[multiCheckTextList.size()];
+                                final boolean[] multiCheckStates = new boolean[multiCheckStateList.size()];
+                                //转换
+                                for (int i = 0; i < multiCheckTextList.size(); i++) {
+                                    multiCheckTexts[i] = multiCheckTextList.get(i);
+                                }
+                                //转换
+                                for (int i = 0; i < multiCheckStateList.size(); i++) {
+                                    multiCheckStates[i] = multiCheckStateList.get(i);
+                                }
+                                CanDialog canDialog = new CanDialog.Builder(getActivity()).setTitle("地图服务资源").setMultiChoiceItems(multiCheckTexts, multiCheckStates, new CanDialogInterface.OnMultiChoiceClickListener() {
                                     @Override
                                     public void onClick(CanDialog dialog, int position, boolean flag) {
-
+                                        if (flag) {
+                                            netDataSourceMap.put(keyList.get(position), stringDataBeanMap.get(keyList.get(position)));
+                                        } else {
+                                            if (netDataSourceMap.containsKey(keyList.get(position))) {
+                                                netDataSourceMap.remove(keyList.get(position));
+                                            }
+                                        }
+                                    }
+                                }).setNegativeButton("取消",true,null).setPositiveButton("确定", true, new CanDialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(CanDialog dialog, int checkItem, CharSequence text, boolean[] checkItems) {
+                                        RxLogTool.i(checkItems);
                                     }
                                 }).show();
                             }
