@@ -74,6 +74,8 @@ import org.oscim.theme.styles.RenderStyle;
 import org.oscim.theme.styles.TextStyle;
 import org.oscim.tiling.TileSource;
 import org.oscim.tiling.source.bitmap.BitmapTileSource;
+import org.oscim.tiling.source.geojson.GeojsonTileSource;
+import org.oscim.tiling.source.geojson.MapzenGeojsonTileSource;
 import org.oscim.tiling.source.mapfile.MapFileTileSource;
 import org.oscim.tiling.source.mapfile.MapInfo;
 
@@ -221,7 +223,7 @@ public class CatEyeMainFragment extends BaseFragment {
                         .url("http://39.107.104.63:8080/tms/1.0.0/world_satellite_raster@EPSG:900913@jpeg").tilePath("/{Z}/{X}/{Y}.png")
                         .zoomMax(18).build();
 //                BitmapTileSource mTileSource= DefaultSources.OPENSTREETMAP.build();
-                createTileLayer(getActivity(), mTileSource, true);
+                createBitmapTileLayer(getActivity(), mTileSource, true);
             }
         });
         btn_select_geoJson_file.setOnClickListener(new View.OnClickListener() {
@@ -339,7 +341,7 @@ public class CatEyeMainFragment extends BaseFragment {
                         Observable.fromIterable(dataBeanList).subscribeOn(Schedulers.computation()).filter(new Predicate<MapSourceFromNet.DataBean>() {
                             @Override
                             public boolean test(MapSourceFromNet.DataBean dataBean) throws Exception {
-                                if (dataBean != null && dataBean.getExtension() != null && (dataBean.getExtension().contains("png") || dataBean.getExtension().contains("json")) && dataBean.getHref() != null && dataBean.getHref().contains("/xyz/")) {
+                                if (dataBean != null && dataBean.getExtension() != null && (dataBean.getExtension().contains("png") || dataBean.getExtension().contains("json") || dataBean.getExtension().contains("jpg") || dataBean.getExtension().contains("jpeg")) && dataBean.getHref() != null && dataBean.getHref().contains("/xyz/")) {
                                     return true;
                                 }
                                 return false;
@@ -348,7 +350,7 @@ public class CatEyeMainFragment extends BaseFragment {
                             @Override
                             public MapSourceFromNet.DataBean apply(MapSourceFromNet.DataBean dataBean) throws Exception {
                                 if (netDataSourceMap != null && netDataSourceMap.containsKey(dataBean.getHref())) {
-                                    dataBean.setShow(true);
+                                    dataBean.setShow(netDataSourceMap.get(dataBean.getHref()).isShow());
                                 }
                                 return dataBean;
                             }
@@ -394,30 +396,40 @@ public class CatEyeMainFragment extends BaseFragment {
                                             netDataSourceMap.put(keyList.get(i), stringDataBeanMap.get(keyList.get(i)));
                                         }
                                         //根据当前的网络资源选择，显示对应的图层
-                                        Set<String> keySet=stringDataBeanMap.keySet();
-                                        for (String key:keySet){
-                                            boolean isShow=stringDataBeanMap.get(key).isShow();
-                                            boolean isHasThisLayer=false;//标识当前是否存在指定的layer
-                                            Iterator<Layer> layerIterator=mMap.layers().iterator();
-                                            b: while (layerIterator.hasNext()){
-                                                Layer layer=layerIterator.next();
-                                                if (layer instanceof BitmapTileLayer&&((BitmapTileLayer)layer).getmTileSource()!=null&&((BitmapTileLayer)layer).getmTileSource().getDataSource()!=null&&((BitmapTileLayer)layer).getmTileSource() instanceof BitmapTileSource){
-                                                    String url=((BitmapTileSource)((BitmapTileLayer)layer).getmTileSource()).getUrl().toString();
-                                                    if (url.contains(key)){
-                                                        isHasThisLayer=true;
-                                                        if (isShow){
+                                        Set<String> keySet = stringDataBeanMap.keySet();
+                                        for (String key : keySet) {
+                                            boolean isShow = stringDataBeanMap.get(key).isShow();
+                                            boolean isHasThisLayer = false;//标识当前是否存在指定的layer
+                                            Iterator<Layer> layerIterator = mMap.layers().iterator();
+                                            b:
+                                            while (layerIterator.hasNext()) {
+                                                Layer layer = layerIterator.next();
+                                                if (layer instanceof BitmapTileLayer && ((BitmapTileLayer) layer).getmTileSource() != null && ((BitmapTileLayer) layer).getmTileSource().getDataSource() != null && ((BitmapTileLayer) layer).getmTileSource() instanceof BitmapTileSource) {
+                                                    String url = ((BitmapTileSource) ((BitmapTileLayer) layer).getmTileSource()).getUrl().toString();
+                                                    if (url.contains(key)) {
+                                                        isHasThisLayer = true;
+                                                        if (isShow) {
                                                             break b;
-                                                        }else {
+                                                        } else {
                                                             layerIterator.remove();
                                                         }
                                                     }
                                                 }
                                             }
-                                            if (!isHasThisLayer&&isShow){
-                                                BitmapTileSource mTileSource = BitmapTileSource.builder()
-                                                        .url(stringDataBeanMap.get(key).getHref()).tilePath("/{Z}/{X}/{Y}"+stringDataBeanMap.get(key).getExtension())
-                                                        .zoomMax(18).build();
-                                                createTileLayer(getActivity(),mTileSource,true);
+                                            if (!isHasThisLayer && isShow) {
+                                                if (stringDataBeanMap.get(key).getExtension().contains("json")){
+                                                    MapzenGeojsonTileSource mTileSource = MapzenGeojsonTileSource.builder()
+                                                            .url(stringDataBeanMap.get(key).getHref()).tilePath("/{X}/{Y}/{Z}.json" /*+ stringDataBeanMap.get(key).getExtension()*/)
+//                                                        .url("http://39.107.104.63:8080/tms/1.0.0/world_satellite_raster@EPSG:900913@jpeg").tilePath("/{Z}/{X}/{Y}.png")
+                                                            .zoomMax(18).build();
+                                                    createGeoJsonTileLayer(getActivity(),mTileSource,true);
+                                                }else {
+                                                    BitmapTileSource mTileSource = BitmapTileSource.builder()
+                                                            .url(stringDataBeanMap.get(key).getHref()).tilePath("/{X}/{Y}/{Z}." + stringDataBeanMap.get(key).getExtension())
+//                                                        .url("http://39.107.104.63:8080/tms/1.0.0/world_satellite_raster@EPSG:900913@jpeg").tilePath("/{Z}/{X}/{Y}.png")
+                                                            .zoomMax(18).build();
+                                                    createBitmapTileLayer(getActivity(), mTileSource, true);
+                                                }
                                             }
                                         }
                                         mMap.updateMap(true);
@@ -616,7 +628,7 @@ public class CatEyeMainFragment extends BaseFragment {
         }
     }
 
-    private void createTileLayer(Context mContext, BitmapTileSource mTileSource, boolean USE_CACHE) {
+    private void createBitmapTileLayer(Context mContext, BitmapTileSource mTileSource, boolean USE_CACHE) {
         if (mTileSource == null)
             return;
 
@@ -634,6 +646,27 @@ public class CatEyeMainFragment extends BaseFragment {
 
         BitmapTileLayer mBitmapLayer = new BitmapTileLayer(mMap, mTileSource);
         mMap.layers().add(mBitmapLayer, LAYER_GROUP_ENUM.GROUP_VECTOR.ordinal());
+        mMap.updateMap(true);
+    }
+
+    private void createGeoJsonTileLayer(Context mContext, GeojsonTileSource mTileSource, boolean USE_CACHE) {
+        if (mTileSource == null)
+            return;
+
+        if (USE_CACHE) {
+            String cacheFile = mTileSource.getUrl()
+                    .toString()
+                    .replaceFirst("https?://", "")
+                    .replaceAll("/", "-");
+
+            RxLogTool.i("use geoJson cache {}", cacheFile);
+            TileCache mCache = new TileCache(mContext, null, cacheFile);
+            mCache.setCacheSize(512 * (1 << 10));
+            mTileSource.setCache(mCache);
+        }
+
+        VectorTileLayer mVectorTileLayer = new VectorTileLayer(mMap, mTileSource);
+        mMap.layers().add(mVectorTileLayer, LAYER_GROUP_ENUM.GROUP_VECTOR.ordinal());
         mMap.updateMap(true);
     }
 
