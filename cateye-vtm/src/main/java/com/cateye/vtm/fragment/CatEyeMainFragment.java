@@ -117,6 +117,7 @@ public class CatEyeMainFragment extends BaseFragment {
     private static final Tag ISSEA_TAG = new Tag("natural", "issea");
     private static final Tag NOSEA_TAG = new Tag("natural", "nosea");
     private static final Tag SEA_TAG = new Tag("natural", "sea");
+    private static final Tag CONTOUR_TAG = new Tag("contour", "1000");//等高线
 
     private List<TileSource> mTileSourceList;//当前正在显示的tileSource的集合
 
@@ -417,13 +418,13 @@ public class CatEyeMainFragment extends BaseFragment {
                                                 }
                                             }
                                             if (!isHasThisLayer && isShow) {
-                                                if (stringDataBeanMap.get(key).getExtension().contains("json")){
+                                                if (stringDataBeanMap.get(key).getExtension().contains("json")) {
                                                     MapzenGeojsonTileSource mTileSource = MapzenGeojsonTileSource.builder()
                                                             .url(stringDataBeanMap.get(key).getHref()).tilePath("/{X}/{Y}/{Z}.json" /*+ stringDataBeanMap.get(key).getExtension()*/)
 //                                                        .url("http://39.107.104.63:8080/tms/1.0.0/world_satellite_raster@EPSG:900913@jpeg").tilePath("/{Z}/{X}/{Y}.png")
                                                             .zoomMax(18).build();
-                                                    createGeoJsonTileLayer(getActivity(),mTileSource,true);
-                                                }else {
+                                                    createGeoJsonTileLayer(getActivity(), mTileSource, true);
+                                                } else {
                                                     BitmapTileSource mTileSource = BitmapTileSource.builder()
                                                             .url(stringDataBeanMap.get(key).getHref()).tilePath("/{X}/{Y}/{Z}." + stringDataBeanMap.get(key).getExtension())
 //                                                        .url("http://39.107.104.63:8080/tms/1.0.0/world_satellite_raster@EPSG:900913@jpeg").tilePath("/{Z}/{X}/{Y}.png")
@@ -646,6 +647,7 @@ public class CatEyeMainFragment extends BaseFragment {
 
         BitmapTileLayer mBitmapLayer = new BitmapTileLayer(mMap, mTileSource);
         mMap.layers().add(mBitmapLayer, LAYER_GROUP_ENUM.GROUP_VECTOR.ordinal());
+        loadTheme(null, true);
         mMap.updateMap(true);
     }
 
@@ -666,7 +668,20 @@ public class CatEyeMainFragment extends BaseFragment {
         }
 
         VectorTileLayer mVectorTileLayer = new VectorTileLayer(mMap, mTileSource);
+        mVectorTileLayer.addHook(new VectorTileLayer.TileLoaderThemeHook() {
+            @Override
+            public boolean process(MapTile tile, RenderBuckets buckets, MapElement element, RenderStyle style, int level) {
+                if (element.tags.contains(CONTOUR_TAG)) {
+                }
+                return false;
+            }
+
+            @Override
+            public void complete(MapTile tile, boolean success) {
+            }
+        });
         mMap.layers().add(mVectorTileLayer, LAYER_GROUP_ENUM.GROUP_VECTOR.ordinal());
+        loadTheme(null, true);
         mMap.updateMap(true);
     }
 

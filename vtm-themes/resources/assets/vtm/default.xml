@@ -42,7 +42,7 @@
 
     <!--等高线文字-->
     <style-text caption="true" dy="20" fill="#2d51bc" font-family="medium" id="CONTOUR"
-        k="name" size="14" stroke="#ffffff" stroke-width="2.0" />
+        k="CONTOUR" size="14" stroke="#ffffff" stroke-width="2.0" />
 
     <!--###### AREA styles ######-->
 
@@ -165,6 +165,11 @@
 
     <m e="way" k="natural" v="nosea">
         <area fill="#f8f8f8" mesh="true" />
+    </m>
+
+    <m k="contour">
+        <line use="trunk_link" />
+        <text use="CONTOUR" />
     </m>
 
     <!-- all closed ways that are not 'highway' or 'building' -->
