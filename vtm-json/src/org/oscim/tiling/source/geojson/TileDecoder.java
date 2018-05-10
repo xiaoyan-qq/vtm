@@ -29,9 +29,9 @@ import org.oscim.tiling.ITileDataSink;
 import org.oscim.tiling.source.ITileDecoder;
 import org.oscim.utils.ArrayUtils;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.LinkedHashMap;
 
 import static com.fasterxml.jackson.core.JsonToken.END_ARRAY;
@@ -86,7 +86,8 @@ public class TileDecoder implements ITileDecoder {
         mTileY = tile.tileY / mTileScale;
         mTileScale *= Tile.SIZE;
 
-        JsonParser jp = mJsonFactory.createParser(new InputStreamReader(is));
+//        JsonParser jp = mJsonFactory.createParser(new InputStreamReader(is));
+        JsonParser jp=mJsonFactory.createParser(new File("/storage/emulated/0/CatEye/contour.json"));
 
         Tag layerTag = null;
         for (JsonToken t; (t = jp.nextToken()) != null; ) {

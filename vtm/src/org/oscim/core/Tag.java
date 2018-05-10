@@ -52,6 +52,7 @@ public class Tag {
 
     public static final String KEY_AMENITY = "amenity";
     public static final String KEY_BUILDING = "building";
+    public static final String KEY_CONTOUR = "contour";
     public static final String KEY_HIGHWAY = "highway";
     public static final String KEY_LANDUSE = "landuse";
 
@@ -65,6 +66,7 @@ public class Tag {
     public static final String KEY_BUILDING_MATERIAL = "building:material";
     public static final String KEY_BUILDING_MIN_LEVEL = "building:min_level";
     public static final String KEY_BUILDING_PART = "building:part";
+    public static final String KEY_CONTOUR_PART = "contour:part";
     public static final String KEY_COLOR = "colour";
     public static final String KEY_HEIGHT = "height";
     public static final String KEY_MATERIAL = "material";

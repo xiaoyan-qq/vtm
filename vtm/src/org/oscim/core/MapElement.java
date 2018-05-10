@@ -62,12 +62,21 @@ public class MapElement extends GeometryBuffer {
 
     public boolean isBuilding() {
         return tags.containsKey(Tag.KEY_BUILDING)
-                || "building".equals(tags.getValue("kind")); // Mapzen
+                || "contour".equals(tags.getValue("kind")); // Mapzen
     }
 
     public boolean isBuildingPart() {
         return tags.containsKey(Tag.KEY_BUILDING_PART)
-                || "building_part".equals(tags.getValue("kind")); // Mapzen
+                || "contour_part".equals(tags.getValue("kind")); // Mapzen
+    }
+    public boolean isContour() {
+        return tags.containsKey(Tag.KEY_CONTOUR)
+                || "contour".equals(tags.getValue("kind")); // Mapzen
+    }
+
+    public boolean isContourPart() {
+        return tags.containsKey(Tag.KEY_CONTOUR_PART)
+                || "contour_part".equals(tags.getValue("kind")); // Mapzen
     }
 
     public void setLabelPosition(float x, float y) {

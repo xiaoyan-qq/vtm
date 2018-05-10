@@ -50,6 +50,7 @@ import org.oscim.layers.ContourLineLayer;
 import org.oscim.layers.Layer;
 import org.oscim.layers.tile.MapTile;
 import org.oscim.layers.tile.bitmap.BitmapTileLayer;
+import org.oscim.layers.tile.buildings.ContourLayer;
 import org.oscim.layers.tile.vector.OsmTileLayer;
 import org.oscim.layers.tile.vector.VectorTileLayer;
 import org.oscim.layers.tile.vector.labeling.LabelLayer;
@@ -74,8 +75,8 @@ import org.oscim.theme.styles.RenderStyle;
 import org.oscim.theme.styles.TextStyle;
 import org.oscim.tiling.TileSource;
 import org.oscim.tiling.source.bitmap.BitmapTileSource;
+import org.oscim.tiling.source.geojson.ContourGeojsonTileSource;
 import org.oscim.tiling.source.geojson.GeojsonTileSource;
-import org.oscim.tiling.source.geojson.MapzenGeojsonTileSource;
 import org.oscim.tiling.source.mapfile.MapFileTileSource;
 import org.oscim.tiling.source.mapfile.MapInfo;
 
@@ -419,7 +420,7 @@ public class CatEyeMainFragment extends BaseFragment {
                                             }
                                             if (!isHasThisLayer && isShow) {
                                                 if (stringDataBeanMap.get(key).getExtension().contains("json")) {
-                                                    MapzenGeojsonTileSource mTileSource = MapzenGeojsonTileSource.builder()
+                                                    ContourGeojsonTileSource mTileSource = ContourGeojsonTileSource.builder()
                                                             .url(stringDataBeanMap.get(key).getHref()).tilePath("/{X}/{Y}/{Z}.json" /*+ stringDataBeanMap.get(key).getExtension()*/)
 //                                                        .url("http://39.107.104.63:8080/tms/1.0.0/world_satellite_raster@EPSG:900913@jpeg").tilePath("/{Z}/{X}/{Y}.png")
                                                             .zoomMax(18).build();
@@ -668,19 +669,7 @@ public class CatEyeMainFragment extends BaseFragment {
         }
 
         VectorTileLayer mVectorTileLayer = new VectorTileLayer(mMap, mTileSource);
-        mVectorTileLayer.addHook(new VectorTileLayer.TileLoaderThemeHook() {
-            @Override
-            public boolean process(MapTile tile, RenderBuckets buckets, MapElement element, RenderStyle style, int level) {
-                if (element.tags.contains(CONTOUR_TAG)) {
-                }
-                return false;
-            }
-
-            @Override
-            public void complete(MapTile tile, boolean success) {
-            }
-        });
-        mMap.layers().add(mVectorTileLayer, LAYER_GROUP_ENUM.GROUP_VECTOR.ordinal());
+        mMap.layers().add(new ContourLayer(mMap, mVectorTileLayer), LAYER_GROUP_ENUM.GROUP_VECTOR.ordinal());
         loadTheme(null, true);
         mMap.updateMap(true);
     }

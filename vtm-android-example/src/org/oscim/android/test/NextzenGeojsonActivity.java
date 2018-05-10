@@ -37,7 +37,7 @@ public class NextzenGeojsonActivity extends MapActivity {
         super.onCreate(savedInstanceState);
 
         UrlTileSource tileSource = NextzenGeojsonTileSource.builder()
-                .apiKey("xxxxxxx") // Put a proper API key
+                .apiKey("4wTLZyXcQym31pxC_HGy7Q") // Put a proper API key
                 .httpFactory(new OkHttpEngine.OkHttpFactory())
                 //.locale("en")
                 .build();
