@@ -93,7 +93,7 @@ public class TileDecoder implements ITileDecoder {
         for (JsonToken t; (t = jp.nextToken()) != null; ) {
             if (t == FIELD_NAME) {
                 if (!match(jp, FIELD_FEATURES) && !match(jp, FIELD_TYPE))
-                    layerTag = new Tag("layer", jp.getCurrentName());
+                    layerTag = new Tag("layer", jp.getValueAsString());
                 if (match(jp, FIELD_FEATURES)) {
                     if (jp.nextToken() != START_ARRAY)
                         continue;
@@ -178,6 +178,8 @@ public class TileDecoder implements ITileDecoder {
                 if (match(jp, FIELD_COORDINATES)) {
                     if (jp.nextToken() != START_ARRAY)
                         continue;
+                    //此处应该需要判断当前geometry的类型
+
                     if (multi) {
                         parseMulti(jp, type);
                     } else {

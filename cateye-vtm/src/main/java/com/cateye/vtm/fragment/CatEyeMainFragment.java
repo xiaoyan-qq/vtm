@@ -669,6 +669,7 @@ public class CatEyeMainFragment extends BaseFragment {
         }
 
         VectorTileLayer mVectorTileLayer = new VectorTileLayer(mMap, mTileSource);
+        mMap.layers().add(mVectorTileLayer, LAYER_GROUP_ENUM.GROUP_VECTOR.ordinal());
         mMap.layers().add(new ContourLayer(mMap, mVectorTileLayer), LAYER_GROUP_ENUM.GROUP_VECTOR.ordinal());
         loadTheme(null, true);
         mMap.updateMap(true);
