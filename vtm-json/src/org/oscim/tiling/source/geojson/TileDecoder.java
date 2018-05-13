@@ -87,13 +87,18 @@ public class TileDecoder implements ITileDecoder {
         mTileScale *= Tile.SIZE;
 
 //        JsonParser jp = mJsonFactory.createParser(new InputStreamReader(is));
-        JsonParser jp=mJsonFactory.createParser(new File("/storage/emulated/0/CatEye/contour.json"));
+        JsonParser jp = mJsonFactory.createParser(new File("/storage/emulated/0/CatEye/contour.json"));
 
         Tag layerTag = null;
         for (JsonToken t; (t = jp.nextToken()) != null; ) {
             if (t == FIELD_NAME) {
-                if (!match(jp, FIELD_FEATURES) && !match(jp, FIELD_TYPE))
-                    layerTag = new Tag("layer", jp.getValueAsString());
+                if (!match(jp, FIELD_FEATURES) && !match(jp, FIELD_TYPE)) {
+                    t = jp.nextToken();
+                    if (t == VALUE_STRING)
+                        layerTag = new Tag("layer", jp.getText());
+                    else
+                        layerTag = new Tag("layer", jp.getValueAsString());
+                }
                 if (match(jp, FIELD_FEATURES)) {
                     if (jp.nextToken() != START_ARRAY)
                         continue;
@@ -172,7 +177,6 @@ public class TileDecoder implements ITileDecoder {
 
         boolean multi = false;
         GeometryType type = GeometryType.NONE;
-
         for (JsonToken t; (t = jp.nextToken()) != null; ) {
             if (t == FIELD_NAME) {
                 if (match(jp, FIELD_COORDINATES)) {
