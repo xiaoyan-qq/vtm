@@ -41,7 +41,7 @@
         stroke-width="2.0" />
 
     <!--等高线文字-->
-    <style-text caption="true" dy="20" fill="#2d51bc" font-family="medium" id="contour"
+    <style-text caption="true" dy="0" fill="#2d51bc" font-family="medium" id="contour"
         k="contour" size="14" stroke="#ffffff" stroke-width="2.0" />
 
     <!--###### AREA styles ######-->
@@ -122,7 +122,7 @@
     <style-line id="construction" stroke="#e0e0e0" width="1.2" />
     <style-line id="highway-service" use="residential" width="-0.6" />
     <!--等高线显示-->
-    <style-line id="contour" use="residential" width="-0.6" stroke="#4B0082" fade="0" />
+    <style-line id="contour" use="residential" width="-0.6" stroke="#4B0082" fade="0" outline="0"/>
 
     <!-- track|footway|path|cycleway -->
     <style-line cap="butt" fix="true" id="footway" stipple="2" stipple-stroke="#d35c48"
