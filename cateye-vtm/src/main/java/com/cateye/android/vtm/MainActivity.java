@@ -2,8 +2,14 @@ package com.cateye.android.vtm;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.os.Message;
 
 import com.cateye.vtm.fragment.CatEyeMainFragment;
+import com.cateye.vtm.util.SystemConstant;
+import com.tencent.map.geolocation.TencentLocation;
+import com.tencent.map.geolocation.TencentLocationListener;
+import com.tencent.map.geolocation.TencentLocationManager;
+import com.tencent.map.geolocation.TencentLocationRequest;
 import com.vondear.rxtools.view.dialog.RxDialogSure;
 import com.yanzhenjie.permission.Action;
 import com.yanzhenjie.permission.AndPermission;
@@ -11,6 +17,7 @@ import com.yanzhenjie.permission.Permission;
 import com.yanzhenjie.permission.Rationale;
 import com.yanzhenjie.permission.RequestExecutor;
 
+import org.greenrobot.eventbus.EventBus;
 import org.oscim.android.filepicker.FilePicker;
 import org.oscim.android.filepicker.FilterByFileExtension;
 import org.oscim.android.filepicker.ValidMapFile;
@@ -21,12 +28,13 @@ import java.util.List;
 import me.yokeyword.fragmentation.SupportActivity;
 
 //@Puppet(containerViewId = R.id.fragment_main_container, bondContainerView = true)
-public class MainActivity extends SupportActivity {
+public class MainActivity extends SupportActivity implements TencentLocationListener {
+    private TencentLocation currentLocation;
 
     //地图layer的分组
     public enum LAYER_GROUP_ENUM {
         GROUP_BASE/*基础图层*/, GROUP_VECTOR/*矢量图层分组*/, GROUP_OTHER/*其他图层分组*/, GROUP_BUILDING/*建筑图层分组*/,
-        GROUP_LABELS/*label图层分组*/, GROUP_3D_OBJECTS/*3D图层分组*/, GROUP_OPERTOR/*操作图层分组*/
+        GROUP_LABELS/*label图层分组*/, GROUP_3D_OBJECTS/*3D图层分组*/, GROUP_OPERTOR/*操作图层分组*/, GROUP_LOCATION/*当前位置分组*/
     }
 
     @Override
@@ -74,6 +82,11 @@ public class MainActivity extends SupportActivity {
 
             }
         }).start();
+
+        TencentLocationRequest request = TencentLocationRequest.create();
+        TencentLocationManager locationManager = TencentLocationManager.getInstance(this);
+        locationManager.setCoordinateType(TencentLocationManager.COORDINATE_TYPE_WGS84);//使用wgs84坐标系
+        int error = locationManager.requestLocationUpdates(request, this);
     }
 
     /**
@@ -109,5 +122,27 @@ public class MainActivity extends SupportActivity {
     @Override
     public void onBackPressedSupport() {
         super.onBackPressedSupport();
+    }
+
+    @Override
+    public void onLocationChanged(TencentLocation tencentLocation, int error, String reason) {
+        //通过腾讯定位获取到位置信息
+        if (TencentLocation.ERROR_OK == error) {
+            // 定位成功,更新当前的位置信息，如果是第一次定位，则自动将屏幕中心位置设置为当前位置
+            currentLocation = tencentLocation;
+            Message msg = new Message();
+            msg.obj = tencentLocation;
+            msg.what = SystemConstant.MSG_WHAT_LOCATION_UPDATE;
+            EventBus.getDefault().post(msg);
+        }
+    }
+
+    @Override
+    public void onStatusUpdate(String s, int i, String s1) {
+        //定位设备状态信息更新
+    }
+
+    public TencentLocation getCurrentLocation() {
+        return currentLocation;
     }
 }

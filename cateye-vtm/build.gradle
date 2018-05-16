@@ -7,7 +7,7 @@ android {
 
     defaultConfig {
         applicationId "com.cateye.android.vtm"
-        minSdkVersion 23
+        minSdkVersion 15
         targetSdkVersion 26
         versionCode 1
         versionName "1.0"
@@ -18,11 +18,12 @@ android {
 
     sourceSets {
         main {
-//            manifest.srcFile 'AndroidManifest.xml'
-//            java.srcDirs = ['src']
-//            resources.srcDirs = ['src']
-//            res.srcDirs = ['res']
-//            assets.srcDirs = ['assets']
+            manifest.srcFile 'src/main/AndroidManifest.xml'
+            java.srcDirs = ['src/main/java']
+            resources.srcDirs = ['src/main']
+            res.srcDirs = ['src/main/res']
+            assets.srcDirs = ['assets']
+            jniLibs.srcDirs = ['libs']
             file("${rootDir}/vtm-android/natives").eachDir() { dir ->
                 jniLibs.srcDirs += "${dir.path}/lib"
             }
@@ -91,4 +92,5 @@ dependencies {
     compile 'com.alibaba:fastjson:1.1.68.android'
     //对话框样式https://github.com/canyinghao/CanDialog
     compile 'com.canyinghao:candialog:1.0.9'
+    implementation files('libs/TencentLocationSdk_v6.2.5.3.jar')
 }

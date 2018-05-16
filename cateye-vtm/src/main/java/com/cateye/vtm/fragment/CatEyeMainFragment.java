@@ -25,6 +25,7 @@ import com.lzy.okgo.convert.StringConvert;
 import com.lzy.okgo.model.Response;
 import com.lzy.okrx2.adapter.ObservableResponse;
 import com.ta.utdid2.android.utils.StringUtils;
+import com.tencent.map.geolocation.TencentLocation;
 import com.vondear.rxtools.RxLogTool;
 import com.vondear.rxtools.view.RxToast;
 import com.vondear.rxtools.view.dialog.RxDialog;
@@ -48,9 +49,9 @@ import org.oscim.core.Tag;
 import org.oscim.core.Tile;
 import org.oscim.layers.ContourLineLayer;
 import org.oscim.layers.Layer;
+import org.oscim.layers.LocationLayer;
 import org.oscim.layers.tile.MapTile;
 import org.oscim.layers.tile.bitmap.BitmapTileLayer;
-import org.oscim.layers.tile.buildings.ContourLayer;
 import org.oscim.layers.tile.vector.OsmTileLayer;
 import org.oscim.layers.tile.vector.VectorTileLayer;
 import org.oscim.layers.tile.vector.labeling.LabelLayer;
@@ -106,7 +107,7 @@ import static com.cateye.vtm.util.SystemConstant.URL_MAP_SOURCE_NET;
  * Created by zhangdezhi1702 on 2018/3/15.
  */
 //@Puppet(containerViewId = R.id.layer_main_cateye_bottom)
-public class CatEyeMainFragment extends BaseFragment {
+public class CatEyeMainFragment extends com.cateye.vtm.fragment.BaseFragment {
     private MapView mapView;//地图控件
     private Map mMap;
     private MapPreferences mPrefs;
@@ -129,10 +130,15 @@ public class CatEyeMainFragment extends BaseFragment {
     private Button btn_draw_plp;//绘制点线面
 
     private ImageView chk_draw_point, chk_draw_line, chk_draw_polygon;//绘制点线面
+    private ImageView img_location;//获取当前位置的按钮
     private ImageView img_map_source_selector;
     private List<ImageView> chkDrawPointLinePolygonList;
     private FrameLayout layer_fragment;//用来显示fragment的布局文件
     private java.util.Map<String, MapSourceFromNet.DataBean> netDataSourceMap;//用来记录用户勾选了哪些网络数据显示
+
+    private LocationLayer locationLayer;//显示当前位置的图层
+    private final MapPosition mapPosition = new MapPosition();//更新地图位置
+    private boolean isMapCenterFollowLocation = true;//地图中心是否需要跟随当前定位位置
 
     @Override
     public int getFragmentLayoutId() {
@@ -180,6 +186,27 @@ public class CatEyeMainFragment extends BaseFragment {
         if (!EventBus.getDefault().isRegistered(this)) {
             EventBus.getDefault().register(this);
         }
+
+        locationLayer = new LocationLayer(mMap);
+        locationLayer.locationRenderer.setShader("location_1_reverse");
+        locationLayer.setEnabled(false);
+        mMap.layers().add(locationLayer, LAYER_GROUP_ENUM.GROUP_LOCATION.ordinal());
+
+        img_location = rootView.findViewById(R.id.img_location);
+        img_location.setOnClickListener(new View.OnClickListener() {//定位到当前位置
+            @Override
+            public void onClick(View view) {
+                TencentLocation location = ((MainActivity) getActivity()).getCurrentLocation();
+                if (location != null) {//有位置信息，或至少曾经定位过
+                    mMap.getMapPosition(mapPosition);
+                    mapPosition.setPosition(location.getLatitude(), location.getLongitude());
+                    mMap.setMapPosition(mapPosition);
+                    isMapCenterFollowLocation = false;
+                } else {
+                    RxToast.info("无法获取到定位信息!");
+                }
+            }
+        });
     }
 
     @Override
@@ -253,12 +280,12 @@ public class CatEyeMainFragment extends BaseFragment {
 //                    DrawPointLinePolygonFragment drawPointLinePolygonFragment = (DrawPointLinePolygonFragment) DrawPointLinePolygonFragment.newInstance(new Bundle());
                     //自动弹出绘制点线面的fragment
                     Bundle pointBundle = new Bundle();
-                    pointBundle.putSerializable(DrawPointLinePolygonFragment.DRAW_STATE.class.getSimpleName(), DrawPointLinePolygonFragment.DRAW_STATE.DRAW_POINT);
+                    pointBundle.putSerializable(com.cateye.vtm.fragment.DrawPointLinePolygonFragment.DRAW_STATE.class.getSimpleName(), com.cateye.vtm.fragment.DrawPointLinePolygonFragment.DRAW_STATE.DRAW_POINT);
 //                    drawPointLinePolygonFragment.setArguments(pointBundle);
 //                    Rigger.getRigger(CatEyeMainFragment.this).startFragment(drawPointLinePolygonFragment);
 //                    DrawPointLinePolygonFragment drawPointLinePolygonFragment=fragment(DrawPointLinePolygonFragment.class,pointBundle);
 //                    startFragment(drawPointLinePolygonFragment);
-                    loadRootFragment(R.id.layer_main_cateye_bottom, DrawPointLinePolygonFragment.newInstance(pointBundle));
+                    loadRootFragment(R.id.layer_main_cateye_bottom, com.cateye.vtm.fragment.DrawPointLinePolygonFragment.newInstance(pointBundle));
                 } else {//不选中
                     popChild();
                 }
@@ -269,10 +296,10 @@ public class CatEyeMainFragment extends BaseFragment {
 //                    DrawPointLinePolygonFragment drawPointLinePolygonFragment = (DrawPointLinePolygonFragment) DrawPointLinePolygonFragment.newInstance(new Bundle());
                     //自动弹出绘制点线面的fragment
                     Bundle lineBundle = new Bundle();
-                    lineBundle.putSerializable(DrawPointLinePolygonFragment.DRAW_STATE.class.getSimpleName(), DrawPointLinePolygonFragment.DRAW_STATE.DRAW_LINE);
+                    lineBundle.putSerializable(com.cateye.vtm.fragment.DrawPointLinePolygonFragment.DRAW_STATE.class.getSimpleName(), com.cateye.vtm.fragment.DrawPointLinePolygonFragment.DRAW_STATE.DRAW_LINE);
 //                    drawPointLinePolygonFragment.setArguments(pointBundle);
 //                    Rigger.getRigger(CatEyeMainFragment.this).startFragment(drawPointLinePolygonFragment);
-                    loadRootFragment(R.id.layer_main_cateye_bottom, DrawPointLinePolygonFragment.newInstance(lineBundle));
+                    loadRootFragment(R.id.layer_main_cateye_bottom, com.cateye.vtm.fragment.DrawPointLinePolygonFragment.newInstance(lineBundle));
                 } else {//不选中
                     popChild();
                 }
@@ -283,10 +310,10 @@ public class CatEyeMainFragment extends BaseFragment {
 //                    DrawPointLinePolygonFragment drawPointLinePolygonFragment = (DrawPointLinePolygonFragment) DrawPointLinePolygonFragment.newInstance(new Bundle());
                     //自动弹出绘制点线面的fragment
                     Bundle polygonBundle = new Bundle();
-                    polygonBundle.putSerializable(DrawPointLinePolygonFragment.DRAW_STATE.class.getSimpleName(), DrawPointLinePolygonFragment.DRAW_STATE.DRAW_POLYGON);
+                    polygonBundle.putSerializable(com.cateye.vtm.fragment.DrawPointLinePolygonFragment.DRAW_STATE.class.getSimpleName(), com.cateye.vtm.fragment.DrawPointLinePolygonFragment.DRAW_STATE.DRAW_POLYGON);
 //                    drawPointLinePolygonFragment.setArguments(pointBundle);
 //                    Rigger.getRigger(CatEyeMainFragment.this).startFragment(drawPointLinePolygonFragment);
-                    loadRootFragment(R.id.layer_main_cateye_bottom, DrawPointLinePolygonFragment.newInstance(polygonBundle));
+                    loadRootFragment(R.id.layer_main_cateye_bottom, com.cateye.vtm.fragment.DrawPointLinePolygonFragment.newInstance(polygonBundle));
                 } else {//不选中
                     popChild();
                 }
@@ -648,7 +675,6 @@ public class CatEyeMainFragment extends BaseFragment {
 
         BitmapTileLayer mBitmapLayer = new BitmapTileLayer(mMap, mTileSource);
         mMap.layers().add(mBitmapLayer, LAYER_GROUP_ENUM.GROUP_VECTOR.ordinal());
-        loadTheme(null, true);
         mMap.updateMap(true);
     }
 
@@ -733,6 +759,21 @@ public class CatEyeMainFragment extends BaseFragment {
                         if (chk.isSelected()) {
                             chk.setSelected(false);
                         }
+                    }
+                }
+                break;
+            case SystemConstant.MSG_WHAT_LOCATION_UPDATE:
+                if (msg.obj != null) {
+                    TencentLocation location = (TencentLocation) msg.obj;
+                    locationLayer.setEnabled(true);
+                    locationLayer.setPosition(location.getLatitude(), location.getLongitude(), location.getAccuracy());
+
+                    // Follow location
+                    if (isMapCenterFollowLocation) {
+                        mMap.getMapPosition(mapPosition);
+                        mapPosition.setPosition(location.getLatitude(), location.getLongitude());
+                        mMap.setMapPosition(mapPosition);
+                        isMapCenterFollowLocation = false;
                     }
                 }
                 break;
