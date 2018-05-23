@@ -3,7 +3,6 @@
     package="com.cateye.android.vtm">
 
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-
     <!-- 通过GPS得到精确位置 -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <!-- 通过网络得到粗略位置 -->
@@ -33,7 +32,6 @@
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
@@ -48,6 +46,10 @@
         <!--GeoJson文件选择筛选类-->
         <activity
             android:name="com.cateye.android.vtm.MainActivity$GeoJsonFilePicker"
+            android:configChanges="keyboardHidden|orientation|screenSize" />
+        <!--等高线文件选择筛选类-->
+        <activity
+            android:name="com.cateye.android.vtm.MainActivity$ContourFilePicker"
             android:configChanges="keyboardHidden|orientation|screenSize" />
 
         <meta-data android:name="TencentMapSDK" android:value="FN4BZ-P6IC6-ENKSQ-MVCMP-MGAX6-FYFUW" />

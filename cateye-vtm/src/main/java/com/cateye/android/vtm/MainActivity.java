@@ -100,6 +100,16 @@ public class MainActivity extends SupportActivity implements TencentLocationList
     }
 
     /**
+     * 选择本地等高线文件的文件选择过滤器
+     */
+    public static class ContourFilePicker extends FilePicker {
+        public ContourFilePicker() {
+            setFileDisplayFilter(new FilterByFileExtension(".json"));
+            setFileSelectFilter(new ValidMapFile());
+        }
+    }
+
+    /**
      * 选择本地地图样式文件的文件选择过滤器
      */
     public static class ThemeFilePicker extends FilePicker {

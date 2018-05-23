@@ -12,8 +12,11 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONReader;
 import com.canyinghao.candialog.CanDialog;
 import com.canyinghao.candialog.CanDialogInterface;
+import com.cateye.android.entity.ContourMPData;
 import com.cateye.android.entity.MapSourceFromNet;
 import com.cateye.android.vtm.MainActivity;
 import com.cateye.android.vtm.MainActivity.LAYER_GROUP_ENUM;
@@ -84,8 +87,11 @@ import org.oscim.tiling.source.mapfile.MapInfo;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serializable;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -115,6 +121,7 @@ public class CatEyeMainFragment extends com.cateye.vtm.fragment.BaseFragment {
     static final int SELECT_MAP_FILE = 0;
     static final int SELECT_THEME_FILE = SELECT_MAP_FILE + 1;
     static final int SELECT_GEOJSON_FILE = SELECT_MAP_FILE + 2;
+    static final int SELECT_CONTOUR_FILE = SELECT_MAP_FILE + 3;
 
     private static final Tag ISSEA_TAG = new Tag("natural", "issea");
     private static final Tag NOSEA_TAG = new Tag("natural", "nosea");
@@ -132,6 +139,7 @@ public class CatEyeMainFragment extends com.cateye.vtm.fragment.BaseFragment {
     private ImageView chk_draw_point, chk_draw_line, chk_draw_polygon;//绘制点线面
     private ImageView img_location;//获取当前位置的按钮
     private ImageView img_map_source_selector;
+    private ImageView img_contour_selector;//加载等高线数据的按钮
     private List<ImageView> chkDrawPointLinePolygonList;
     private FrameLayout layer_fragment;//用来显示fragment的布局文件
     private java.util.Map<String, MapSourceFromNet.DataBean> netDataSourceMap;//用来记录用户勾选了哪些网络数据显示
@@ -180,33 +188,14 @@ public class CatEyeMainFragment extends com.cateye.vtm.fragment.BaseFragment {
 
         //选择地图资源
         img_map_source_selector = rootView.findViewById(R.id.img_map_source_select);
+        img_contour_selector = rootView.findViewById(R.id.img_contour_select);
+        img_location = rootView.findViewById(R.id.img_location);
 
         initData();
         initScaleBar();
         if (!EventBus.getDefault().isRegistered(this)) {
             EventBus.getDefault().register(this);
         }
-
-        locationLayer = new LocationLayer(mMap);
-        locationLayer.locationRenderer.setShader("location_1_reverse");
-        locationLayer.setEnabled(false);
-        mMap.layers().add(locationLayer, LAYER_GROUP_ENUM.GROUP_LOCATION.ordinal());
-
-        img_location = rootView.findViewById(R.id.img_location);
-        img_location.setOnClickListener(new View.OnClickListener() {//定位到当前位置
-            @Override
-            public void onClick(View view) {
-                TencentLocation location = ((MainActivity) getActivity()).getCurrentLocation();
-                if (location != null) {//有位置信息，或至少曾经定位过
-                    mMap.getMapPosition(mapPosition);
-                    mapPosition.setPosition(location.getLatitude(), location.getLongitude());
-                    mMap.setMapPosition(mapPosition);
-                    isMapCenterFollowLocation = false;
-                } else {
-                    RxToast.info("无法获取到定位信息!");
-                }
-            }
-        });
     }
 
     @Override
@@ -268,6 +257,27 @@ public class CatEyeMainFragment extends com.cateye.vtm.fragment.BaseFragment {
         chk_draw_polygon.setOnClickListener(mainFragmentClickListener);
 
         img_map_source_selector.setOnClickListener(mainFragmentClickListener);
+        img_contour_selector.setOnClickListener(mainFragmentClickListener);//选择等高线文件并显示
+
+        locationLayer = new LocationLayer(mMap);
+        locationLayer.locationRenderer.setShader("location_1_reverse");
+        locationLayer.setEnabled(false);
+        mMap.layers().add(locationLayer, LAYER_GROUP_ENUM.GROUP_LOCATION.ordinal());
+
+        img_location.setOnClickListener(new View.OnClickListener() {//定位到当前位置
+            @Override
+            public void onClick(View view) {
+                TencentLocation location = ((MainActivity) getActivity()).getCurrentLocation();
+                if (location != null) {//有位置信息，或至少曾经定位过
+                    mMap.getMapPosition(mapPosition);
+                    mapPosition.setPosition(location.getLatitude(), location.getLongitude());
+                    mMap.setMapPosition(mapPosition);
+                    isMapCenterFollowLocation = false;
+                } else {
+                    RxToast.info("无法获取到定位信息!");
+                }
+            }
+        });
     }
 
     View.OnClickListener mainFragmentClickListener = new View.OnClickListener() {
@@ -340,6 +350,9 @@ public class CatEyeMainFragment extends com.cateye.vtm.fragment.BaseFragment {
                         getMapDataSourceFromNet();
                     }
                 });
+            } else if (view.getId() == R.id.img_contour_select) {//选择等高线文件
+                startActivityForResult(new Intent(getActivity(), MainActivity.ContourFilePicker.class),
+                        SELECT_CONTOUR_FILE);
             }
         }
     };
@@ -616,6 +629,41 @@ public class CatEyeMainFragment extends com.cateye.vtm.fragment.BaseFragment {
                 } catch (FileNotFoundException e) {
                     e.printStackTrace();
                 }
+            }
+        } else if (requestCode == SELECT_CONTOUR_FILE) {
+            try {
+                if (resultCode != getActivity().RESULT_OK || intent == null || intent.getStringExtra(FilePicker.SELECTED_FILE) == null) {
+                    return;
+                }
+                String filePath = intent.getStringExtra(FilePicker.SELECTED_FILE);
+                File geoJsonFile = new File(filePath);
+                if (geoJsonFile.exists() && geoJsonFile.isFile()) {
+                    JSONReader reader = null;
+                    reader = new JSONReader(new FileReader(filePath));
+                    //此处使用list的int数组记录从文件中读取到的数据
+                    List<ContourMPData> xyzList = new ArrayList<>();
+                    reader.startArray();
+                    while (reader.hasNext()) {
+                        JSONArray jsonArray = (JSONArray) reader.readObject();
+                        if (jsonArray != null) {
+                            ContourMPData contourMPData = new ContourMPData();
+                            contourMPData.setmLongitude(((BigDecimal) jsonArray.get(0)).doubleValue());
+                            contourMPData.setmLatitude(((BigDecimal) jsonArray.get(1)).doubleValue());
+                            contourMPData.setmHeight(((BigDecimal) jsonArray.get(2)).floatValue());
+                            xyzList.add(contourMPData);
+                        }
+                    }
+                    reader.endArray();
+                    reader.close();
+                    //自动弹出绘制高度折线的fragment
+                    Bundle pointBundle = new Bundle();
+                    pointBundle.putSerializable(SystemConstant.DATA_CONTOUR_CHART, (Serializable) xyzList);
+                    loadRootFragment(R.id.layer_main_cateye_bottom, ContourMPChartFragment.newInstance(pointBundle));
+                }
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (Exception e) {
+                RxToast.error("您选择的文件不符合等高线文件读取标准");
             }
         }
     }
