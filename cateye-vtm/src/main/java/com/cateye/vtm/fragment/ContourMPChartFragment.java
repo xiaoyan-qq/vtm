@@ -169,7 +169,7 @@ public class ContourMPChartFragment extends BaseDrawFragment {
 
             LineData lineData = new LineData(dataSet);
             contourChart.setData(lineData);
-            contourChart.animateXY(100,250, Easing.EasingOption.Linear, Easing.EasingOption.Linear);
+            contourChart.animateXY(1000,1500, Easing.EasingOption.Linear, Easing.EasingOption.Linear);
             contourChart.invalidate(); // refresh
             contourChart.setOnChartValueSelectedListener(new OnChartValueSelectedListener() {
                 @Override
