@@ -10,6 +10,7 @@ import com.tencent.map.geolocation.TencentLocation;
 import com.tencent.map.geolocation.TencentLocationListener;
 import com.tencent.map.geolocation.TencentLocationManager;
 import com.tencent.map.geolocation.TencentLocationRequest;
+import com.vondear.rxtools.RxBarTool;
 import com.vondear.rxtools.view.dialog.RxDialogSure;
 import com.yanzhenjie.permission.Action;
 import com.yanzhenjie.permission.AndPermission;
@@ -87,6 +88,10 @@ public class MainActivity extends SupportActivity implements TencentLocationList
         TencentLocationManager locationManager = TencentLocationManager.getInstance(this);
         locationManager.setCoordinateType(TencentLocationManager.COORDINATE_TYPE_WGS84);//使用wgs84坐标系
         int error = locationManager.requestLocationUpdates(request, this);
+
+        //处理ActionBar
+        RxBarTool.transparencyBar(this);
+//        RxBarTool.FlymeSetStatusBarLightMode(getWindow(),true);
     }
 
     /**
@@ -105,7 +110,6 @@ public class MainActivity extends SupportActivity implements TencentLocationList
     public static class ContourFilePicker extends FilePicker {
         public ContourFilePicker() {
             setFileDisplayFilter(new FilterByFileExtension(".json"));
-            setFileSelectFilter(new ValidMapFile());
         }
     }
 

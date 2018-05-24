@@ -113,7 +113,7 @@ import static com.cateye.vtm.util.SystemConstant.URL_MAP_SOURCE_NET;
  * Created by zhangdezhi1702 on 2018/3/15.
  */
 //@Puppet(containerViewId = R.id.layer_main_cateye_bottom)
-public class CatEyeMainFragment extends com.cateye.vtm.fragment.BaseFragment {
+public class CatEyeMainFragment extends BaseFragment {
     private MapView mapView;//地图控件
     private Map mMap;
     private MapPreferences mPrefs;
@@ -271,7 +271,7 @@ public class CatEyeMainFragment extends com.cateye.vtm.fragment.BaseFragment {
                 if (location != null) {//有位置信息，或至少曾经定位过
                     mMap.getMapPosition(mapPosition);
                     mapPosition.setPosition(location.getLatitude(), location.getLongitude());
-                    mMap.setMapPosition(mapPosition);
+                    mMap.animator().animateTo(mapPosition);
                     isMapCenterFollowLocation = false;
                 } else {
                     RxToast.info("无法获取到定位信息!");
@@ -576,7 +576,7 @@ public class CatEyeMainFragment extends com.cateye.vtm.fragment.BaseFragment {
                 MapInfo info = mTileSource.getMapInfo();
                 MapPosition pos = new MapPosition();
                 pos.setByBoundingBox(info.boundingBox, Tile.SIZE * 4, Tile.SIZE * 4);
-                mMap.setMapPosition(pos);
+                mMap.animator().animateTo(pos);
                 loadTheme(null, true);
 
                 mPrefs.clear();
@@ -798,7 +798,7 @@ public class CatEyeMainFragment extends com.cateye.vtm.fragment.BaseFragment {
     @Subscribe
     public void onEventMainThread(Message msg) {
         switch (msg.what) {
-            case SystemConstant.MSG_WHAT_DRAW_POINT_LINE_POLYGON_DESTROY:
+            case SystemConstant.MSG_WHAT_DRAW_POINT_LINE_POLYGON_DESTROY://绘制点线面结束
                 if (chkDrawPointLinePolygonList != null) {
                     for (ImageView chk : chkDrawPointLinePolygonList) {
                         if (!chk.isEnabled()) {
@@ -810,7 +810,7 @@ public class CatEyeMainFragment extends com.cateye.vtm.fragment.BaseFragment {
                     }
                 }
                 break;
-            case SystemConstant.MSG_WHAT_LOCATION_UPDATE:
+            case SystemConstant.MSG_WHAT_LOCATION_UPDATE://位置有更新
                 if (msg.obj != null) {
                     TencentLocation location = (TencentLocation) msg.obj;
                     locationLayer.setEnabled(true);
@@ -820,11 +820,49 @@ public class CatEyeMainFragment extends com.cateye.vtm.fragment.BaseFragment {
                     if (isMapCenterFollowLocation) {
                         mMap.getMapPosition(mapPosition);
                         mapPosition.setPosition(location.getLatitude(), location.getLongitude());
-                        mMap.setMapPosition(mapPosition);
+                        mMap.animator().animateTo(mapPosition);
                         isMapCenterFollowLocation = false;
                     }
                 }
                 break;
+            case SystemConstant.MSG_WHAT_MAIN_AREA_HIDEN_VISIBLE:
+                Bundle bundle = msg.getData();
+                if (bundle != null) {
+                    boolean isHiden = bundle.getBoolean(SystemConstant.BUNDLE_AREA_HIDEN_STATE);
+                    BUTTON_AREA button_area = (BUTTON_AREA) bundle.getSerializable(SystemConstant.BUNDLE_BUTTON_AREA);
+                    hideOrShowButtonArea(isHiden, button_area);
+                }
+                break;
         }
+    }
+
+    /**
+     * @param :
+     * @return :
+     * @method : hideButton
+     * @Author : xiaoxiao
+     * @Describe : 隐藏右侧按钮列表
+     * @Date : 2018/5/24
+     */
+    private void hideOrShowButtonArea(boolean isVisible, BUTTON_AREA button_area) {
+        switch (button_area) {
+            case ALL:
+                rootView.findViewById(R.id.layer_main_fragment_right).setVisibility(isVisible ? View.VISIBLE : View.GONE);
+                rootView.findViewById(R.id.img_location).setVisibility(isVisible ? View.VISIBLE : View.GONE);
+                break;
+            case LOCATION:
+                rootView.findViewById(R.id.img_location).setVisibility(isVisible ? View.VISIBLE : View.GONE);
+                break;
+            case BOTTOM_LEFT:
+                rootView.findViewById(R.id.img_location).setVisibility(isVisible ? View.VISIBLE : View.GONE);
+                break;
+            case BOTTOM_RIGHT:
+                rootView.findViewById(R.id.layer_main_fragment_right_bottom).setVisibility(isVisible ? View.VISIBLE : View.GONE);
+                break;
+        }
+    }
+
+    public enum BUTTON_AREA {
+        ALL/*所有按钮*/, LOCATION/*定位按钮*/, BOTTOM_LEFT/*左下角*/, BOTTOM_RIGHT/*右下角*/
     }
 }
