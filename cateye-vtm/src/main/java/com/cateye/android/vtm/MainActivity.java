@@ -91,6 +91,7 @@ public class MainActivity extends SupportActivity implements TencentLocationList
 
         //处理ActionBar
         RxBarTool.transparencyBar(this);
+//        RxBarTool.setNoTitle(this);
 //        RxBarTool.FlymeSetStatusBarLightMode(getWindow(),true);
     }
 

@@ -165,7 +165,7 @@ public class BaseDrawFragment extends BaseFragment {
 //                    }
 //                    break;
 //            }
-            if (g instanceof Gesture.Press) {
+            if (g instanceof Gesture.Tap) {
                 GeoPoint p = mMap.viewport().fromScreenPoint(e.getX(), e.getY());
                 DRAW_STATE currentState = getCurrentDrawState();
                 if (currentState != DRAW_STATE.DRAW_NONE) {//如果当前是绘制模式，则自动添加marker

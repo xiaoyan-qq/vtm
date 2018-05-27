@@ -1,6 +1,7 @@
 package com.cateye.vtm.fragment;
 
 import android.content.Context;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.view.View;
@@ -20,6 +21,7 @@ import com.github.mikephil.charting.highlight.Highlight;
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
 import com.vondear.rxtools.RxDeviceTool;
 
+import org.oscim.android.canvas.AndroidBitmap;
 import org.oscim.backend.canvas.Bitmap;
 import org.oscim.core.GeoPoint;
 import org.oscim.core.MapPosition;
@@ -43,6 +45,8 @@ public class ContourMPChartFragment extends BaseDrawFragment {
     private ImageView img_close;
     private MapPosition currentMapPosition;
 
+    private ItemizedLayer<MarkerItem> mLineClickMarkerLayer;//用来捕捉用户点击事件的marker的layer
+
     public static BaseFragment newInstance(Bundle bundle) {
         ContourMPChartFragment contourMPChartFragment = new ContourMPChartFragment();
         contourMPChartFragment.setArguments(bundle);
@@ -53,7 +57,7 @@ public class ContourMPChartFragment extends BaseDrawFragment {
     public void onNewBundle(Bundle args) {
         super.onNewBundle(args);
         if (args != null) {
-            //获取当前的绘制状态
+            //获取等高线的数据
             mpChartDataList = (List<ContourMPData>) args.getSerializable(SystemConstant.DATA_CONTOUR_CHART);
         }
     }
@@ -62,12 +66,12 @@ public class ContourMPChartFragment extends BaseDrawFragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (savedInstanceState != null) {
-            //获取当前的绘制状态
+            //获取等高线的数据
             mpChartDataList = (List<ContourMPData>) savedInstanceState.getSerializable(SystemConstant.DATA_CONTOUR_CHART);
         }
         if (getArguments() != null) {
             Bundle bundle = getArguments();
-            //获取当前的绘制状态
+            //获取等高线的数据
             mpChartDataList = (List<ContourMPData>) bundle.getSerializable(SystemConstant.DATA_CONTOUR_CHART);
         }
     }
@@ -96,14 +100,16 @@ public class ContourMPChartFragment extends BaseDrawFragment {
             }
             polylineOverlay.getPoints().clear();
             for (ContourMPData data : mpChartDataList) {
-                polylineOverlay.getPoints().add(new GeoPoint(data.getmLatitude(), data.getmLongitude()));
+                GeoPoint geoPoint = new GeoPoint(data.getmLatitude(), data.getmLongitude());
+                polylineOverlay.getPoints().add(geoPoint);
+                markerLayer.addItem(new MarkerItem(geoPoint.getLatitude() + "/" + geoPoint.getLongitude(), "", geoPoint));
             }
             redrawPolyline(polylineOverlay);
 
             //自动将地图缩放级别提高，并将中心点位置定位到第一个点的位置
             polylineOverlay.map().getMapPosition(currentMapPosition);
             currentMapPosition.setPosition(polylineOverlay.getPoints().get(0).getLatitude(), polylineOverlay.getPoints().get(0).getLongitude());
-            if (currentMapPosition.getZoomLevel()<14){
+            if (currentMapPosition.getZoomLevel() < 14) {
                 currentMapPosition.setZoomLevel(14);
             }
             polylineOverlay.map().animator().animateTo(currentMapPosition);
@@ -140,13 +146,39 @@ public class ContourMPChartFragment extends BaseDrawFragment {
         polylineOverlay.setStyle(lineStyle);
     }
 
+    /**
+     * @param :
+     * @return :
+     * @method : initMarkerOverlayer
+     * @Author : xiaoxiao
+     * @Describe : 初始化线的点击layer
+     * @Date : 2018/5/24
+     */
     private void initMarkerOverlayer() {
         //打开该fragment，则自动向地图中添加marker的overlay
-        Bitmap bitmapPoi = drawableToBitmap(getResources().getDrawable(R.drawable.marker_focus));
+        Bitmap bitmapPoi = drawableToBitmap(getResources().getDrawable(R.drawable.marker_poi));
         pointMarker = new MarkerSymbol(bitmapPoi, MarkerSymbol.HotspotPlace.CENTER);
-        markerLayer = new ItemizedLayer<MarkerItem>(CatEyeMapManager.getInstance(getActivity()).getCatEyeMap(), pointMarker);
+
+//        MarkerSymbol unClickMarkerSymbol=new MarkerSymbol(new AndroidBitmap(null), MarkerSymbol.HotspotPlace.CENTER);
+
+        markerLayer = new ItemizedLayer<MarkerItem>(CatEyeMapManager.getInstance(getActivity()).getCatEyeMap(), new ArrayList<MarkerItem>(), pointMarker/*默认不显示任何marker*/, new ItemizedLayer.OnItemGestureListener<MarkerItem>() {
+            @Override
+            public boolean onItemSingleTapUp(int index, MarkerItem item) {
+                markerLayer.removeAllItems();
+                item.setMarker(pointMarker);
+                markerLayer.update();
+                markerLayer.map().updateMap(true);
+                return true;
+            }
+
+            @Override
+            public boolean onItemLongPress(int index, MarkerItem item) {
+                return false;
+            }
+        });
         CatEyeMapManager.getInstance(getActivity()).getCatEyeMap().layers().add(markerLayer, MainActivity.LAYER_GROUP_ENUM.GROUP_BUILDING.ordinal());
     }
+
 
     /**
      * @param :
@@ -169,14 +201,14 @@ public class ContourMPChartFragment extends BaseDrawFragment {
 
             LineData lineData = new LineData(dataSet);
             contourChart.setData(lineData);
-            contourChart.animateXY(1000,1500, Easing.EasingOption.Linear, Easing.EasingOption.Linear);
+            contourChart.animateXY(1000, 1500, Easing.EasingOption.Linear, Easing.EasingOption.Linear);
             contourChart.invalidate(); // refresh
             contourChart.setOnChartValueSelectedListener(new OnChartValueSelectedListener() {
                 @Override
                 public void onValueSelected(Entry e, Highlight h) {
                     int pointIndex = (int) e.getX();
                     if (markerLayer != null && mpChartDataList != null && mpChartDataList.size() > pointIndex) {
-                        markerLayer.getItemList().clear();
+                        markerLayer.removeAllItems();
                         markerLayer.addItem(new MarkerItem("", "", new GeoPoint(mpChartDataList.get(pointIndex).getmLatitude(), mpChartDataList.get(pointIndex).getmLongitude())));
                         markerLayer.update();
                         markerLayer.map().updateMap(true);
