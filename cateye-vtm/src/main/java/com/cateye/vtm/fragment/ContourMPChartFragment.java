@@ -3,6 +3,7 @@ package com.cateye.vtm.fragment;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.view.DragEvent;
 import android.view.View;
 import android.widget.ImageView;
 
@@ -15,10 +16,16 @@ import com.cateye.vtm.util.CatEyeMapManager;
 import com.cateye.vtm.util.SystemConstant;
 import com.github.mikephil.charting.animation.Easing;
 import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.components.Description;
+import com.github.mikephil.charting.components.XAxis;
+import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
+import com.github.mikephil.charting.highlight.ChartHighlighter;
 import com.github.mikephil.charting.highlight.Highlight;
+import com.github.mikephil.charting.listener.ChartTouchListener;
+import com.github.mikephil.charting.listener.OnChartGestureListener;
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
 import com.vondear.rxtools.RxDeviceTool;
 
@@ -30,6 +37,7 @@ import org.oscim.event.GestureListener;
 import org.oscim.event.MotionEvent;
 import org.oscim.layers.Layer;
 import org.oscim.layers.marker.MarkerSymbol;
+import org.oscim.layers.vector.PathLayer;
 import org.oscim.layers.vector.geometries.Style;
 import org.oscim.map.Map;
 
@@ -51,6 +59,7 @@ public class ContourMPChartFragment extends BaseDrawFragment {
     protected MapEventsReceiver mapEventsReceiver;
 
     private final double TAP_DISTANCE = 0.005;//点击捕捉的距离阈值=5米
+    private PathLayer currentChartLine;//当前正在折线图中显示的线型
 
 
     public static BaseFragment newInstance(Bundle bundle) {
@@ -93,10 +102,17 @@ public class ContourMPChartFragment extends BaseDrawFragment {
         contourChart = rootView.findViewById(R.id.contour_chart);
         img_close = rootView.findViewById(R.id.img_contour_chart_close);
         contourChart.setMinimumHeight(((int) (RxDeviceTool.getScreenHeight(getActivity()) * 0.3)));
+        //设置折线图的x轴显示在底部
+        contourChart.getXAxis().setPosition(XAxis.XAxisPosition.TOP);
+        Description chartDes = new Description();
+        chartDes.setText("纵断面");
+        contourChart.setDescription(chartDes);
         initChartData(mpChartDataList);
 
         //自动添加pathLayer,
         initPolylineOverlayer();
+        //初始化绘制当前图表中正在显示的线型
+        initCurrentPolylineOverlayer();
         //自动添加绘制marker的overlayer，当用户滑动折线图时，自动定位到折线图上对应的点位
         initMarkerOverlayer();
 
@@ -104,16 +120,25 @@ public class ContourMPChartFragment extends BaseDrawFragment {
         mapEventsReceiver = new MapEventsReceiver(CatEyeMapManager.getInstance(getActivity()).getCatEyeMap());
         CatEyeMapManager.getInstance(getActivity()).getCatEyeMap().layers().add(mapEventsReceiver, MainActivity.LAYER_GROUP_ENUM.GROUP_OPERTOR.ordinal());
 
-        if (mpChartDataList != null && polylineOverlay != null) {
+        //绘制所有数据
+        if (mpChartDataList != null && polylineOverlay != null && currentChartLine != null) {
             if (polylineOverlay.getPoints() == null) {
                 polylineOverlay.setPoints(new ArrayList<GeoPoint>());
             }
             polylineOverlay.getPoints().clear();
+
+            if (currentChartLine.getPoints() == null) {
+                currentChartLine.setPoints(new ArrayList<GeoPoint>());
+            }
+            currentChartLine.getPoints().clear();
+
             for (ContourMPData data : mpChartDataList) {
                 GeoPoint geoPoint = data.getGeoPoint();
                 polylineOverlay.getPoints().add(geoPoint);
+                currentChartLine.getPoints().add(geoPoint);
             }
             redrawPolyline(polylineOverlay);
+            redrawPolyline(currentChartLine);
 
             //自动将地图缩放级别提高，并将中心点位置定位到第一个点的位置
             polylineOverlay.map().getMapPosition(currentMapPosition);
@@ -142,7 +167,7 @@ public class ContourMPChartFragment extends BaseDrawFragment {
      */
     private void initPolylineOverlayer() {
         //自动添加pathLayer
-        int c = getResources().getColor(R.color.violet);
+        int c = getResources().getColor(R.color.turquoise);
         Style lineStyle = Style.builder()
                 .stippleColor(c)
                 .stipple(24)
@@ -153,6 +178,30 @@ public class ContourMPChartFragment extends BaseDrawFragment {
                 .randomOffset(false)
                 .build();
         polylineOverlay.setStyle(lineStyle);
+    }
+
+    /**
+     * @param :
+     * @return :
+     * @method : initPolylineOverlayer
+     * @Author : xiaoxiao
+     * @Describe : 初始化绘制线的图层
+     * @Date : 2018/5/24
+     */
+    private void initCurrentPolylineOverlayer() {
+        //自动添加pathLayer
+        int c = getResources().getColor(R.color.violet);
+        Style lineStyle = Style.builder()
+                .stippleColor(c)
+                .stipple(24)
+                .stippleWidth(1)
+                .strokeWidth(2)
+                .strokeColor(c)
+                .fixed(true)
+                .randomOffset(false)
+                .build();
+        currentChartLine = new PathLayer(CatEyeMapManager.getInstance(getActivity()).getCatEyeMap(), lineStyle);
+        CatEyeMapManager.getInstance(getActivity()).getCatEyeMap().layers().add(currentChartLine, MainActivity.LAYER_GROUP_ENUM.GROUP_BUILDING.ordinal());
     }
 
     /**
@@ -189,6 +238,10 @@ public class ContourMPChartFragment extends BaseDrawFragment {
             dataSet.setValueTextColor(getResources().getColor(R.color.primary_text)); // styling, ...
             dataSet.setFillColor(getResources().getColor(R.color.color_blue_alpha_200));
             dataSet.setHighlightEnabled(true);
+            dataSet.setHighLightColor(getResources().getColor(R.color.ERROR_COLOR));
+            dataSet.setHighlightLineWidth(1f);
+            dataSet.setCircleRadius(1.5f);
+            dataSet.setCircleColor(getResources().getColor(R.color.white));
 
             LineData lineData = new LineData(dataSet);
             contourChart.setData(lineData);
@@ -204,6 +257,11 @@ public class ContourMPChartFragment extends BaseDrawFragment {
                         markerLayer.addItem(obtainMarker(null, "", "", new GeoPoint(mpChartDataList.get(pointIndex).getGeoPoint().getLatitude(), mpChartDataList.get(pointIndex).getGeoPoint().getLongitude())));
                         markerLayer.update();
                         markerLayer.map().updateMap(true);
+
+                        //地图自动以当前选中的点位为中心
+                        polylineOverlay.map().getMapPosition(currentMapPosition);
+                        currentMapPosition.setPosition(mpChartDataList.get(pointIndex).getGeoPoint().getLatitude(), mpChartDataList.get(pointIndex).getGeoPoint().getLongitude());
+                        polylineOverlay.map().animator().animateTo(currentMapPosition);
                     }
                 }
 
@@ -214,6 +272,53 @@ public class ContourMPChartFragment extends BaseDrawFragment {
                         markerLayer.update();
                         markerLayer.map().updateMap(true);
                     }
+                }
+            });
+            contourChart.setOnChartGestureListener(new OnChartGestureListener() {
+                @Override
+                public void onChartGestureStart(android.view.MotionEvent me, ChartTouchListener.ChartGesture lastPerformedGesture) {
+
+                }
+
+                @Override
+                public void onChartGestureEnd(android.view.MotionEvent me, ChartTouchListener.ChartGesture lastPerformedGesture) {
+                    //操作结束
+                    float min = contourChart.getLowestVisibleX();
+                    float max = contourChart.getHighestVisibleX();
+                    if (min < max && currentChartLine != null && mpChartDataList != null && mpChartDataList.size() > max) {
+                        currentChartLine.clearPath();
+                        for (int m = (int) min; m < max; m++) {
+                            currentChartLine.addPoint(mpChartDataList.get(m).getGeoPoint());
+                        }
+                        redrawPolyline(currentChartLine);
+                    }
+                }
+
+                @Override
+                public void onChartLongPressed(android.view.MotionEvent me) {
+
+                }
+
+                @Override
+                public void onChartDoubleTapped(android.view.MotionEvent me) {
+
+                }
+
+                @Override
+                public void onChartSingleTapped(android.view.MotionEvent me) {
+
+                }
+
+                @Override
+                public void onChartFling(android.view.MotionEvent me1, android.view.MotionEvent me2, float velocityX, float velocityY) {
+                }
+
+                @Override
+                public void onChartScale(android.view.MotionEvent me, float scaleX, float scaleY) {
+                }
+
+                @Override
+                public void onChartTranslate(android.view.MotionEvent me, float dX, float dY) {
                 }
             });
         }
@@ -230,11 +335,14 @@ public class ContourMPChartFragment extends BaseDrawFragment {
     @Override
     public void onDetach() {
         super.onDetach();
-        clearMapOverlayer();
         //当前界面被返回时，自动移除所有的overlayer
         if (mapEventsReceiver != null) {
             CatEyeMapManager.getInstance(getActivity()).getCatEyeMap().layers().remove(mapEventsReceiver);
         }
+        if (currentChartLine != null) {
+            CatEyeMapManager.getInstance(getActivity()).getCatEyeMap().layers().remove(currentChartLine);
+        }
+        clearMapOverlayer();
         //通知主界面隐藏部分重新显示
         setMainFragmentAreaVisible(CatEyeMainFragment.BUTTON_AREA.BOTTOM_RIGHT, true);
     }
@@ -266,8 +374,9 @@ public class ContourMPChartFragment extends BaseDrawFragment {
                         markerLayer.update();
                         markerLayer.map().updateMap(true);
                         //重新设置选中状态
-                        Highlight highlight = new Highlight(selectedPointIndex, selectedPointIndex, 0);
-                        contourChart.highlightValue(highlight,true);
+                        contourChart.highlightValue(selectedPointIndex, mpChartDataList.get(selectedPointIndex).getmHeight(), 0, false);
+                        //自动以选中的元素居中
+                        contourChart.centerViewToAnimated(selectedPointIndex, mpChartDataList.get(selectedPointIndex).getmHeight(), YAxis.AxisDependency.LEFT, 1200);
                     }
                 }
                 return true;

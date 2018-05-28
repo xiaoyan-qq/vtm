@@ -25,11 +25,14 @@
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
+        android:largeHeap="true"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
-        <activity android:name=".MainActivity">
+        <activity
+            android:name=".MainActivity"
+            android:screenOrientation="landscape">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -38,21 +41,27 @@
         <!--地图文件选择筛选类-->
         <activity
             android:name="com.cateye.android.vtm.MainActivity$MapFilePicker"
-            android:configChanges="keyboardHidden|orientation|screenSize" />
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:screenOrientation="landscape" />
         <!--地图样式文件选择筛选类-->
         <activity
             android:name="com.cateye.android.vtm.MainActivity$ThemeFilePicker"
-            android:configChanges="keyboardHidden|orientation|screenSize" />
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:screenOrientation="landscape" />
         <!--GeoJson文件选择筛选类-->
         <activity
             android:name="com.cateye.android.vtm.MainActivity$GeoJsonFilePicker"
-            android:configChanges="keyboardHidden|orientation|screenSize" />
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:screenOrientation="landscape" />
         <!--等高线文件选择筛选类-->
         <activity
             android:name="com.cateye.android.vtm.MainActivity$ContourFilePicker"
-            android:configChanges="keyboardHidden|orientation|screenSize" />
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:screenOrientation="landscape" />
 
-        <meta-data android:name="TencentMapSDK" android:value="FN4BZ-P6IC6-ENKSQ-MVCMP-MGAX6-FYFUW" />
+        <meta-data
+            android:name="TencentMapSDK"
+            android:value="FN4BZ-P6IC6-ENKSQ-MVCMP-MGAX6-FYFUW" />
     </application>
 
 </manifest>

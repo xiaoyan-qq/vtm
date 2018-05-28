@@ -88,7 +88,7 @@ dependencies {
     //对话框样式https://github.com/canyinghao/CanDialog
     compile 'com.canyinghao:candialog:1.0.9'
     implementation files('libs/TencentLocationSdk_v6.2.5.3.jar')
-    //https://github.com/PhilJay/MPAndroidChart 绘制图表的开源库
+    //绘制图表的开源库 https://github.com/PhilJay/MPAndroidChart
     implementation 'com.github.PhilJay:MPAndroidChart:v3.0.3'
 
     //https://github.com/locationtech/jts/blob/master/USING.md gis的java工具库

@@ -9,7 +9,8 @@
     <com.github.mikephil.charting.charts.LineChart
         android:id="@+id/contour_chart"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        android:paddingTop="@dimen/textSize_sidebar_padding"/>
 
     <ImageView
         android:id="@+id/img_contour_chart_close"
