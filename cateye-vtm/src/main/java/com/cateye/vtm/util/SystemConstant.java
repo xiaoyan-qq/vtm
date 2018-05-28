@@ -4,6 +4,7 @@ public class SystemConstant {
     public static final int MSG_WHAT_DRAW_POINT_LINE_POLYGON_DESTROY = 0x1001;//绘制点线面
     public static final int MSG_WHAT_LOCATION_UPDATE = 0x1002;//位置更新
     public static final int MSG_WHAT_MAIN_AREA_HIDEN_VISIBLE = 0x1003;//显示隐藏主界面上的某些元素
+    public static final int MSG_WHAT_DRAW_POINT_LINE_POLYGON_TAP = 0x1004;//用户在绘制界面点击
 
     public static final String BASE_URL = "http://39.107.104.63:8080";
     public static final String URL_MAP_SOURCE_NET = BASE_URL + "/meta/maps";

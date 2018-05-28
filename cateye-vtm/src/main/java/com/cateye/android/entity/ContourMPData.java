@@ -1,30 +1,23 @@
 package com.cateye.android.entity;
 
+import org.oscim.core.GeoPoint;
+
 import java.io.Serializable;
 
 /**
  * Created by xiaoxiao on 2018/5/23.
  */
 
-public class ContourMPData implements Serializable{
-    private double mLatitude;
-    private double mLongitude;
+public class ContourMPData implements Serializable {
+    private GeoPoint geoPoint;
     private float mHeight;
 
-    public double getmLatitude() {
-        return mLatitude;
+    public GeoPoint getGeoPoint() {
+        return geoPoint;
     }
 
-    public void setmLatitude(double mLatitude) {
-        this.mLatitude = mLatitude;
-    }
-
-    public double getmLongitude() {
-        return mLongitude;
-    }
-
-    public void setmLongitude(double mLongitude) {
-        this.mLongitude = mLongitude;
+    public void setGeoPoint(GeoPoint geoPoint) {
+        this.geoPoint = geoPoint;
     }
 
     public float getmHeight() {

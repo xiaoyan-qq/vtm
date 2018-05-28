@@ -1,6 +1,5 @@
-package com.cateye.vtm.fragment;
+package com.cateye.vtm.fragment.base;
 
-import android.os.Bundle;
 import android.view.View;
 
 /**

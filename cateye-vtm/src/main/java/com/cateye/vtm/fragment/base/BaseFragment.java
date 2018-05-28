@@ -1,4 +1,4 @@
-package com.cateye.vtm.fragment;
+package com.cateye.vtm.fragment.base;
 
 import android.content.Context;
 import android.os.Bundle;
@@ -9,6 +9,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.cateye.vtm.fragment.CatEyeMainFragment;
 import com.cateye.vtm.util.SystemConstant;
 
 import org.greenrobot.eventbus.EventBus;

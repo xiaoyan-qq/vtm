@@ -7,11 +7,22 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.cateye.android.vtm.MainActivity;
 import com.cateye.android.vtm.R;
+import com.cateye.vtm.fragment.base.BaseDrawFragment;
+import com.cateye.vtm.fragment.base.BaseFragment;
+import com.cateye.vtm.util.CatEyeMapManager;
 import com.cateye.vtm.util.SystemConstant;
 import com.vondear.rxtools.view.RxToast;
 
 import org.greenrobot.eventbus.EventBus;
+import org.oscim.core.GeoPoint;
+import org.oscim.event.Gesture;
+import org.oscim.event.GestureListener;
+import org.oscim.event.MotionEvent;
+import org.oscim.layers.Layer;
+import org.oscim.layers.marker.MarkerItem;
+import org.oscim.map.Map;
 
 /**
  * Created by xiaoxiao on 2018/3/21.
@@ -19,6 +30,7 @@ import org.greenrobot.eventbus.EventBus;
 //@Puppet
 public class DrawPointLinePolygonFragment extends BaseDrawFragment {
     private TextView tv_last, tv_clear, tv_finish;
+    protected MapEventsReceiver mapEventsReceiver;
 
     @Override
     public int getFragmentLayoutId() {
@@ -114,7 +126,20 @@ public class DrawPointLinePolygonFragment extends BaseDrawFragment {
                 pop();//退出当前界面
             }
         });
+
+        //添加一个操作图层，监听用户在地图上的点击事件
+        mapEventsReceiver = new MapEventsReceiver(CatEyeMapManager.getInstance(getActivity()).getCatEyeMap());
+        CatEyeMapManager.getInstance(getActivity()).getCatEyeMap().layers().add(mapEventsReceiver, MainActivity.LAYER_GROUP_ENUM.GROUP_OPERTOR.ordinal());
     }
+    /**
+     * @method :
+     * @Author : xiaoxiao
+     * @Describe :
+     * @param :
+     * @return :
+     * @Date : 2018/5/28
+    */
+
 
     public static BaseFragment newInstance(Bundle bundle) {
         DrawPointLinePolygonFragment drawPointLinePolygonFragment = new DrawPointLinePolygonFragment();
@@ -139,5 +164,46 @@ public class DrawPointLinePolygonFragment extends BaseDrawFragment {
 
         //通知主界面隐藏部分重新显示
         setMainFragmentAreaVisible(CatEyeMainFragment.BUTTON_AREA.BOTTOM_RIGHT, true);
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        //当前界面被返回时，自动移除所有的overlayer
+        if (mapEventsReceiver != null) {
+            CatEyeMapManager.getInstance(getActivity()).getCatEyeMap().layers().remove(mapEventsReceiver);
+        }
+    }
+
+    private class MapEventsReceiver extends Layer implements GestureListener {
+
+        MapEventsReceiver(Map map) {
+            super(map);
+        }
+
+        @Override
+        public boolean onGesture(Gesture g, MotionEvent e) {
+            if (g instanceof Gesture.Tap) {
+                GeoPoint p = mMap.viewport().fromScreenPoint(e.getX(), e.getY());
+                DRAW_STATE currentState = getCurrentDrawState();
+
+                if (currentState != DRAW_STATE.DRAW_NONE) {//如果当前是绘制模式，则自动添加marker
+                    markerLayer.addItem(new MarkerItem("", "", p));
+                    markerLayer.update();
+                    //如果当前是绘制线模式，则增加pathLayer
+                    if (currentState == DRAW_STATE.DRAW_LINE) {
+                        polylineOverlay.addPoint(p);
+                        redrawPolyline(polylineOverlay);
+                    }
+                    if (currentState == DRAW_STATE.DRAW_POLYGON) {
+                        polygonOverlay.addPoint(p);
+                        redrawPolygon(polygonOverlay);
+                    }
+                    markerLayer.map().updateMap(true);
+                    return true;
+                }
+            }
+            return false;
+        }
     }
 }

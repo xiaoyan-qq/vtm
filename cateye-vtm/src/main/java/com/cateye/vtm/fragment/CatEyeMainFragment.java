@@ -21,6 +21,7 @@ import com.cateye.android.entity.MapSourceFromNet;
 import com.cateye.android.vtm.MainActivity;
 import com.cateye.android.vtm.MainActivity.LAYER_GROUP_ENUM;
 import com.cateye.android.vtm.R;
+import com.cateye.vtm.fragment.base.BaseFragment;
 import com.cateye.vtm.util.CatEyeMapManager;
 import com.cateye.vtm.util.SystemConstant;
 import com.lzy.okgo.OkGo;
@@ -46,6 +47,7 @@ import org.oscim.android.filepicker.FilePicker;
 import org.oscim.android.theme.AssetsRenderTheme;
 import org.oscim.backend.CanvasAdapter;
 import org.oscim.backend.canvas.Color;
+import org.oscim.core.GeoPoint;
 import org.oscim.core.MapElement;
 import org.oscim.core.MapPosition;
 import org.oscim.core.Tag;
@@ -647,8 +649,7 @@ public class CatEyeMainFragment extends BaseFragment {
                         JSONArray jsonArray = (JSONArray) reader.readObject();
                         if (jsonArray != null) {
                             ContourMPData contourMPData = new ContourMPData();
-                            contourMPData.setmLongitude(((BigDecimal) jsonArray.get(0)).doubleValue());
-                            contourMPData.setmLatitude(((BigDecimal) jsonArray.get(1)).doubleValue());
+                            contourMPData.setGeoPoint(new GeoPoint(((BigDecimal) jsonArray.get(1)).doubleValue(),((BigDecimal) jsonArray.get(0)).doubleValue()));
                             contourMPData.setmHeight(((BigDecimal) jsonArray.get(2)).floatValue());
                             xyzList.add(contourMPData);
                         }
