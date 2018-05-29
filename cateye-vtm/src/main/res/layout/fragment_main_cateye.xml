@@ -76,8 +76,8 @@
                 android:clickable="true"
                 android:focusable="true"
                 android:padding="@dimen/button_padding_default"
-                android:src="@drawable/selector_map_add"
-                android:text="@null"/>
+                android:src="@drawable/selector_contour_line"
+                android:text="@null" />
 
             <View
                 android:layout_width="0dp"
@@ -92,7 +92,7 @@
                 android:focusable="true"
                 android:padding="@dimen/button_padding_default"
                 android:src="@drawable/selector_map_add"
-                android:text="@null"/>
+                android:text="@null" />
 
             <View
                 android:layout_width="0dp"

@@ -1,5 +1,6 @@
 package com.cateye.vtm.fragment;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.os.Message;
 import android.support.annotation.Nullable;
@@ -131,14 +132,15 @@ public class DrawPointLinePolygonFragment extends BaseDrawFragment {
         mapEventsReceiver = new MapEventsReceiver(CatEyeMapManager.getInstance(getActivity()).getCatEyeMap());
         CatEyeMapManager.getInstance(getActivity()).getCatEyeMap().layers().add(mapEventsReceiver, MainActivity.LAYER_GROUP_ENUM.GROUP_OPERTOR.ordinal());
     }
+
     /**
+     * @param :
+     * @return :
      * @method :
      * @Author : xiaoxiao
      * @Describe :
-     * @param :
-     * @return :
      * @Date : 2018/5/28
-    */
+     */
 
 
     public static BaseFragment newInstance(Bundle bundle) {
@@ -148,10 +150,10 @@ public class DrawPointLinePolygonFragment extends BaseDrawFragment {
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
+    public void onAttach(Context context) {
+        super.onAttach(context);
         //通知主界面隐藏部分重新显示
-        setMainFragmentAreaVisible(CatEyeMainFragment.BUTTON_AREA.BOTTOM_RIGHT, false);
+        setMainFragmentAreaVisible(CatEyeMainFragment.BUTTON_AREA.ALL, false);
     }
 
     @Override
@@ -163,7 +165,7 @@ public class DrawPointLinePolygonFragment extends BaseDrawFragment {
         EventBus.getDefault().post(msg);
 
         //通知主界面隐藏部分重新显示
-        setMainFragmentAreaVisible(CatEyeMainFragment.BUTTON_AREA.BOTTOM_RIGHT, true);
+        setMainFragmentAreaVisible(CatEyeMainFragment.BUTTON_AREA.ALL, true);
     }
 
     @Override

@@ -3,7 +3,6 @@ package com.cateye.vtm.fragment;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.view.DragEvent;
 import android.view.View;
 import android.widget.ImageView;
 
@@ -22,12 +21,12 @@ import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
-import com.github.mikephil.charting.highlight.ChartHighlighter;
 import com.github.mikephil.charting.highlight.Highlight;
 import com.github.mikephil.charting.listener.ChartTouchListener;
 import com.github.mikephil.charting.listener.OnChartGestureListener;
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
 import com.vondear.rxtools.RxDeviceTool;
+import com.vondear.rxtools.view.dialog.RxDialogLoading;
 
 import org.oscim.backend.canvas.Bitmap;
 import org.oscim.core.GeoPoint;
@@ -43,6 +42,14 @@ import org.oscim.map.Map;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import io.reactivex.Observable;
+import io.reactivex.ObservableEmitter;
+import io.reactivex.ObservableOnSubscribe;
+import io.reactivex.Observer;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.schedulers.Schedulers;
 
 import static org.oscim.android.canvas.AndroidGraphics.drawableToBitmap;
 
@@ -60,6 +67,8 @@ public class ContourMPChartFragment extends BaseDrawFragment {
 
     private final double TAP_DISTANCE = 0.005;//点击捕捉的距离阈值=5米
     private PathLayer currentChartLine;//当前正在折线图中显示的线型
+    private RxDialogLoading rxDialogLoading;//绘制地图上的line时显示的加载对话框
+    private boolean isMoveOrScaleChart = false;
 
 
     public static BaseFragment newInstance(Bundle bundle) {
@@ -98,6 +107,7 @@ public class ContourMPChartFragment extends BaseDrawFragment {
 
     @Override
     public void initView(View rootView) {
+        rxDialogLoading = new RxDialogLoading(getActivity());
         currentMapPosition = new MapPosition();
         contourChart = rootView.findViewById(R.id.contour_chart);
         img_close = rootView.findViewById(R.id.img_contour_chart_close);
@@ -241,7 +251,7 @@ public class ContourMPChartFragment extends BaseDrawFragment {
             dataSet.setHighLightColor(getResources().getColor(R.color.ERROR_COLOR));
             dataSet.setHighlightLineWidth(1f);
             dataSet.setCircleRadius(1.5f);
-            dataSet.setCircleColor(getResources().getColor(R.color.white));
+            dataSet.setCircleColor(getResources().getColor(R.color.colorPrimaryLight));
 
             LineData lineData = new LineData(dataSet);
             contourChart.setData(lineData);
@@ -282,15 +292,50 @@ public class ContourMPChartFragment extends BaseDrawFragment {
 
                 @Override
                 public void onChartGestureEnd(android.view.MotionEvent me, ChartTouchListener.ChartGesture lastPerformedGesture) {
-                    //操作结束
-                    float min = contourChart.getLowestVisibleX();
-                    float max = contourChart.getHighestVisibleX();
-                    if (min < max && currentChartLine != null && mpChartDataList != null && mpChartDataList.size() > max) {
-                        currentChartLine.clearPath();
-                        for (int m = (int) min; m < max; m++) {
-                            currentChartLine.addPoint(mpChartDataList.get(m).getGeoPoint());
-                        }
-                        redrawPolyline(currentChartLine);
+                    if (isMoveOrScaleChart){
+                        Observable.create(new ObservableOnSubscribe<PathLayer>() {
+                            @Override
+                            public void subscribe(ObservableEmitter<PathLayer> emitter) throws Exception {
+                                //操作结束
+                                float min = contourChart.getLowestVisibleX();
+                                float max = contourChart.getHighestVisibleX();
+                                if (min < max && currentChartLine != null && mpChartDataList != null && mpChartDataList.size() > max) {
+                                    currentChartLine.clearPath();
+                                    for (int m = (int) min; m < max; m++) {
+                                        currentChartLine.addPoint(mpChartDataList.get(m).getGeoPoint());
+                                    }
+                                    emitter.onNext(currentChartLine);
+                                    emitter.onComplete();
+                                }
+                            }
+                        }).subscribeOn(Schedulers.computation()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<PathLayer>() {
+                            @Override
+                            public void onSubscribe(Disposable d) {
+                                if (!rxDialogLoading.isShowing()) {
+                                    rxDialogLoading.show();
+                                }
+                            }
+
+                            @Override
+                            public void onNext(PathLayer pathLayer) {
+                                redrawPolyline(currentChartLine);
+                            }
+
+                            @Override
+                            public void onError(Throwable e) {
+                                if (rxDialogLoading.isShowing()) {
+                                    rxDialogLoading.dismiss();
+                                }
+                            }
+
+                            @Override
+                            public void onComplete() {
+                                if (rxDialogLoading.isShowing()) {
+                                    rxDialogLoading.dismiss();
+                                    isMoveOrScaleChart=false;
+                                }
+                            }
+                        });
                     }
                 }
 
@@ -315,10 +360,12 @@ public class ContourMPChartFragment extends BaseDrawFragment {
 
                 @Override
                 public void onChartScale(android.view.MotionEvent me, float scaleX, float scaleY) {
+                    isMoveOrScaleChart = true;
                 }
 
                 @Override
                 public void onChartTranslate(android.view.MotionEvent me, float dX, float dY) {
+                    isMoveOrScaleChart = true;
                 }
             });
         }
@@ -329,7 +376,7 @@ public class ContourMPChartFragment extends BaseDrawFragment {
     public void onAttach(Context context) {
         super.onAttach(context);
         //通知主界面隐藏部分重新显示
-        setMainFragmentAreaVisible(CatEyeMainFragment.BUTTON_AREA.BOTTOM_RIGHT, false);
+        setMainFragmentAreaVisible(CatEyeMainFragment.BUTTON_AREA.ALL, false);
     }
 
     @Override
@@ -344,7 +391,7 @@ public class ContourMPChartFragment extends BaseDrawFragment {
         }
         clearMapOverlayer();
         //通知主界面隐藏部分重新显示
-        setMainFragmentAreaVisible(CatEyeMainFragment.BUTTON_AREA.BOTTOM_RIGHT, true);
+        setMainFragmentAreaVisible(CatEyeMainFragment.BUTTON_AREA.ALL, true);
     }
 
     private class MapEventsReceiver extends Layer implements GestureListener {
