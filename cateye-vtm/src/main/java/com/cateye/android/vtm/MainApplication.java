@@ -8,6 +8,7 @@ import com.lzy.okgo.cache.CacheMode;
 import com.lzy.okgo.cookie.CookieJarImpl;
 import com.lzy.okgo.cookie.store.MemoryCookieStore;
 import com.lzy.okgo.interceptor.HttpLoggingInterceptor;
+import com.umeng.commonsdk.UMConfigure;
 import com.vondear.rxtools.RxTool;
 
 import java.util.concurrent.TimeUnit;
@@ -58,5 +59,8 @@ public class MainApplication extends Application {
                 .setRetryCount(3)                               //全局统一超时重连次数，默认为三次，那么最差的情况会请求4次(一次原始请求，三次重连请求)，不需要可以设置为0
                 /*.addCommonHeaders(headers)                      //全局公共头
                 .addCommonParams(params)*/;                       //全局公共参数
+
+        //友盟初始化
+        UMConfigure.init(this, null, null, UMConfigure.DEVICE_TYPE_PHONE, null);
     }
 }

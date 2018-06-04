@@ -10,6 +10,7 @@ import com.tencent.map.geolocation.TencentLocation;
 import com.tencent.map.geolocation.TencentLocationListener;
 import com.tencent.map.geolocation.TencentLocationManager;
 import com.tencent.map.geolocation.TencentLocationRequest;
+import com.umeng.analytics.MobclickAgent;
 import com.vondear.rxtools.RxBarTool;
 import com.vondear.rxtools.view.dialog.RxDialogSure;
 import com.yanzhenjie.permission.Action;
@@ -159,5 +160,17 @@ public class MainActivity extends SupportActivity implements TencentLocationList
 
     public TencentLocation getCurrentLocation() {
         return currentLocation;
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        MobclickAgent.onResume(this);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        MobclickAgent.onPause(this);
     }
 }
