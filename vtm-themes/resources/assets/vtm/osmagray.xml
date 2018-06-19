@@ -38,7 +38,9 @@
 
 
     <!--###### AREA styles ######-->
-    <!--no styles-->
+
+    <!--water-->
+    <style-area fill="#d0d0d0" id="water" mesh="true" />
 
 
     <!--###### LINE styles ######-->
@@ -53,7 +55,7 @@
     <!--###### ASSIGNMENT ######-->
 
     <m e="way" k="natural" v="issea|sea">
-        <area fill="#d0d0d0" mesh="true" />
+        <area use="water" />
     </m>
 
     <m e="way" k="natural" v="nosea">
@@ -311,7 +313,7 @@
 
 
         <m k="natural" v="water">
-            <area fill="#d0d0d0" />
+            <area use="water" />
             <caption area-size="0.4" fill="#3b3b3b" k="name" size="16" stroke="#aaffffff"
                 stroke-width="2.0" />
         </m>
@@ -562,7 +564,7 @@
             </m>
 
             <!--Only add house numbers where no name exist-->
-            <m k="addr:housenumber" zoom-min="17">
+            <m k="addr:housenumber" zoom-min="18">
                 <m k="name" v="~">
                     <caption style="bold" fill="#606060" font-family="condensed"
                         k="addr:housenumber" priority="10" size="12" stroke="#ffffff"
@@ -1409,7 +1411,7 @@
 
     <m e="node" select="first">
         <!--Only add house numbers where no name exist-->
-        <m k="addr:housenumber" zoom-min="17">
+        <m k="addr:housenumber" zoom-min="18">
             <m k="name" v="~">
                 <caption style="bold" fill="#606060" font-family="condensed" k="addr:housenumber"
                     priority="10" size="12" stroke="#ffffff" stroke-width="2.0" />
