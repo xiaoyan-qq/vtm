@@ -13,38 +13,6 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentRight="true"
-            android:layout_marginRight="@dimen/activity_horizontal_margin"
-            android:orientation="vertical"
-            android:visibility="gone">
-
-            <Button
-                android:id="@+id/btn_select_local_map_file"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/select_local_map_file" />
-
-            <Button
-                android:id="@+id/btn_select_net_map_file"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/select_net_map_file" />
-
-            <Button
-                android:id="@+id/btn_select_geoJson"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/select_geoJson_file" />
-
-            <Button
-                android:id="@+id/btn_draw_plp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/draw_point_line_polygon" />
-        </LinearLayout>
     </RelativeLayout>
     <!--用来显示fragment的布局文件,底部-->
     <FrameLayout

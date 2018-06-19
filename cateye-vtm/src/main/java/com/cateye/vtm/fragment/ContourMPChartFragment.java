@@ -128,7 +128,7 @@ public class ContourMPChartFragment extends BaseDrawFragment {
 
         //添加一个操作图层，监听用户在地图上的点击事件
         mapEventsReceiver = new MapEventsReceiver(CatEyeMapManager.getInstance(getActivity()).getCatEyeMap());
-        CatEyeMapManager.getInstance(getActivity()).getCatEyeMap().layers().add(mapEventsReceiver, MainActivity.LAYER_GROUP_ENUM.GROUP_OPERTOR.ordinal());
+        CatEyeMapManager.getInstance(getActivity()).getCatEyeMap().layers().add(mapEventsReceiver, MainActivity.LAYER_GROUP_ENUM.OPERTOR_GROUP.orderIndex);
 
         //绘制所有数据
         if (mpChartDataList != null && polylineOverlay != null && currentChartLine != null) {
@@ -211,7 +211,7 @@ public class ContourMPChartFragment extends BaseDrawFragment {
                 .randomOffset(false)
                 .build();
         currentChartLine = new PathLayer(CatEyeMapManager.getInstance(getActivity()).getCatEyeMap(), lineStyle);
-        CatEyeMapManager.getInstance(getActivity()).getCatEyeMap().layers().add(currentChartLine, MainActivity.LAYER_GROUP_ENUM.GROUP_BUILDING.ordinal());
+        CatEyeMapManager.getInstance(getActivity()).getCatEyeMap().layers().add(currentChartLine, MainActivity.LAYER_GROUP_ENUM.OTHER_GROUP.orderIndex);
     }
 
     /**
@@ -292,7 +292,7 @@ public class ContourMPChartFragment extends BaseDrawFragment {
 
                 @Override
                 public void onChartGestureEnd(android.view.MotionEvent me, ChartTouchListener.ChartGesture lastPerformedGesture) {
-                    if (isMoveOrScaleChart){
+                    if (isMoveOrScaleChart) {
                         Observable.create(new ObservableOnSubscribe<PathLayer>() {
                             @Override
                             public void subscribe(ObservableEmitter<PathLayer> emitter) throws Exception {
@@ -332,7 +332,7 @@ public class ContourMPChartFragment extends BaseDrawFragment {
                             public void onComplete() {
                                 if (rxDialogLoading.isShowing()) {
                                     rxDialogLoading.dismiss();
-                                    isMoveOrScaleChart=false;
+                                    isMoveOrScaleChart = false;
                                 }
                             }
                         });

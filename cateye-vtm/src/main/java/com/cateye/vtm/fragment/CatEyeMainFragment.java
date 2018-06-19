@@ -6,7 +6,6 @@ import android.os.Bundle;
 import android.os.Message;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.Toast;
@@ -57,6 +56,7 @@ import org.oscim.layers.Layer;
 import org.oscim.layers.LocationLayer;
 import org.oscim.layers.tile.MapTile;
 import org.oscim.layers.tile.bitmap.BitmapTileLayer;
+import org.oscim.layers.tile.buildings.BuildingLayer;
 import org.oscim.layers.tile.vector.OsmTileLayer;
 import org.oscim.layers.tile.vector.VectorTileLayer;
 import org.oscim.layers.tile.vector.labeling.LabelLayer;
@@ -132,11 +132,6 @@ public class CatEyeMainFragment extends BaseFragment {
 
     private List<TileSource> mTileSourceList;//当前正在显示的tileSource的集合
 
-    //控件
-    private Button btn_select_local_map_file;//选择需要显示的本地map文件
-    private Button btn_select_net_map_file;//选择需要显示的在线map文件
-    private Button btn_select_geoJson_file;//选择需要显示的geoJson文件
-    private Button btn_draw_plp;//绘制点线面
 
     private ImageView chk_draw_point, chk_draw_line, chk_draw_polygon;//绘制点线面
     private ImageView img_location;//获取当前位置的按钮
@@ -160,23 +155,6 @@ public class CatEyeMainFragment extends BaseFragment {
         mapView = rootView.findViewById(R.id.mapView);
 
         mMap = mapView.map();
-
-        //选择底图map文件
-        btn_select_local_map_file = rootView.findViewById(R.id.btn_select_local_map_file);
-
-        //开始绘制点线面
-        btn_draw_plp = rootView.findViewById(R.id.btn_draw_plp);
-        btn_draw_plp.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-//                //自动弹出绘制点线面的fragment
-//                Rigger.getRigger(CatEyeMainFragment.this).showFragment(DrawPointLinePolygonFragment.newInstance(new Bundle()), R.id.layer_main_cateye_bottom);
-            }
-        });
-        //选择网络地图显示
-        btn_select_net_map_file = rootView.findViewById(R.id.btn_select_net_map_file);
-        //选择显示GeoJson文件
-        btn_select_geoJson_file = rootView.findViewById(R.id.btn_select_geoJson);
 
         layer_fragment = rootView.findViewById(R.id.layer_main_cateye_bottom);
 
@@ -222,37 +200,10 @@ public class CatEyeMainFragment extends BaseFragment {
         mPrefs = new MapPreferences(this.getTag(), getActivity());
         mTileSourceList = new ArrayList<>();
 
-        btn_select_local_map_file.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivityForResult(new Intent(getActivity(), MainActivity.MapFilePicker.class),
-                        SELECT_MAP_FILE);
-            }
-        });
         //向地图中添加地图图层分组
         for (LAYER_GROUP_ENUM group_enum : LAYER_GROUP_ENUM.values()) {
-            mMap.layers().addGroup(group_enum.ordinal());
+            mMap.layers().addGroup(group_enum.orderIndex);
         }
-
-        btn_select_net_map_file.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                //首先请求服务器，获取最新的服务列表
-
-                BitmapTileSource mTileSource = BitmapTileSource.builder()
-                        .url("http://39.107.104.63:8080/tms/1.0.0/world_satellite_raster@EPSG:900913@jpeg").tilePath("/{Z}/{X}/{Y}.png")
-                        .zoomMax(18).build();
-//                BitmapTileSource mTileSource= DefaultSources.OPENSTREETMAP.build();
-                createBitmapTileLayer(getActivity(), mTileSource, true);
-            }
-        });
-        btn_select_geoJson_file.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivityForResult(new Intent(getActivity(), MainActivity.GeoJsonFilePicker.class),
-                        SELECT_GEOJSON_FILE);
-            }
-        });
 
         chk_draw_point.setOnClickListener(mainFragmentClickListener);
         chk_draw_line.setOnClickListener(mainFragmentClickListener);
@@ -264,7 +215,7 @@ public class CatEyeMainFragment extends BaseFragment {
         locationLayer = new LocationLayer(mMap);
         locationLayer.locationRenderer.setShader("location_1_reverse");
         locationLayer.setEnabled(false);
-        mMap.layers().add(locationLayer, LAYER_GROUP_ENUM.GROUP_LOCATION.ordinal());
+        mMap.layers().add(locationLayer, LAYER_GROUP_ENUM.LOCATION_GROUP.orderIndex);
 
         img_location.setOnClickListener(new View.OnClickListener() {//定位到当前位置
             @Override
@@ -289,14 +240,9 @@ public class CatEyeMainFragment extends BaseFragment {
                 //判断是否被添加进Reggier
                 setDrawPointLinePolygonButtonState(view, chkDrawPointLinePolygonList);
                 if (view.isSelected()) {//选中
-//                    DrawPointLinePolygonFragment drawPointLinePolygonFragment = (DrawPointLinePolygonFragment) DrawPointLinePolygonFragment.newInstance(new Bundle());
                     //自动弹出绘制点线面的fragment
                     Bundle pointBundle = new Bundle();
                     pointBundle.putSerializable(com.cateye.vtm.fragment.DrawPointLinePolygonFragment.DRAW_STATE.class.getSimpleName(), com.cateye.vtm.fragment.DrawPointLinePolygonFragment.DRAW_STATE.DRAW_POINT);
-//                    drawPointLinePolygonFragment.setArguments(pointBundle);
-//                    Rigger.getRigger(CatEyeMainFragment.this).startFragment(drawPointLinePolygonFragment);
-//                    DrawPointLinePolygonFragment drawPointLinePolygonFragment=fragment(DrawPointLinePolygonFragment.class,pointBundle);
-//                    startFragment(drawPointLinePolygonFragment);
                     loadRootFragment(R.id.layer_main_cateye_bottom, com.cateye.vtm.fragment.DrawPointLinePolygonFragment.newInstance(pointBundle));
                 } else {//不选中
                     popChild();
@@ -305,12 +251,9 @@ public class CatEyeMainFragment extends BaseFragment {
                 //判断是否被添加进Reggier
                 setDrawPointLinePolygonButtonState(view, chkDrawPointLinePolygonList);
                 if (view.isSelected()) {//选中
-//                    DrawPointLinePolygonFragment drawPointLinePolygonFragment = (DrawPointLinePolygonFragment) DrawPointLinePolygonFragment.newInstance(new Bundle());
                     //自动弹出绘制点线面的fragment
                     Bundle lineBundle = new Bundle();
                     lineBundle.putSerializable(com.cateye.vtm.fragment.DrawPointLinePolygonFragment.DRAW_STATE.class.getSimpleName(), com.cateye.vtm.fragment.DrawPointLinePolygonFragment.DRAW_STATE.DRAW_LINE);
-//                    drawPointLinePolygonFragment.setArguments(pointBundle);
-//                    Rigger.getRigger(CatEyeMainFragment.this).startFragment(drawPointLinePolygonFragment);
                     loadRootFragment(R.id.layer_main_cateye_bottom, com.cateye.vtm.fragment.DrawPointLinePolygonFragment.newInstance(lineBundle));
                 } else {//不选中
                     popChild();
@@ -319,12 +262,9 @@ public class CatEyeMainFragment extends BaseFragment {
                 //判断是否被添加进Reggier
                 setDrawPointLinePolygonButtonState(view, chkDrawPointLinePolygonList);
                 if (view.isSelected()) {//选中
-//                    DrawPointLinePolygonFragment drawPointLinePolygonFragment = (DrawPointLinePolygonFragment) DrawPointLinePolygonFragment.newInstance(new Bundle());
                     //自动弹出绘制点线面的fragment
                     Bundle polygonBundle = new Bundle();
                     polygonBundle.putSerializable(com.cateye.vtm.fragment.DrawPointLinePolygonFragment.DRAW_STATE.class.getSimpleName(), com.cateye.vtm.fragment.DrawPointLinePolygonFragment.DRAW_STATE.DRAW_POLYGON);
-//                    drawPointLinePolygonFragment.setArguments(pointBundle);
-//                    Rigger.getRigger(CatEyeMainFragment.this).startFragment(drawPointLinePolygonFragment);
                     loadRootFragment(R.id.layer_main_cateye_bottom, com.cateye.vtm.fragment.DrawPointLinePolygonFragment.newInstance(polygonBundle));
                 } else {//不选中
                     popChild();
@@ -466,13 +406,13 @@ public class CatEyeMainFragment extends BaseFragment {
                                                             .url(stringDataBeanMap.get(key).getHref()).tilePath("/{X}/{Y}/{Z}.json" /*+ stringDataBeanMap.get(key).getExtension()*/)
 //                                                        .url("http://39.107.104.63:8080/tms/1.0.0/world_satellite_raster@EPSG:900913@jpeg").tilePath("/{Z}/{X}/{Y}.png")
                                                             .zoomMax(18).build();
-                                                    createGeoJsonTileLayer(getActivity(), mTileSource, true);
+                                                    createGeoJsonTileLayer(getActivity(), mTileSource, true, stringDataBeanMap.get(key).getGroup());
                                                 } else {
                                                     BitmapTileSource mTileSource = BitmapTileSource.builder()
                                                             .url(stringDataBeanMap.get(key).getHref()).tilePath("/{X}/{Y}/{Z}." + stringDataBeanMap.get(key).getExtension())
 //                                                        .url("http://39.107.104.63:8080/tms/1.0.0/world_satellite_raster@EPSG:900913@jpeg").tilePath("/{Z}/{X}/{Y}.png")
                                                             .zoomMax(18).build();
-                                                    createBitmapTileLayer(getActivity(), mTileSource, true);
+                                                    createBitmapTileLayer(getActivity(), mTileSource, true, stringDataBeanMap.get(key).getGroup());
                                                 }
                                             }
                                         }
@@ -537,7 +477,7 @@ public class CatEyeMainFragment extends BaseFragment {
         BitmapRenderer renderer = mapScaleBarLayer.getRenderer();
         renderer.setPosition(GLViewport.Position.BOTTOM_LEFT);
         renderer.setOffset(5 * CanvasAdapter.getScale(), 0);
-        mMap.layers().add(mapScaleBarLayer, LAYER_GROUP_ENUM.GROUP_OPERTOR.ordinal());
+        mMap.layers().add(mapScaleBarLayer, LAYER_GROUP_ENUM.OPERTOR_GROUP.orderIndex);
     }
 
     @Override
@@ -564,16 +504,12 @@ public class CatEyeMainFragment extends BaseFragment {
 
             if (mTileSource.setMapFile(file)) {
                 //设置当前的文件选择的layer为地图的基础图层(第一层)==此处去掉此设置
-                //VectorTileLayer mTileLayer = mMap.setBaseMap(mTileSource);
                 VectorTileLayer mTileLayer = new OsmTileLayer(mMap);
                 mTileLayer.setTileSource(mTileSource);
-                mMap.layers().add(mTileLayer, LAYER_GROUP_ENUM.GROUP_VECTOR.ordinal());
+                mMap.layers().add(mTileLayer, LAYER_GROUP_ENUM.BASE_VECTOR_GROUP.orderIndex);
 
-//                if (mS3db)
-//                    mMap.layers().add(new S3DBLayer(mMap, mTileLayer), LAYER_GROUP_ENUM.GROUP_3D_OBJECTS.ordinal());
-//                else
-//                mMap.layers().add(new BuildingLayer(mMap, mTileLayer), LAYER_GROUP_ENUM.GROUP_BUILDING.ordinal());
-                mMap.layers().add(new LabelLayer(mMap, mTileLayer), LAYER_GROUP_ENUM.GROUP_LABELS.ordinal());
+                mMap.layers().add(new LabelLayer(mMap, mTileLayer), LAYER_GROUP_ENUM.OTHER_GROUP.orderIndex);
+                mMap.layers().add(new BuildingLayer(mMap, mTileLayer), LAYER_GROUP_ENUM.OTHER_GROUP.orderIndex);
 
                 MapInfo info = mTileSource.getMapInfo();
                 MapPosition pos = new MapPosition();
@@ -649,7 +585,7 @@ public class CatEyeMainFragment extends BaseFragment {
                         JSONArray jsonArray = (JSONArray) reader.readObject();
                         if (jsonArray != null) {
                             ContourMPData contourMPData = new ContourMPData();
-                            contourMPData.setGeoPoint(new GeoPoint(((BigDecimal) jsonArray.get(1)).doubleValue(),((BigDecimal) jsonArray.get(0)).doubleValue()));
+                            contourMPData.setGeoPoint(new GeoPoint(((BigDecimal) jsonArray.get(1)).doubleValue(), ((BigDecimal) jsonArray.get(0)).doubleValue()));
                             contourMPData.setmHeight(((BigDecimal) jsonArray.get(2)).floatValue());
                             xyzList.add(contourMPData);
                         }
@@ -706,7 +642,7 @@ public class CatEyeMainFragment extends BaseFragment {
         }
     }
 
-    private void createBitmapTileLayer(Context mContext, BitmapTileSource mTileSource, boolean USE_CACHE) {
+    private void createBitmapTileLayer(Context mContext, BitmapTileSource mTileSource, boolean USE_CACHE, String layerGroup) {
         if (mTileSource == null)
             return;
 
@@ -723,11 +659,11 @@ public class CatEyeMainFragment extends BaseFragment {
         }
 
         BitmapTileLayer mBitmapLayer = new BitmapTileLayer(mMap, mTileSource);
-        mMap.layers().add(mBitmapLayer, LAYER_GROUP_ENUM.GROUP_VECTOR.ordinal());
+        mMap.layers().add(mBitmapLayer, LAYER_GROUP_ENUM.getGroupByName(layerGroup).orderIndex);
         mMap.updateMap(true);
     }
 
-    private void createGeoJsonTileLayer(Context mContext, GeojsonTileSource mTileSource, boolean USE_CACHE) {
+    private void createGeoJsonTileLayer(Context mContext, GeojsonTileSource mTileSource, boolean USE_CACHE, String layerGroup) {
         if (mTileSource == null)
             return;
 
@@ -744,8 +680,8 @@ public class CatEyeMainFragment extends BaseFragment {
         }
 
         VectorTileLayer mVectorTileLayer = new VectorTileLayer(mMap, mTileSource);
-        mMap.layers().add(mVectorTileLayer, LAYER_GROUP_ENUM.GROUP_VECTOR.ordinal());
-        mMap.layers().add(new LabelLayer(mMap, mVectorTileLayer), LAYER_GROUP_ENUM.GROUP_VECTOR.ordinal());
+        mMap.layers().add(mVectorTileLayer, LAYER_GROUP_ENUM.getGroupByName(layerGroup).orderIndex);
+        mMap.layers().add(new LabelLayer(mMap, mVectorTileLayer), LAYER_GROUP_ENUM.OTHER_GROUP.orderIndex);
         loadTheme(null, true);
         mMap.updateMap(true);
     }
@@ -785,7 +721,7 @@ public class CatEyeMainFragment extends BaseFragment {
                 .strokeWidth(2.2f * CanvasAdapter.getScale()).strokeColor(Color.WHITE)
                 .build();
         ContourLineLayer contourLineLayer = new ContourLineLayer(mMap, data, style, textStyle);
-        mMap.layers().add(contourLineLayer, LAYER_GROUP_ENUM.GROUP_OPERTOR.ordinal());
+        mMap.layers().add(contourLineLayer, LAYER_GROUP_ENUM.OTHER_GROUP.orderIndex);
 
         RxToast.info("data ready");
         mMap.updateMap(true);

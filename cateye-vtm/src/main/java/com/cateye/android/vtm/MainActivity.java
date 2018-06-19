@@ -35,8 +35,25 @@ public class MainActivity extends SupportActivity implements TencentLocationList
 
     //地图layer的分组
     public enum LAYER_GROUP_ENUM {
-        GROUP_BASE/*基础图层*/, GROUP_VECTOR/*矢量图层分组*/, GROUP_OTHER/*其他图层分组*/, GROUP_BUILDING/*建筑图层分组*/,
-        GROUP_LABELS/*label图层分组*/, GROUP_3D_OBJECTS/*3D图层分组*/, GROUP_OPERTOR/*操作图层分组*/, GROUP_LOCATION/*当前位置分组*/
+        BASE_GRID_GROUP(0, "基础栅格图层L0", false), PROJ_GRID_GROUP(1, "项目栅格图层分组L1", false), BASE_VECTOR_GROUP(2, "基础矢量图层L2", true), PROJ_VECTOR_GROUP(3, "项目矢量图层分组L3", true), OTHER_GROUP(4, "其他图层分组", true), OBJECTS_3D_GROUP(5, "3D图层分组", true), OPERTOR_GROUP(6, "操作图层分组L4", true), LOCATION_GROUP(7, "当前位置分组", false);
+        public int orderIndex;//图层分组的顺序
+        public String name;//图层分组名称
+        public boolean isMulti;//图层分组是否支持多个图层
+
+        LAYER_GROUP_ENUM(int orderIndex, String name, boolean isMulti) {
+            this.orderIndex = orderIndex;
+            this.name = name;
+            this.isMulti = isMulti;
+        }
+
+        public static LAYER_GROUP_ENUM getGroupByName(String groupName) {
+            for (LAYER_GROUP_ENUM groupEnum : LAYER_GROUP_ENUM.values()) {
+                if (groupEnum.name.contains(groupName)) {
+                    return groupEnum;
+                }
+            }
+            return OTHER_GROUP;
+        }
     }
 
     @Override

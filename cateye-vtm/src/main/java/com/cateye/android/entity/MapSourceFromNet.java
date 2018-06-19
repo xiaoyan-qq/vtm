@@ -103,6 +103,7 @@ public class MapSourceFromNet {
         private String source;
         private String fileExtension;
         private String abstractX;
+        private String group;//layer的图层所在分组
         private boolean isShow=false;//本地字段，用来标识是否已经添加到地图界面上
 
         public int getId() {
@@ -299,6 +300,14 @@ public class MapSourceFromNet {
 
         public void setShow(boolean show) {
             isShow = show;
+        }
+
+        public String getGroup() {
+            return group;
+        }
+
+        public void setGroup(String group) {
+            this.group = group;
         }
     }
 }
