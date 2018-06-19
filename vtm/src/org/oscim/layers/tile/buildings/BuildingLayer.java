@@ -2,7 +2,7 @@
  * Copyright 2013 Hannes Janetzek
  * Copyright 2016-2018 devemux86
  * Copyright 2016 Robin Boldt
- * Copyright 2017 Gustl22
+ * Copyright 2017-2018 Gustl22
  *
  * This file is part of the OpenScienceMap project (http://www.opensciencemap.org).
  *
@@ -23,6 +23,7 @@ import org.oscim.core.MapElement;
 import org.oscim.core.Tag;
 import org.oscim.layers.Layer;
 import org.oscim.layers.tile.MapTile;
+import org.oscim.layers.tile.ZoomLimiter;
 import org.oscim.layers.tile.vector.VectorTileLayer;
 import org.oscim.layers.tile.vector.VectorTileLayer.TileLoaderThemeHook;
 import org.oscim.map.Map;
@@ -39,12 +40,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class BuildingLayer extends Layer implements TileLoaderThemeHook {
+public class BuildingLayer extends Layer implements TileLoaderThemeHook, ZoomLimiter.IZoomLimiter {
 
     protected final static int BUILDING_LEVEL_HEIGHT = 280; // cm
 
-    protected final static int MIN_ZOOM = 17;
-    protected final static int MAX_ZOOM = 17;
+    public final static int MIN_ZOOM = 17;
 
     public static boolean POST_AA = false;
     public static boolean TRANSLUCENT = true;
@@ -53,6 +53,8 @@ public class BuildingLayer extends Layer implements TileLoaderThemeHook {
 
     // Can be replaced with Multimap in Java 8
     protected java.util.Map<Integer, List<BuildingElement>> mBuildings = new HashMap<>();
+
+    private final ZoomLimiter mZoomLimiter;
 
     class BuildingElement {
         MapElement element;
@@ -65,11 +67,11 @@ public class BuildingLayer extends Layer implements TileLoaderThemeHook {
     }
 
     public BuildingLayer(Map map, VectorTileLayer tileLayer) {
-        this(map, tileLayer, MIN_ZOOM, MAX_ZOOM, false);
+        this(map, tileLayer, false);
     }
 
     public BuildingLayer(Map map, VectorTileLayer tileLayer, boolean mesh) {
-        this(map, tileLayer, MIN_ZOOM, MAX_ZOOM, mesh);
+        this(map, tileLayer, MIN_ZOOM, map.viewport().getMaxZoomLevel(), mesh);
     }
 
     public BuildingLayer(Map map, VectorTileLayer tileLayer, int zoomMin, int zoomMax, boolean mesh) {
@@ -78,11 +80,23 @@ public class BuildingLayer extends Layer implements TileLoaderThemeHook {
 
         tileLayer.addHook(this);
 
-        mRenderer = new BuildingRenderer(tileLayer.tileRenderer(),
-                zoomMin, zoomMax,
+        // Use zoomMin as zoomLimit to render buildings only once
+        mZoomLimiter = new ZoomLimiter(tileLayer.getManager(), zoomMin, zoomMax, zoomMin);
+
+        mRenderer = new BuildingRenderer(tileLayer.tileRenderer(), mZoomLimiter,
                 mesh, !mesh && TRANSLUCENT); // alpha must be disabled for mesh renderer
         if (POST_AA)
             mRenderer = new OffscreenRenderer(Mode.SSAO_FXAA, mRenderer);
+    }
+
+    @Override
+    public void addZoomLimit() {
+        mZoomLimiter.addZoomLimit();
+    }
+
+    @Override
+    public void removeZoomLimit() {
+        mZoomLimiter.removeZoomLimit();
     }
 
     /**
@@ -91,10 +105,11 @@ public class BuildingLayer extends Layer implements TileLoaderThemeHook {
     @Override
     public boolean process(MapTile tile, RenderBuckets buckets, MapElement element,
                            RenderStyle style, int level) {
-        // FIXME check why some buildings are processed up to 4 times (should avoid overhead)
-        // FIXME fix artifacts at tile borders
+        // FIXME artifacts at tile borders in last extraction zoom as they're clipped
 
         if (!(style instanceof ExtrusionStyle))
+            return false;
+        if (tile.zoomLevel > mZoomLimiter.getZoomLimit())
             return false;
 
         ExtrusionStyle extrusion = (ExtrusionStyle) style.current();
@@ -129,21 +144,23 @@ public class BuildingLayer extends Layer implements TileLoaderThemeHook {
         int height = 0; // cm
         int minHeight = 0; // cm
 
-        String v = element.tags.getValue(Tag.KEY_HEIGHT);
-        if (v != null)
-            height = (int) (Float.parseFloat(v) * 100);
+        Float f = element.getHeight();
+        if (f != null)
+            height = (int) (f * 100);
         else {
             // #TagFromTheme: generalize level/height tags
-            if ((v = element.tags.getValue(Tag.KEY_BUILDING_LEVELS)) != null)
+            String v = element.tags.getValue(Tag.KEY_BUILDING_LEVELS);
+            if (v != null)
                 height = (int) (Float.parseFloat(v) * BUILDING_LEVEL_HEIGHT);
         }
 
-        v = element.tags.getValue(Tag.KEY_MIN_HEIGHT);
-        if (v != null)
-            minHeight = (int) (Float.parseFloat(v) * 100);
+        f = element.getMinHeight();
+        if (f != null)
+            minHeight = (int) (f * 100);
         else {
             // #TagFromTheme: level/height tags
-            if ((v = element.tags.getValue(Tag.KEY_BUILDING_MIN_LEVEL)) != null)
+            String v = element.tags.getValue(Tag.KEY_BUILDING_MIN_LEVEL);
+            if (v != null)
                 minHeight = (int) (Float.parseFloat(v) * BUILDING_LEVEL_HEIGHT);
         }
 
