@@ -19,7 +19,6 @@ package org.oscim.test;
 import org.oscim.core.MapPosition;
 import org.oscim.core.Tile;
 import org.oscim.gdx.GdxMapApp;
-import org.oscim.gdx.GdxMapImpl;
 import org.oscim.layers.tile.buildings.BuildingLayer;
 import org.oscim.layers.tile.buildings.S3DBLayer;
 import org.oscim.layers.tile.vector.VectorTileLayer;
@@ -37,7 +36,7 @@ import org.oscim.tiling.source.mapfile.MapInfo;
 
 import java.io.File;
 
-public class MapsforgeTest extends GdxMapImpl {
+public class MapsforgeTest extends GdxMapApp {
 
     private File mapFile;
     private boolean s3db;
@@ -78,10 +77,19 @@ public class MapsforgeTest extends GdxMapImpl {
         renderer.setOffset(5, 0);
         mMap.layers().add(mapScaleBarLayer);
 
+        MapPosition pos = MapPreferences.getMapPosition();
         MapInfo info = tileSource.getMapInfo();
-        MapPosition pos = new MapPosition();
-        pos.setByBoundingBox(info.boundingBox, Tile.SIZE * 4, Tile.SIZE * 4);
+        if (pos == null || !info.boundingBox.contains(pos.getGeoPoint())) {
+            pos = new MapPosition();
+            pos.setByBoundingBox(info.boundingBox, Tile.SIZE * 4, Tile.SIZE * 4);
+        }
         mMap.setMapPosition(pos);
+    }
+
+    @Override
+    public void dispose() {
+        MapPreferences.saveMapPosition(mMap.getMapPosition());
+        super.dispose();
     }
 
     static File getMapFile(String[] args) {
