@@ -109,8 +109,8 @@ public class ContourMPChartFragment extends BaseDrawFragment {
     public void initView(View rootView) {
         rxDialogLoading = new RxDialogLoading(getActivity());
         currentMapPosition = new MapPosition();
-        contourChart = rootView.findViewById(R.id.contour_chart);
-        img_close = rootView.findViewById(R.id.img_contour_chart_close);
+        contourChart = (LineChart) rootView.findViewById(R.id.contour_chart);
+        img_close = (ImageView) rootView.findViewById(R.id.img_contour_chart_close);
         contourChart.setMinimumHeight(((int) (RxDeviceTool.getScreenHeight(getActivity()) * 0.3)));
         //设置折线图的x轴显示在底部
         contourChart.getXAxis().setPosition(XAxis.XAxisPosition.TOP);

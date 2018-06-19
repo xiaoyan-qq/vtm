@@ -152,24 +152,24 @@ public class CatEyeMainFragment extends BaseFragment {
 
     @Override
     public void initView(View rootView) {
-        mapView = rootView.findViewById(R.id.mapView);
+        mapView = (MapView) rootView.findViewById(R.id.mapView);
 
         mMap = mapView.map();
 
-        layer_fragment = rootView.findViewById(R.id.layer_main_cateye_bottom);
+        layer_fragment = (FrameLayout) rootView.findViewById(R.id.layer_main_cateye_bottom);
 
-        chk_draw_point = rootView.findViewById(R.id.chk_draw_vector_point);
-        chk_draw_line = rootView.findViewById(R.id.chk_draw_vector_line);
-        chk_draw_polygon = rootView.findViewById(R.id.chk_draw_vector_polygon);
+        chk_draw_point = (ImageView) rootView.findViewById(R.id.chk_draw_vector_point);
+        chk_draw_line = (ImageView) rootView.findViewById(R.id.chk_draw_vector_line);
+        chk_draw_polygon = (ImageView) rootView.findViewById(R.id.chk_draw_vector_polygon);
         chkDrawPointLinePolygonList = new ArrayList<>();
         chkDrawPointLinePolygonList.add(chk_draw_point);
         chkDrawPointLinePolygonList.add(chk_draw_line);
         chkDrawPointLinePolygonList.add(chk_draw_polygon);
 
         //选择地图资源
-        img_map_source_selector = rootView.findViewById(R.id.img_map_source_select);
-        img_contour_selector = rootView.findViewById(R.id.img_contour_select);
-        img_location = rootView.findViewById(R.id.img_location);
+        img_map_source_selector = (ImageView) rootView.findViewById(R.id.img_map_source_select);
+        img_contour_selector = (ImageView) rootView.findViewById(R.id.img_contour_select);
+        img_location = (ImageView) rootView.findViewById(R.id.img_location);
 
         initData();
         initScaleBar();

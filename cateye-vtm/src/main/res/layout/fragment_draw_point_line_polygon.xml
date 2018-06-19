@@ -18,7 +18,8 @@
         style="@style/button_4_radius"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginHorizontal="@dimen/button_padding_default"
+        android:layout_marginLeft="@dimen/button_padding_default"
+        android:layout_marginRight="@dimen/button_padding_default"
         android:layout_weight="1"
         android:text="@string/draw_clear_paint" />
 

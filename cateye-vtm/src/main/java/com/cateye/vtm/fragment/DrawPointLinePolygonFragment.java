@@ -62,9 +62,9 @@ public class DrawPointLinePolygonFragment extends BaseDrawFragment {
 
     @Override
     public void initView(View rootView) {
-        tv_last = rootView.findViewById(R.id.tv_draw_last);
-        tv_clear = rootView.findViewById(R.id.tv_draw_clear);
-        tv_finish = rootView.findViewById(R.id.tv_draw_finish);
+        tv_last = (TextView) rootView.findViewById(R.id.tv_draw_last);
+        tv_clear = (TextView) rootView.findViewById(R.id.tv_draw_clear);
+        tv_finish = (TextView) rootView.findViewById(R.id.tv_draw_finish);
 
         if (currentDrawState == DRAW_STATE.DRAW_POINT) {
             tv_last.setVisibility(View.GONE);
