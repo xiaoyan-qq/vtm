@@ -84,34 +84,31 @@ public class MapElement extends GeometryBuffer {
         return null;
     }
 
-//    public boolean isBuilding() {
-//        return tags.containsKey(Tag.KEY_BUILDING)
-//<<<<<<< HEAD
-//                || "contour".equals(tags.getValue("kind")); // Mapzen
-//=======
-//                || "building".equals(tags.getValue("kind")) // Mapzen
-//                || "building".equals(tags.getValue("layer")); // OpenMapTiles
-//>>>>>>> 2e9b6bf42c1d40992fa0555923a86604f7665271
-//    }
-//
-//    public boolean isBuildingPart() {
-//        return tags.containsKey(Tag.KEY_BUILDING_PART)
-//<<<<<<< HEAD
-//                || "contour_part".equals(tags.getValue("kind")); // Mapzen
-//    }
-//    public boolean isContour() {
-//        return tags.containsKey(Tag.KEY_CONTOUR)
-//                || "contour".equals(tags.getValue("kind")); // Mapzen
-//    }
-//
-//    public boolean isContourPart() {
-//        return tags.containsKey(Tag.KEY_CONTOUR_PART)
-//                || "contour_part".equals(tags.getValue("kind")); // Mapzen
-//=======
-//                || "building_part".equals(tags.getValue("kind")) // Mapzen
-//                || "building:part".equals(tags.getValue("layer")); // OpenMapTiles
-//>>>>>>> 2e9b6bf42c1d40992fa0555923a86604f7665271
-//    }
+    public boolean isBuilding() {
+        return tags.containsKey(Tag.KEY_BUILDING)
+                || "contour".equals(tags.getValue("kind")) // Mapzen
+                || "building".equals(tags.getValue("kind")) // Mapzen
+                || "building".equals(tags.getValue("layer")); // OpenMapTiles
+    }
+
+    public boolean isBuildingPart() {
+        return tags.containsKey(Tag.KEY_BUILDING_PART)
+                || "contour_part".equals(tags.getValue("kind")); // Mapzen
+    }
+
+    public boolean isContour() {
+        return tags.containsKey(Tag.KEY_CONTOUR)
+                || "contour".equals(tags.getValue("kind"))
+                || "building".equals(tags.getValue("kind")) // Mapzen
+                || "building".equals(tags.getValue("layer")); // OpenMapTiles
+    }
+
+    public boolean isContourPart() {
+        return tags.containsKey(Tag.KEY_CONTOUR_PART)
+                || "contour_part".equals(tags.getValue("kind")) // Mapzen
+                || "building_part".equals(tags.getValue("kind")) // Mapzen
+                || "building:part".equals(tags.getValue("layer")); // OpenMapTiles
+    }
 
     public void setLabelPosition(float x, float y) {
         labelPosition = new PointF(x, y);
