@@ -33,6 +33,7 @@ import com.vondear.rxtools.RxLogTool;
 import com.vondear.rxtools.view.RxToast;
 import com.vondear.rxtools.view.dialog.RxDialog;
 import com.vondear.rxtools.view.dialog.RxDialogLoading;
+import com.yydcdut.sdlv.SlideAndDragListView;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -367,7 +368,13 @@ public class CatEyeMainFragment extends BaseFragment {
                                 for (int i = 0; i < multiCheckStateList.size(); i++) {
                                     multiCheckStates[i] = multiCheckStateList.get(i);
                                 }
-                                CanDialog canDialog = new CanDialog.Builder(getActivity()).setTitle("地图服务资源").setMultiChoiceItems(multiCheckTexts, multiCheckStates, null).setNegativeButton("取消", true, null).setPositiveButton("确定", true, new CanDialogInterface.OnClickListener() {
+
+                                //使用自定义listview，增加调整图层顺序与图层
+                                View layerManagerRootView=LayoutInflater.from(getActivity()).inflate(R.layout.fragment_layer_manager,null);
+                                SlideAndDragListView slideAndDragListView= (SlideAndDragListView) layerManagerRootView.findViewById(R.id.sadLv_layerlist);
+                                slideAndDragListView.setAdapter();
+
+                                new CanDialog.Builder(getActivity()).setView(layerManagerRootView).setNegativeButton("取消", true, null).setPositiveButton("确定", true, new CanDialogInterface.OnClickListener() {
                                     @Override
                                     public void onClick(CanDialog dialog, int checkItem, CharSequence text, boolean[] checkItems) {
                                         RxLogTool.i(checkItems);
@@ -419,6 +426,7 @@ public class CatEyeMainFragment extends BaseFragment {
                                         mMap.updateMap(true);
                                     }
                                 }).show();
+
                             }
                         });
                     }
