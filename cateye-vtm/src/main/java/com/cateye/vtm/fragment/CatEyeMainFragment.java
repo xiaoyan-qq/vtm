@@ -20,6 +20,7 @@ import com.cateye.android.entity.MapSourceFromNet;
 import com.cateye.android.vtm.MainActivity;
 import com.cateye.android.vtm.MainActivity.LAYER_GROUP_ENUM;
 import com.cateye.android.vtm.R;
+import com.cateye.vtm.adapter.LayerManagerAdapter;
 import com.cateye.vtm.fragment.base.BaseFragment;
 import com.cateye.vtm.util.CatEyeMapManager;
 import com.cateye.vtm.util.SystemConstant;
@@ -358,21 +359,23 @@ public class CatEyeMainFragment extends BaseFragment {
                                         keyList.add(key);
                                     }
                                 }
-                                final String[] multiCheckTexts = new String[multiCheckTextList.size()];
-                                final boolean[] multiCheckStates = new boolean[multiCheckStateList.size()];
-                                //转换
-                                for (int i = 0; i < multiCheckTextList.size(); i++) {
-                                    multiCheckTexts[i] = multiCheckTextList.get(i);
-                                }
-                                //转换
-                                for (int i = 0; i < multiCheckStateList.size(); i++) {
-                                    multiCheckStates[i] = multiCheckStateList.get(i);
-                                }
+//                                final String[] multiCheckTexts = new String[multiCheckTextList.size()];
+//                                final boolean[] multiCheckStates = new boolean[multiCheckStateList.size()];
+//                                //转换
+//                                for (int i = 0; i < multiCheckTextList.size(); i++) {
+//                                    multiCheckTexts[i] = multiCheckTextList.get(i);
+//                                }
+//                                //转换
+//                                for (int i = 0; i < multiCheckStateList.size(); i++) {
+//                                    multiCheckStates[i] = multiCheckStateList.get(i);
+//                                }
 
                                 //使用自定义listview，增加调整图层顺序与图层
                                 View layerManagerRootView=LayoutInflater.from(getActivity()).inflate(R.layout.fragment_layer_manager,null);
                                 SlideAndDragListView slideAndDragListView= (SlideAndDragListView) layerManagerRootView.findViewById(R.id.sadLv_layerlist);
-                                slideAndDragListView.setAdapter();
+                                LayerManagerAdapter layerManagerAdapter=new LayerManagerAdapter(getActivity(), (List<MapSourceFromNet.DataBean>) stringDataBeanMap.values());
+                                slideAndDragListView.setAdapter(layerManagerAdapter);
+
 
                                 new CanDialog.Builder(getActivity()).setView(layerManagerRootView).setNegativeButton("取消", true, null).setPositiveButton("确定", true, new CanDialogInterface.OnClickListener() {
                                     @Override
