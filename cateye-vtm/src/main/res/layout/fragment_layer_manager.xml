@@ -3,8 +3,18 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <TextView
+        android:id="@+id/tv_layerlist_add"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:gravity="center"
+        android:padding="@dimen/button_padding_default"
+        android:text="+" />
+
     <com.yydcdut.sdlv.SlideAndDragListView
         android:id="@+id/sadLv_layerlist"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"></com.yydcdut.sdlv.SlideAndDragListView>
+        android:layout_height="match_parent"
+        android:layout_above="@id/tv_layerlist_add"></com.yydcdut.sdlv.SlideAndDragListView>
 </RelativeLayout>

@@ -35,14 +35,16 @@ public class MainActivity extends SupportActivity implements TencentLocationList
 
     //地图layer的分组
     public enum LAYER_GROUP_ENUM {
-        BASE_GRID_GROUP(2, "基础栅格图层L0", false), PROJ_GRID_GROUP(1, "项目栅格图层分组L1", false), BASE_VECTOR_GROUP(0, "基础矢量图层L2", true), PROJ_VECTOR_GROUP(3, "项目矢量图层分组L3", true), OTHER_GROUP(4, "其他图层分组", true), OBJECTS_3D_GROUP(5, "3D图层分组", true), OPERTOR_GROUP(6, "操作图层分组L4", true), LOCATION_GROUP(7, "当前位置分组", false);
+        BASE_GRID_GROUP(0, "L0", "基础栅格图层L0", false), PROJ_GRID_GROUP(1, "L1", "项目栅格图层分组L1", false), BASE_VECTOR_GROUP(2, "L2", "基础矢量图层L2", true), PROJ_VECTOR_GROUP(3, "L3", "项目矢量图层分组L3", true), OTHER_GROUP(4, "L4", "其他图层分组", true), OBJECTS_3D_GROUP(5, "L5", "3D图层分组", true), OPERTOR_GROUP(6, "L6", "操作图层分组L4", true), LOCATION_GROUP(7, "L7", "当前位置分组", false);
         public int orderIndex;//图层分组的顺序
         public String name;//图层分组名称
+        public String desc;//图层描述
         public boolean isMulti;//图层分组是否支持多个图层
 
-        LAYER_GROUP_ENUM(int orderIndex, String name, boolean isMulti) {
+        LAYER_GROUP_ENUM(int orderIndex, String name, String desc, boolean isMulti) {
             this.orderIndex = orderIndex;
             this.name = name;
+            this.desc = desc;
             this.isMulti = isMulti;
         }
 
