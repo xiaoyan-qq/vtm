@@ -1,7 +1,14 @@
 package com.cateye.android.vtm;
 
 import android.app.Application;
+import android.content.Context;
+import android.support.multidex.MultiDex;
 
+import com.cateye.vtm.util.SystemConstant;
+import com.jiongbull.jlog.Logger;
+import com.jiongbull.jlog.constant.LogLevel;
+import com.jiongbull.jlog.constant.LogSegment;
+import com.jiongbull.jlog.util.TimeUtils;
 import com.lzy.okgo.OkGo;
 import com.lzy.okgo.cache.CacheEntity;
 import com.lzy.okgo.cache.CacheMode;
@@ -11,6 +18,8 @@ import com.lzy.okgo.interceptor.HttpLoggingInterceptor;
 import com.umeng.commonsdk.UMConfigure;
 import com.vondear.rxtools.RxTool;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
@@ -22,10 +31,36 @@ import okhttp3.OkHttpClient;
  */
 
 public class MainApplication extends Application {
+    private static Logger sLogger;
+    @Override
+    protected void attachBaseContext(Context base) {
+        super.attachBaseContext(base);
+        //log方法的初始化
+        List<String> logLevels = new ArrayList<>();
+        logLevels.add(LogLevel.ERROR);
+        logLevels.add(LogLevel.WTF);
+        sLogger = Logger.Builder.newBuilder(getApplicationContext(), "jlog")
+                /* 下面的属性都是默认值，你可以根据需求决定是否修改它们. */
+                .setDebug(true)
+                .setWriteToFile(true)
+                .setLogDir(SystemConstant.LOG_DIR)
+                .setLogPrefix("CatEye")
+                .setLogSegment(LogSegment.TWELVE_HOURS)
+                .setLogLevelsForFile(logLevels)
+                .setZoneOffset(TimeUtils.ZoneOffset.P0800)
+                .setTimeFormat("yyyy-MM-dd HH:mm:ss")
+                .setPackagedLevel(0)
+                .setStorage(null)
+                .build();
+        MultiDex.install(this);//安装分包工具类，否则在4.4的设备会报错
+    }
+
     @Override
     public void onCreate() {
         super.onCreate();
+
         RxTool.init(this);
+        SystemConstant.init();
 
         Fragmentation.builder()
                 // 显示悬浮球 ; 其他Mode:SHAKE: 摇一摇唤出   NONE：隐藏

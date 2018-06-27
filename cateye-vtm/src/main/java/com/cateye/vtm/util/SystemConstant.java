@@ -1,5 +1,8 @@
 package com.cateye.vtm.util;
 
+import com.litesuits.common.data.DataKeeper;
+import com.vondear.rxtools.RxFileTool;
+
 public class SystemConstant {
     public static final int MSG_WHAT_DRAW_POINT_LINE_POLYGON_DESTROY = 0x1001;//绘制点线面
     public static final int MSG_WHAT_LOCATION_UPDATE = 0x1002;//位置更新
@@ -13,4 +16,12 @@ public class SystemConstant {
     public static final String BUNDLE_AREA_HIDEN_STATE = "BUNDLE_AREA_HIDEN_STATE";//主界面上部分区域的显隐状态，隐藏或显示
     public static final String BUNDLE_BUTTON_AREA = "BUNDLE_BUTTON_AREA";//主界面上控制的显隐区域
     public static final long SCREEN_MOVE_BOUNDARY = 20;//判断点击屏幕时是否为移动事件的边界值
+
+    public static String BASE_DIR = null;//程序根地址
+    public static String LOG_DIR = null;//log目录
+
+    public static void init() {
+        BASE_DIR = RxFileTool.getRootPath() + "/CatEye";
+        LOG_DIR = BASE_DIR + "/Log";
+    }
 }
