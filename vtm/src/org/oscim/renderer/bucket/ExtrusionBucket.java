@@ -556,7 +556,7 @@ public class ExtrusionBucket extends RenderBucket {
             }
 
             /* check if face is within tile */
-            if (mClipper.clipNext((int) nx, (int) ny) == 0) {
+            if (mClipper.clipNext((int) nx, (int) ny) == LineClipper.OUTSIDE) {
                 even = ++even % 2;
                 continue;
             }
@@ -606,7 +606,7 @@ public class ExtrusionBucket extends RenderBucket {
                 iOffset += idx[i];
             }
         }
-        vertexOffset = vboData.position() * 2;
+        vertexOffset = vboData.position() * RenderBuckets.SHORT_BYTES;
         vertexItems.compile(vboData);
 
         clear();

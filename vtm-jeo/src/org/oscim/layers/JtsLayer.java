@@ -1,5 +1,7 @@
 /*
+ * Copyright 2014 Hannes Janetzek
  * Copyright 2016 devemux86
+ * Copyright 2018 xiaoyan-qq
  *
  * This file is part of the OpenScienceMap project (http://www.opensciencemap.org).
  *
