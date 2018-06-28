@@ -25,6 +25,10 @@ import org.oscim.layers.Layer;
 import org.oscim.layers.marker.MarkerItem;
 import org.oscim.map.Map;
 
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Created by xiaoxiao on 2018/3/21.
  */
@@ -32,6 +36,8 @@ import org.oscim.map.Map;
 public class DrawPointLinePolygonFragment extends BaseDrawFragment {
     private TextView tv_last, tv_clear, tv_finish;
     protected MapEventsReceiver mapEventsReceiver;
+
+    private int drawUsage = -1;
 
     @Override
     public int getFragmentLayoutId() {
@@ -44,10 +50,12 @@ public class DrawPointLinePolygonFragment extends BaseDrawFragment {
         if (savedInstanceState != null) {
             //获取当前的绘制状态
             currentDrawState = (DRAW_STATE) savedInstanceState.getSerializable(DRAW_STATE.class.getSimpleName());
+            drawUsage = savedInstanceState.getInt(SystemConstant.DRAW_USAGE);
         }
         if (getArguments() != null) {
             Bundle bundle = getArguments();
             currentDrawState = (DRAW_STATE) bundle.getSerializable(DRAW_STATE.class.getSimpleName());
+            drawUsage = bundle.getInt(SystemConstant.DRAW_USAGE);
         }
     }
 
@@ -124,6 +132,19 @@ public class DrawPointLinePolygonFragment extends BaseDrawFragment {
         tv_finish.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                Bundle drawBundle = new Bundle();
+                List<GeoPoint> geoPointList = new ArrayList<>();
+                if (markerLayer != null && markerLayer.getItemList() != null && !markerLayer.getItemList().isEmpty()) {
+                    for (MarkerItem item : markerLayer.getItemList()) {
+                        geoPointList.add(item.geoPoint);
+                    }
+                    drawBundle.putSerializable(SystemConstant.DRAW_POINT_LIST, (Serializable) geoPointList);
+                }
+                Message msg = Message.obtain();
+                msg.what = SystemConstant.MSG_WHAT_DRAW_RESULT;
+                msg.obj = geoPointList;
+                msg.arg1 = drawUsage;
+                EventBus.getDefault().post(msg);
                 pop();//退出当前界面
             }
         });

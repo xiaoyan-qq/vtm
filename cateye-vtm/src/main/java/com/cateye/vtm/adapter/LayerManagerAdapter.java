@@ -8,6 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -31,7 +32,7 @@ public class LayerManagerAdapter extends BaseAdapter {
         this.dataBeanList = dataBeanList;
         this.inflater = LayoutInflater.from(mContext);
         //对传递进来的数据按照图层分组排序
-        sortListData(dataBeanList);
+        sortListData();
     }
 
     @Override
@@ -79,9 +80,17 @@ public class LayerManagerAdapter extends BaseAdapter {
             holder = (ViewHolder) view.getTag();
         }
         if (dataBeanList != null && dataBeanList.size() > i) {
-            MapSourceFromNet.DataBean dataBean = dataBeanList.get(i);
+            final MapSourceFromNet.DataBean dataBean = dataBeanList.get(i);
             holder.tv_name.setText(dataBean.getAbstractX() + "(" + dataBean.getGroup() + ")");
             holder.chk_visibile.setChecked(dataBean.isShow());
+
+            //用户点击勾选框，实时修改图层的显隐状态
+            holder.chk_visibile.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                    dataBean.setShow(b);
+                }
+            });
         }
         return view;
     }
@@ -96,7 +105,7 @@ public class LayerManagerAdapter extends BaseAdapter {
      * 对传递进来的数据做排序
      */
     @SuppressLint("NewApi")
-    protected void sortListData(List<MapSourceFromNet.DataBean> dataBeanList) {
+    public void sortListData() {
         if (dataBeanList != null && !dataBeanList.isEmpty()) {
             dataBeanList.sort(new Comparator<MapSourceFromNet.DataBean>() {
                 @Override

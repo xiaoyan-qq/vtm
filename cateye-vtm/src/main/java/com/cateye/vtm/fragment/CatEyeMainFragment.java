@@ -2,6 +2,7 @@ package com.cateye.vtm.fragment;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.os.Message;
 import android.view.LayoutInflater;
@@ -16,6 +17,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONReader;
 import com.canyinghao.candialog.CanDialog;
 import com.canyinghao.candialog.CanDialogInterface;
+import com.cateye.android.entity.ContourFromNet;
 import com.cateye.android.entity.ContourMPData;
 import com.cateye.android.entity.MapSourceFromNet;
 import com.cateye.android.vtm.MainActivity;
@@ -35,6 +37,8 @@ import com.vondear.rxtools.RxLogTool;
 import com.vondear.rxtools.view.RxToast;
 import com.vondear.rxtools.view.dialog.RxDialog;
 import com.vondear.rxtools.view.dialog.RxDialogLoading;
+import com.yydcdut.sdlv.Menu;
+import com.yydcdut.sdlv.MenuItem;
 import com.yydcdut.sdlv.SlideAndDragListView;
 
 import org.greenrobot.eventbus.EventBus;
@@ -57,6 +61,8 @@ import org.oscim.core.Tile;
 import org.oscim.layers.ContourLineLayer;
 import org.oscim.layers.Layer;
 import org.oscim.layers.LocationLayer;
+import org.oscim.layers.MapEventLayer;
+import org.oscim.layers.MapEventLayer2;
 import org.oscim.layers.tile.MapTile;
 import org.oscim.layers.tile.bitmap.BitmapTileLayer;
 import org.oscim.layers.tile.buildings.BuildingLayer;
@@ -97,6 +103,7 @@ import java.io.InputStream;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -108,6 +115,7 @@ import io.reactivex.functions.Consumer;
 import io.reactivex.functions.Predicate;
 import io.reactivex.schedulers.Schedulers;
 
+import static com.cateye.vtm.util.SystemConstant.URL_CONTOUR_CALCULATE;
 import static com.cateye.vtm.util.SystemConstant.URL_MAP_SOURCE_NET;
 
 /**
@@ -146,6 +154,7 @@ public class CatEyeMainFragment extends BaseFragment {
 
     private List<MapSourceFromNet.DataBean> layerDataBeanList;//记录图层管理中的图层信息
     private View layerManagerRootView;//图层管理对话框的根视图
+    private LayerManagerAdapter layerManagerAdapter;//图层管理对应的adapter
 
     @Override
     public int getFragmentLayoutId() {
@@ -272,35 +281,39 @@ public class CatEyeMainFragment extends BaseFragment {
                     popChild();
                 }
             } else if (view.getId() == R.id.img_map_source_select) {//选择地图资源
+                if (layerDataBeanList != null) {
+                    showLayerManagerDialog(layerDataBeanList);
+                } else {
+                    getMapDataSourceFromNet();
+                }
+            } else if (view.getId() == R.id.img_contour_select) {//选择等高线文件
                 final RxDialog dialog = new RxDialog(getContext());
-                View layer_select_map_source = LayoutInflater.from(getContext()).inflate(R.layout.layer_select_map_source, null);
+                View layer_select_map_source = LayoutInflater.from(getContext()).inflate(R.layout.layer_select_contour_source, null);
                 dialog.setContentView(layer_select_map_source);
                 dialog.setCancelable(true);
                 dialog.show();
-                //本地地图资源
-                layer_select_map_source.findViewById(R.id.tv_map_source_local).setOnClickListener(new View.OnClickListener() {
+                //本地等高线资源
+                layer_select_map_source.findViewById(R.id.tv_map_contour_local).setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        startActivityForResult(new Intent(getActivity(), MainActivity.MapFilePicker.class),
-                                SELECT_MAP_FILE);
+                        startActivityForResult(new Intent(getActivity(), MainActivity.ContourFilePicker.class),
+                                SELECT_CONTOUR_FILE);
                         dialog.dismiss();
                     }
                 });
-                //网络地图资源
-                layer_select_map_source.findViewById(R.id.tv_map_source_net).setOnClickListener(new View.OnClickListener() {
+                //手动绘制等高线
+                layer_select_map_source.findViewById(R.id.tv_map_contour_draw).setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         dialog.dismiss();
-                        if (layerDataBeanList != null) {
-                            showLayerManagerDialog(layerManagerRootView, layerDataBeanList);
-                        } else {
-                            getMapDataSourceFromNet();
-                        }
+                        //进入绘制线界面，绘制完成后获取到绘制到的线的点位集合
+                        //自动弹出绘制点线面的fragment
+                        Bundle lineBundle = new Bundle();
+                        lineBundle.putSerializable(com.cateye.vtm.fragment.DrawPointLinePolygonFragment.DRAW_STATE.class.getSimpleName(), com.cateye.vtm.fragment.DrawPointLinePolygonFragment.DRAW_STATE.DRAW_LINE);
+                        lineBundle.putInt(SystemConstant.DRAW_USAGE, SystemConstant.DRAW_CONTOUR_LINE);
+                        loadRootFragment(R.id.layer_main_cateye_bottom, com.cateye.vtm.fragment.DrawPointLinePolygonFragment.newInstance(lineBundle));
                     }
                 });
-            } else if (view.getId() == R.id.img_contour_select) {//选择等高线文件
-                startActivityForResult(new Intent(getActivity(), MainActivity.ContourFilePicker.class),
-                        SELECT_CONTOUR_FILE);
             }
         }
     };
@@ -341,22 +354,7 @@ public class CatEyeMainFragment extends BaseFragment {
                             public void accept(List<MapSourceFromNet.DataBean> dataBeanList) throws Exception {
                                 if (dataBeanList != null) {
                                     layerDataBeanList = dataBeanList;
-                                    //使用自定义listview，增加调整图层顺序与图层
-                                    layerManagerRootView = LayoutInflater.from(getActivity()).inflate(R.layout.fragment_layer_manager, null);
-                                    SlideAndDragListView slideAndDragListView = (SlideAndDragListView) layerManagerRootView.findViewById(R.id.sadLv_layerlist);
-                                    LayerManagerAdapter layerManagerAdapter = new LayerManagerAdapter(getActivity(), dataBeanList);
-                                    slideAndDragListView.setAdapter(layerManagerAdapter);
-
-                                    //增加按钮
-                                    TextView tv_add = (TextView) layerManagerRootView.findViewById(R.id.tv_layerlist_add);
-                                    tv_add.setOnClickListener(new View.OnClickListener() {
-                                        @Override
-                                        public void onClick(View view) {
-                                            startActivityForResult(new Intent(getActivity(), MainActivity.MapFilePicker.class),
-                                                    SELECT_MAP_FILE);
-                                        }
-                                    });
-                                    showLayerManagerDialog(layerManagerRootView, dataBeanList);
+                                    showLayerManagerDialog(dataBeanList);
                                 }
                             }
                         });
@@ -385,12 +383,62 @@ public class CatEyeMainFragment extends BaseFragment {
      * @Describe : 显示图层管理的对话框
      * @Date : 2018/6/27
      */
-    private void showLayerManagerDialog(View layerManagerRootView, final List<MapSourceFromNet.DataBean> dataBeanList) {
-        new CanDialog.Builder(getActivity()).setView(layerManagerRootView).
+    private MapSourceFromNet.DataBean mDraggedEntity;
+    private int dragBeginPosition = -1;
+
+    private void showLayerManagerDialog(final List<MapSourceFromNet.DataBean> dataBeanList) {
+        //使用自定义listview，增加调整图层顺序与图层
+        layerManagerRootView = LayoutInflater.from(getActivity()).inflate(R.layout.fragment_layer_manager, null);
+        SlideAndDragListView slideAndDragListView = (SlideAndDragListView) layerManagerRootView.findViewById(R.id.sadLv_layerlist);
+
+        Menu menu = new Menu(true, 0);//第1个参数表示滑动 item 是否能滑的过头，像弹簧那样( true 表示过头，就像 Gif 中显示的那样；false 表示不过头，就像 Android QQ 中的那样)
+        menu.addItem(new MenuItem.Builder().setText("下载")
+                .setBackground(new ColorDrawable(getResources().getColor(R.color.color_blue_alpha_700)))
+                .setDirection(MenuItem.DIRECTION_RIGHT)//设置方向 (默认方向为 DIRECTION_LEFT )
+                .build());
+        slideAndDragListView.setMenu(menu);
+        slideAndDragListView.setOnDragDropListener(new SlideAndDragListView.OnDragDropListener() {
+            @Override
+            public void onDragViewStart(int beginPosition) {
+                mDraggedEntity = dataBeanList.get(beginPosition);
+                dragBeginPosition = beginPosition;
+            }
+
+            @Override
+            public void onDragDropViewMoved(int fromPosition, int toPosition) {
+                MapSourceFromNet.DataBean dataBean = dataBeanList.remove(fromPosition);
+                dataBeanList.add(toPosition, dataBean);
+            }
+
+            @Override
+            public void onDragViewDown(int finalPosition) {
+                dataBeanList.set(finalPosition, mDraggedEntity);
+            }
+        });
+
+
+        layerManagerAdapter = new LayerManagerAdapter(getActivity(), dataBeanList);
+        slideAndDragListView.setAdapter(layerManagerAdapter);
+
+        //增加按钮
+        TextView tv_add = (TextView) layerManagerRootView.findViewById(R.id.tv_layerlist_add);
+        tv_add.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startActivityForResult(new Intent(getActivity(), MainActivity.MapFilePicker.class),
+                        SELECT_MAP_FILE);
+            }
+        });
         new CanDialog.Builder(getActivity()).setView(layerManagerRootView).setNegativeButton("取消", true, null).setPositiveButton("确定", true, new CanDialogInterface.OnClickListener() {
             @Override
             public void onClick(CanDialog dialog, int checkItem, CharSequence text, boolean[] checkItems) {
-                mMap.clearMap();
+                Iterator mapLayerIterator = mMap.layers().iterator();
+                while (mapLayerIterator.hasNext()) {
+                    Layer layer = (Layer) mapLayerIterator.next();
+                    if (!(layer instanceof MapEventLayer) && !(layer instanceof MapEventLayer2) && !(layer instanceof LocationLayer) && !(layer instanceof MapScaleBarLayer)) {
+                        mapLayerIterator.remove();
+                    }
+                }
                 //根据当前的资源选择，显示对应的图层
                 for (MapSourceFromNet.DataBean dataBean : dataBeanList) {
                     boolean isShow = dataBean.isShow();
@@ -400,7 +448,7 @@ public class CatEyeMainFragment extends BaseFragment {
                                     .url(dataBean.getHref()).tilePath("/{X}/{Y}/{Z}.json" /*+ stringDataBeanMap.get(key).getExtension()*/)
                                     .zoomMax(18).build();
                             createGeoJsonTileLayer(getActivity(), mTileSource, true, dataBean.getGroup());
-                        } else if (dataBean.getExtension().contains("map")) {
+                        } else if (dataBean.getExtension().contains(".map")) {
                             addLocalMapFileLayer(dataBean.getHref());
                         } else {
                             BitmapTileSource mTileSource = BitmapTileSource.builder()
@@ -410,7 +458,7 @@ public class CatEyeMainFragment extends BaseFragment {
                         }
                     }
                 }
-                mMap.updateMap(true);
+                mMap.clearMap();
             }
         }).show();
     }
@@ -478,7 +526,13 @@ public class CatEyeMainFragment extends BaseFragment {
                     mapFileDataBean.setShow(false);
                     mapFileDataBean.setGroup(LAYER_GROUP_ENUM.BASE_VECTOR_GROUP.name);
                     mapFileDataBean.setExtension(".map");
-                    layerDataBeanList.add(mapFileDataBean);
+                    if (layerDataBeanList != null) {
+                        layerDataBeanList.add(mapFileDataBean);
+                        layerManagerAdapter.sortListData();//重新排序
+                        if (layerManagerAdapter != null) {
+                            layerManagerAdapter.notifyDataSetChanged();
+                        }
+                    }
                 }
             }
         } else if (requestCode == SELECT_THEME_FILE) {//选择本地style文件显示
@@ -767,6 +821,60 @@ public class CatEyeMainFragment extends BaseFragment {
                     hideOrShowButtonArea(isHiden, button_area);
                 }
                 break;
+            case SystemConstant.MSG_WHAT_DRAW_RESULT://获取到绘制的点集合
+                if (msg.arg1==SystemConstant.DRAW_CONTOUR_LINE){
+                    List<GeoPoint> geoPointList= (List<GeoPoint>) msg.obj;
+                    if (geoPointList!=null&&geoPointList.size()>1){
+                        StringBuilder contourParam=new StringBuilder();
+                        for (GeoPoint geoPoint:geoPointList){
+                            contourParam.append(geoPoint.getLongitude()).append(",").append(geoPoint.getLongitude()).append(";");
+                        }
+
+                        final RxDialogLoading rxDialogLoading = new RxDialogLoading(getContext());
+                        OkGo.<String>get(URL_CONTOUR_CALCULATE).params("xys",contourParam.toString()).tag(this).converter(new StringConvert()).adapt(new ObservableResponse<String>()).subscribeOn(Schedulers.io()).doOnSubscribe(new Consumer<Disposable>() {
+                            @Override
+                            public void accept(Disposable disposable) throws Exception {
+                                rxDialogLoading.show();
+                            }
+                        }).observeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<Response<String>>() {
+                            @Override
+                            public void onSubscribe(Disposable d) {
+
+                            }
+
+                            @Override
+                            public void onNext(Response<String> stringResponse) {
+                                String resultStr = stringResponse.body();
+                                ContourFromNet contourFromNet = JSON.parseObject(resultStr, ContourFromNet.class);
+                                if (contourFromNet.isSuccess()){
+                                    if (contourFromNet != null) {
+                                        List<ContourFromNet.Contour> contourList = contourFromNet.getData();
+                                        if (contourList != null && !contourList.isEmpty()) {
+
+                                        }
+                                    }
+                                }else {
+                                    RxToast.error("计算等高线失败");
+                                }
+
+                            }
+
+                            @Override
+                            public void onError(Throwable e) {
+                                RxToast.info("请求失败，请检查网络!", Toast.LENGTH_SHORT);
+                                RxLogTool.saveLogFile(e.toString());
+                            }
+
+                            @Override
+                            public void onComplete() {
+                                rxDialogLoading.dismiss();
+                            }
+                        });
+                    }else {
+                        RxToast.error("绘制的线至少需要包含两个点");
+                    }
+                }
+                break;
         }
     }
 
@@ -798,5 +906,14 @@ public class CatEyeMainFragment extends BaseFragment {
 
     public enum BUTTON_AREA {
         ALL/*所有按钮*/, LOCATION/*定位按钮*/, BOTTOM_LEFT/*左下角*/, BOTTOM_RIGHT/*右下角*/
+    }
+
+    @Override
+    public void onFragmentResult(int requestCode, int resultCode, Bundle data) {
+        super.onFragmentResult(requestCode, resultCode, data);
+        switch (requestCode){
+            case 1:
+                break;
+        }
     }
 }

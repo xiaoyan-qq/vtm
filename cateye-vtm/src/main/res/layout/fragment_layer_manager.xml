@@ -1,20 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent">
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <com.yydcdut.sdlv.SlideAndDragListView
+        android:id="@+id/sadLv_layerlist"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+    </com.yydcdut.sdlv.SlideAndDragListView>
 
     <TextView
         android:id="@+id/tv_layerlist_add"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
+        android:layout_weight="1"
         android:gravity="center"
         android:padding="@dimen/button_padding_default"
         android:text="+" />
 
-    <com.yydcdut.sdlv.SlideAndDragListView
-        android:id="@+id/sadLv_layerlist"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_above="@id/tv_layerlist_add"></com.yydcdut.sdlv.SlideAndDragListView>
-</RelativeLayout>
+
+</LinearLayout>

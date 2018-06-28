@@ -40,11 +40,11 @@ android {
     }
 
 }
-
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation 'com.android.support.constraint:constraint-layout:1.0.2'
     implementation 'com.android.support:appcompat-v7:25.1.0'
+    implementation 'com.android.support:support-v4:25.4.0'
     testImplementation 'junit:junit:4.12'
 
     //    androidTestImplementation 'com.android.support.test:runner:1.0.1'
@@ -71,12 +71,12 @@ dependencies {
     implementation 'io.reactivex.rxjava2:rxjava:2.x.x'
 
     //https://github.com/yanzhenjie/AndPermission
+    //动态获取权限的三方库
     implementation 'com.yanzhenjie:permission:2.0.0-rc3'
 
-    //动态获取权限的三方库
+    //https://github.com/l123456789jy/Lazy常用工具箱
     compile 'com.github.lazylibrary:lazylibrary:1.0.2'
 
-    //https://github.com/l123456789jy/Lazy常用工具箱
 
     //okhttp-OkGo
 
@@ -135,3 +135,4 @@ dependencies {
     //可滑动的listview https://github.com/yydcdut/SlideAndDragListView
     compile 'com.yydcdut:sdlv:0.7.5'
 }
+
