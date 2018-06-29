@@ -68,7 +68,7 @@ public class LayerManagerAdapter extends BaseAdapter {
 
     @Override
     public View getView(final int i, View view, ViewGroup viewGroup) {
-        ViewHolder holder;
+        ViewHolder holder= new ViewHolder();;
         if (view == null) {
             view = inflater.inflate(R.layout.item_layer_manager, null);
             holder = new ViewHolder();
@@ -85,10 +85,10 @@ public class LayerManagerAdapter extends BaseAdapter {
             holder.chk_visibile.setChecked(dataBean.isShow());
 
             //用户点击勾选框，实时修改图层的显隐状态
-            holder.chk_visibile.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            holder.chk_visibile.setOnClickListener(new View.OnClickListener() {
                 @Override
-                public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                    dataBean.setShow(b);
+                public void onClick(View view) {
+                    dataBean.setShow(((CompoundButton)view).isChecked());
                 }
             });
         }

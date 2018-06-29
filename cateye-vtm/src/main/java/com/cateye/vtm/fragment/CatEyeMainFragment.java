@@ -252,9 +252,15 @@ public class CatEyeMainFragment extends BaseFragment {
                 setDrawPointLinePolygonButtonState(view, chkDrawPointLinePolygonList);
                 if (view.isSelected()) {//选中
                     //自动弹出绘制点线面的fragment
+                    DrawPointLinePolygonFragment fragment = findFragment(DrawPointLinePolygonFragment.class);
                     Bundle pointBundle = new Bundle();
                     pointBundle.putSerializable(com.cateye.vtm.fragment.DrawPointLinePolygonFragment.DRAW_STATE.class.getSimpleName(), com.cateye.vtm.fragment.DrawPointLinePolygonFragment.DRAW_STATE.DRAW_POINT);
-                    loadRootFragment(R.id.layer_main_cateye_bottom, com.cateye.vtm.fragment.DrawPointLinePolygonFragment.newInstance(pointBundle));
+                    if (fragment != null) {
+                        fragment.setArguments(pointBundle);
+                        start(fragment);
+                    } else {
+                        loadRootFragment(R.id.layer_main_cateye_bottom, com.cateye.vtm.fragment.DrawPointLinePolygonFragment.newInstance(pointBundle));
+                    }
                 } else {//不选中
                     popChild();
                 }
@@ -263,9 +269,16 @@ public class CatEyeMainFragment extends BaseFragment {
                 setDrawPointLinePolygonButtonState(view, chkDrawPointLinePolygonList);
                 if (view.isSelected()) {//选中
                     //自动弹出绘制点线面的fragment
+                    DrawPointLinePolygonFragment fragment = findFragment(DrawPointLinePolygonFragment.class);
+                    //自动弹出绘制点线面的fragment
                     Bundle lineBundle = new Bundle();
                     lineBundle.putSerializable(com.cateye.vtm.fragment.DrawPointLinePolygonFragment.DRAW_STATE.class.getSimpleName(), com.cateye.vtm.fragment.DrawPointLinePolygonFragment.DRAW_STATE.DRAW_LINE);
-                    loadRootFragment(R.id.layer_main_cateye_bottom, com.cateye.vtm.fragment.DrawPointLinePolygonFragment.newInstance(lineBundle));
+                    if (fragment != null) {
+                        fragment.setArguments(lineBundle);
+                        start(fragment);
+                    } else {
+                        loadRootFragment(R.id.layer_main_cateye_bottom, com.cateye.vtm.fragment.DrawPointLinePolygonFragment.newInstance(lineBundle));
+                    }
                 } else {//不选中
                     popChild();
                 }
@@ -274,9 +287,16 @@ public class CatEyeMainFragment extends BaseFragment {
                 setDrawPointLinePolygonButtonState(view, chkDrawPointLinePolygonList);
                 if (view.isSelected()) {//选中
                     //自动弹出绘制点线面的fragment
+                    DrawPointLinePolygonFragment fragment = findFragment(DrawPointLinePolygonFragment.class);
+                    //自动弹出绘制点线面的fragment
                     Bundle polygonBundle = new Bundle();
                     polygonBundle.putSerializable(com.cateye.vtm.fragment.DrawPointLinePolygonFragment.DRAW_STATE.class.getSimpleName(), com.cateye.vtm.fragment.DrawPointLinePolygonFragment.DRAW_STATE.DRAW_POLYGON);
-                    loadRootFragment(R.id.layer_main_cateye_bottom, com.cateye.vtm.fragment.DrawPointLinePolygonFragment.newInstance(polygonBundle));
+                    if (fragment != null) {
+                        fragment.setArguments(polygonBundle);
+                        start(fragment);
+                    } else {
+                        loadRootFragment(R.id.layer_main_cateye_bottom, com.cateye.vtm.fragment.DrawPointLinePolygonFragment.newInstance(polygonBundle));
+                    }
                 } else {//不选中
                     popChild();
                 }
@@ -392,7 +412,7 @@ public class CatEyeMainFragment extends BaseFragment {
         SlideAndDragListView slideAndDragListView = (SlideAndDragListView) layerManagerRootView.findViewById(R.id.sadLv_layerlist);
 
         Menu menu = new Menu(true, 0);//第1个参数表示滑动 item 是否能滑的过头，像弹簧那样( true 表示过头，就像 Gif 中显示的那样；false 表示不过头，就像 Android QQ 中的那样)
-        menu.addItem(new MenuItem.Builder().setText("下载")
+        menu.addItem(new MenuItem.Builder().setText("下载").setWidth(120)
                 .setBackground(new ColorDrawable(getResources().getColor(R.color.color_blue_alpha_700)))
                 .setDirection(MenuItem.DIRECTION_RIGHT)//设置方向 (默认方向为 DIRECTION_LEFT )
                 .build());
@@ -518,6 +538,15 @@ public class CatEyeMainFragment extends BaseFragment {
 
             //增加本地layer的dataBean到dataBeanList中
             if (file != null) {
+                //判断当前图层中是否已经存在选择的文件，如果存在，则不再添加
+                if (layerDataBeanList != null && !layerDataBeanList.isEmpty()) {
+                    for (MapSourceFromNet.DataBean dataBean : layerDataBeanList) {
+                        if (dataBean.getHref().equals(file)) {
+                            RxToast.info("已经添加过相同的图层！无法再次添加！");
+                            return;
+                        }
+                    }
+                }
                 File mapFile = new File(file);
                 if (mapFile.exists()) {
                     MapSourceFromNet.DataBean mapFileDataBean = new MapSourceFromNet.DataBean();
@@ -528,7 +557,7 @@ public class CatEyeMainFragment extends BaseFragment {
                     mapFileDataBean.setExtension(".map");
                     if (layerDataBeanList != null) {
                         layerDataBeanList.add(mapFileDataBean);
-                        layerManagerAdapter.sortListData();//重新排序
+//                        layerManagerAdapter.sortListData();//重新排序
                         if (layerManagerAdapter != null) {
                             layerManagerAdapter.notifyDataSetChanged();
                         }
@@ -626,15 +655,6 @@ public class CatEyeMainFragment extends BaseFragment {
     private void addLocalMapFileLayer(String localMapFilePath) {
         MapFileTileSource mTileSource = new MapFileTileSource();
         mTileSource.setPreferredLanguage("zh");
-//        //过滤判断选中的文件是否已经在显示中了
-//        if (mTileSourceList != null && !mTileSourceList.isEmpty()) {
-//            for (TileSource tileSource : mTileSourceList) {
-//                if (tileSource instanceof MapFileTileSource && ((MapFileTileSource) tileSource).getOption("file").equals(file)) {
-//                    RxToast.error(getActivity().getResources().getString(R.string.the_local_map_file_exists));
-//                    return;
-//                }
-//            }
-//        }
 
         if (mTileSource.setMapFile(localMapFilePath)) {
             //设置当前的文件选择的layer为地图的基础图层(第一层)==此处去掉此设置
@@ -822,16 +842,16 @@ public class CatEyeMainFragment extends BaseFragment {
                 }
                 break;
             case SystemConstant.MSG_WHAT_DRAW_RESULT://获取到绘制的点集合
-                if (msg.arg1==SystemConstant.DRAW_CONTOUR_LINE){
-                    List<GeoPoint> geoPointList= (List<GeoPoint>) msg.obj;
-                    if (geoPointList!=null&&geoPointList.size()>1){
-                        StringBuilder contourParam=new StringBuilder();
-                        for (GeoPoint geoPoint:geoPointList){
-                            contourParam.append(geoPoint.getLongitude()).append(",").append(geoPoint.getLongitude()).append(";");
+                if (msg.arg1 == SystemConstant.DRAW_CONTOUR_LINE) {
+                    List<GeoPoint> geoPointList = (List<GeoPoint>) msg.obj;
+                    if (geoPointList != null && geoPointList.size() > 1) {
+                        StringBuilder contourParam = new StringBuilder();
+                        for (GeoPoint geoPoint : geoPointList) {
+                            contourParam.append(geoPoint.getLongitude()).append(",").append(geoPoint.getLatitude()).append(";");
                         }
 
                         final RxDialogLoading rxDialogLoading = new RxDialogLoading(getContext());
-                        OkGo.<String>get(URL_CONTOUR_CALCULATE).params("xys",contourParam.toString()).tag(this).converter(new StringConvert()).adapt(new ObservableResponse<String>()).subscribeOn(Schedulers.io()).doOnSubscribe(new Consumer<Disposable>() {
+                        OkGo.<String>get(URL_CONTOUR_CALCULATE).params("xys", contourParam.toString()).tag(this).converter(new StringConvert()).adapt(new ObservableResponse<String>()).subscribeOn(Schedulers.io()).doOnSubscribe(new Consumer<Disposable>() {
                             @Override
                             public void accept(Disposable disposable) throws Exception {
                                 rxDialogLoading.show();
@@ -846,14 +866,26 @@ public class CatEyeMainFragment extends BaseFragment {
                             public void onNext(Response<String> stringResponse) {
                                 String resultStr = stringResponse.body();
                                 ContourFromNet contourFromNet = JSON.parseObject(resultStr, ContourFromNet.class);
-                                if (contourFromNet.isSuccess()){
+                                if (contourFromNet.isSuccess()) {
                                     if (contourFromNet != null) {
                                         List<ContourFromNet.Contour> contourList = contourFromNet.getData();
                                         if (contourList != null && !contourList.isEmpty()) {
-
+                                            List<ContourMPData> contourMPDataList = new ArrayList<>();
+                                            for (ContourFromNet.Contour contour : contourList) {
+                                                ContourMPData contourMPData = new ContourMPData();
+                                                contourMPData.setGeoPoint(new GeoPoint(contour.getLatitude(), contour.getLongitude()));
+                                                contourMPData.setmHeight(contour.getHeight());
+                                                contourMPDataList.add(contourMPData);
+                                            }
+                                            //自动弹出绘制高度折线的fragment
+                                            Bundle pointBundle = new Bundle();
+                                            pointBundle.putSerializable(SystemConstant.DATA_CONTOUR_CHART, (Serializable) contourMPDataList);
+                                            loadRootFragment(R.id.layer_main_cateye_bottom, ContourMPChartFragment.newInstance(pointBundle));
+                                        } else {
+                                            RxToast.error("绘制的区域无法获取到高度信息!");
                                         }
                                     }
-                                }else {
+                                } else {
                                     RxToast.error("计算等高线失败");
                                 }
 
@@ -870,7 +902,7 @@ public class CatEyeMainFragment extends BaseFragment {
                                 rxDialogLoading.dismiss();
                             }
                         });
-                    }else {
+                    } else {
                         RxToast.error("绘制的线至少需要包含两个点");
                     }
                 }
@@ -911,7 +943,7 @@ public class CatEyeMainFragment extends BaseFragment {
     @Override
     public void onFragmentResult(int requestCode, int resultCode, Bundle data) {
         super.onFragmentResult(requestCode, resultCode, data);
-        switch (requestCode){
+        switch (requestCode) {
             case 1:
                 break;
         }

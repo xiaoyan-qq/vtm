@@ -108,6 +108,7 @@ public class ContourMPChartFragment extends BaseDrawFragment {
     @Override
     public void initView(View rootView) {
         rxDialogLoading = new RxDialogLoading(getActivity());
+        rxDialogLoading.setTitle("捕捉界面区域");
         currentMapPosition = new MapPosition();
         contourChart = (LineChart) rootView.findViewById(R.id.contour_chart);
         img_close = (ImageView) rootView.findViewById(R.id.img_contour_chart_close);
@@ -200,7 +201,7 @@ public class ContourMPChartFragment extends BaseDrawFragment {
      */
     private void initCurrentPolylineOverlayer() {
         //自动添加pathLayer
-        int c = getResources().getColor(R.color.violet);
+        int c = getResources().getColor(R.color.tomato);
         Style lineStyle = Style.builder()
                 .stippleColor(c)
                 .stipple(24)
@@ -211,7 +212,7 @@ public class ContourMPChartFragment extends BaseDrawFragment {
                 .randomOffset(false)
                 .build();
         currentChartLine = new PathLayer(CatEyeMapManager.getInstance(getActivity()).getCatEyeMap(), lineStyle);
-        CatEyeMapManager.getInstance(getActivity()).getCatEyeMap().layers().add(currentChartLine, MainActivity.LAYER_GROUP_ENUM.OTHER_GROUP.orderIndex);
+        CatEyeMapManager.getInstance(getActivity()).getCatEyeMap().layers().add(currentChartLine, MainActivity.LAYER_GROUP_ENUM.OPERTOR_GROUP.orderIndex);
     }
 
     /**
@@ -380,8 +381,8 @@ public class ContourMPChartFragment extends BaseDrawFragment {
     }
 
     @Override
-    public void onDetach() {
-        super.onDetach();
+    public void onStop() {
+        super.onStop();
         //当前界面被返回时，自动移除所有的overlayer
         if (mapEventsReceiver != null) {
             CatEyeMapManager.getInstance(getActivity()).getCatEyeMap().layers().remove(mapEventsReceiver);
@@ -392,6 +393,11 @@ public class ContourMPChartFragment extends BaseDrawFragment {
         clearMapOverlayer();
         //通知主界面隐藏部分重新显示
         setMainFragmentAreaVisible(CatEyeMainFragment.BUTTON_AREA.ALL, true);
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
     }
 
     private class MapEventsReceiver extends Layer implements GestureListener {

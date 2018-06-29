@@ -18,7 +18,7 @@
         android:layout_weight="1"
         android:gravity="center"
         android:padding="@dimen/button_padding_default"
-        android:text="+" />
+        android:text="添加本地图层" />
 
 
 </LinearLayout>
