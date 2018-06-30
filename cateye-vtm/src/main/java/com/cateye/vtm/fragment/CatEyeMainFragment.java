@@ -846,12 +846,33 @@ public class CatEyeMainFragment extends BaseFragment {
                     List<GeoPoint> geoPointList = (List<GeoPoint>) msg.obj;
                     if (geoPointList != null && geoPointList.size() > 1) {
                         StringBuilder contourParam = new StringBuilder();
+                        String layerName = null;
+                        double gujiaoLatMin = 36.1688086262;
+                        double gujiaoLonMin = 110.8021029688;
+                        double gujiaoLatMax = 39.3333699398;
+                        double gujiaoLonMax = 113.1415834394;
+
+                        double jingzhuangLatMin = 33.0335361398;
+                        double jingzhuangLonMin = 103.8403611975;
+                        double jingzhuangLatMax = 36.0227737918;
+                        double jingzhuangLonMax = 107.0461587400;
                         for (GeoPoint geoPoint : geoPointList) {
                             contourParam.append(geoPoint.getLongitude()).append(",").append(geoPoint.getLatitude()).append(";");
                         }
 
+                        if (geoPointList.get(0).getLongitude() < gujiaoLonMax && geoPointList.get(0).getLongitude() > gujiaoLonMin && geoPointList.get(0).getLatitude() < gujiaoLatMax && geoPointList.get(0).getLatitude() > gujiaoLatMin) {
+                            layerName = "gujiao";
+                        }
+                        if (geoPointList.get(0).getLongitude() < jingzhuangLonMax && geoPointList.get(0).getLongitude() > jingzhuangLonMin && geoPointList.get(0).getLatitude() < jingzhuangLatMax && geoPointList.get(0).getLatitude() > jingzhuangLatMin) {
+                            layerName = "jingzhuang";
+                        }
+                        if (layerName==null){
+                            RxToast.info("绘制的线不在指定区域内！");
+                            return;
+                        }
+
                         final RxDialogLoading rxDialogLoading = new RxDialogLoading(getContext());
-                        OkGo.<String>get(URL_CONTOUR_CALCULATE).params("xys", contourParam.toString()).tag(this).converter(new StringConvert()).adapt(new ObservableResponse<String>()).subscribeOn(Schedulers.io()).doOnSubscribe(new Consumer<Disposable>() {
+                        OkGo.<String>get(URL_CONTOUR_CALCULATE).params("xys", contourParam.toString()).tag(this).params("layerName", layerName).converter(new StringConvert()).adapt(new ObservableResponse<String>()).subscribeOn(Schedulers.io()).doOnSubscribe(new Consumer<Disposable>() {
                             @Override
                             public void accept(Disposable disposable) throws Exception {
                                 rxDialogLoading.show();
