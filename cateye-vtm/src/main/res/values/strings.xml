@@ -30,8 +30,8 @@
     <string name="draw_clear_paint">清空</string>
     <string name="draw_finish">完成</string>
 
-    <string name="local_contour_source">选择本地等高线</string>
-    <string name="draw_contour_source">手动绘制等高线</string>
+    <string name="local_contour_source">选择本地线位</string>
+    <string name="draw_contour_source">手动绘制线位</string>
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
