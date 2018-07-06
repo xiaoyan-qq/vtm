@@ -29,6 +29,8 @@
     <string name="draw_last_paint">上一笔</string>
     <string name="draw_clear_paint">清空</string>
     <string name="draw_finish">完成</string>
+    <string name="confirmStr">确定</string>
+    <string name="cancelStr">取消</string>
 
     <string name="local_contour_source">选择本地线位</string>
     <string name="draw_contour_source">手动绘制线位</string>
