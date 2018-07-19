@@ -2,6 +2,7 @@ package com.cateye.android.vtm;
 
 import android.app.Application;
 
+import com.beardedhen.androidbootstrap.TypefaceProvider;
 import com.lzy.okgo.OkGo;
 import com.lzy.okgo.cache.CacheEntity;
 import com.lzy.okgo.cache.CacheMode;
@@ -9,7 +10,7 @@ import com.lzy.okgo.cookie.CookieJarImpl;
 import com.lzy.okgo.cookie.store.MemoryCookieStore;
 import com.lzy.okgo.interceptor.HttpLoggingInterceptor;
 import com.umeng.commonsdk.UMConfigure;
-import com.vondear.rxtools.RxTool;
+import com.vondear.rxtool.RxTool;
 
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -62,5 +63,8 @@ public class MainApplication extends Application {
 
         //友盟初始化
         UMConfigure.init(this, null, null, UMConfigure.DEVICE_TYPE_PHONE, null);
+
+        //为Bootstrap注册默认图标集
+        TypefaceProvider.registerDefaultIconSets();
     }
 }

@@ -14,7 +14,7 @@ import com.cateye.vtm.fragment.base.BaseDrawFragment;
 import com.cateye.vtm.fragment.base.BaseFragment;
 import com.cateye.vtm.util.CatEyeMapManager;
 import com.cateye.vtm.util.SystemConstant;
-import com.vondear.rxtools.view.RxToast;
+import com.vondear.rxtool.view.RxToast;
 
 import org.greenrobot.eventbus.EventBus;
 import org.oscim.core.GeoPoint;
