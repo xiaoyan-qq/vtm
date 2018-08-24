@@ -38,12 +38,12 @@ allprojects {
     }
 }
 
-static def androidCompileSdk() { return 25 }
+static def androidCompileSdk() { return 27 }
 
 // Minimum API Level by Support Library
 static def androidMinSdk() { return 14 }
 
-static def androidTargetSdk() { return 22 }
+static def androidTargetSdk() { return 26 }
 
 static def versionCode() { return 1 }
 
