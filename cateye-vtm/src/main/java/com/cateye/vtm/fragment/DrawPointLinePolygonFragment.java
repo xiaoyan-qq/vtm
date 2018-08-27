@@ -180,7 +180,6 @@ public class DrawPointLinePolygonFragment extends BaseDrawFragment {
     @Override
     public void onStop() {
         super.onStop();
-        RxToast.info("调用onStop");
 
         //当前界面被返回时，移除绘制的图层
         if (mapEventsReceiver != null) {
