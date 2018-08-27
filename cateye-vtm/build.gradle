@@ -1,13 +1,13 @@
 apply plugin: 'com.android.application'
 apply plugin: 'android-aspectjx'
 android {
-    compileSdkVersion 25
+    compileSdkVersion 27
     defaultConfig {
         applicationId "com.cateye.android.vtm"
-        minSdkVersion 15
-        targetSdkVersion 25
+        minSdkVersion 16
+        targetSdkVersion 27
         versionCode 7
-        versionName "0.7"
+        versionName "0.7.1"
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         multiDexEnabled = true
@@ -43,8 +43,8 @@ android {
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation 'com.android.support.constraint:constraint-layout:1.0.2'
-    implementation 'com.android.support:appcompat-v7:25.1.0'
-    implementation 'com.android.support:support-v4:25.4.0'
+    implementation 'com.android.support:appcompat-v7:27.0.1'
+    implementation 'com.android.support:support-v4:27.0.1'
     testImplementation 'junit:junit:4.12'
 
     //    androidTestImplementation 'com.android.support.test:runner:1.0.1'
@@ -64,7 +64,14 @@ dependencies {
     //Fragment的第三方管理框架
 
     //https://github.com/vondear/RxTools
-    compile 'com.github.vondear:RxTools:v1.7.7.3'
+    //基础工具库
+    implementation "com.github.vondear.RxTool:RxKit:v2.0.4"
+    //UI库
+    implementation "com.github.vondear.RxTool:RxUI:v2.0.4"
+    //功能库（Zxing扫描与生成二维码条形码 支付宝 微信）
+//    implementation "com.github.vondear.RxTool:RxFeature:v2.0.4"
+    //ArcGis For Android工具库（API：100.1以上版本）
+    implementation "com.github.vondear.RxTool:RxArcGisKit:v2.0.4"
 
     //常用android工具类https://github.com/ReactiveX/RxAndroid
     implementation 'io.reactivex.rxjava2:rxandroid:2.0.2'
@@ -74,7 +81,7 @@ dependencies {
     //动态获取权限的三方库
     implementation 'com.yanzhenjie:permission:2.0.0-rc3'
 
-    //https://github.com/l123456789jy/Lazy常用工具箱
+    //常用工具箱 https://github.com/l123456789jy/Lazy
     compile 'com.github.lazylibrary:lazylibrary:1.0.2'
 
 
@@ -92,13 +99,9 @@ dependencies {
     compile 'me.yokeyword:fragmentation:1.3.3'
 
     //    // If you don't want to extends SupportActivity/Fragment and would like to customize your own support, just rely on fragmentation-core
-
     //    // compile 'me.yokeyword:fragmentation-core:1.3.3'
-
     //    // To get SwipeBack feature, rely on both fragmentation & fragmentation-swipeback
-
     //    compile 'me.yokeyword:fragmentation:1.3.3'
-
     // Swipeback is based on fragmentation. Refer to SwipeBackActivity/Fragment for your Customized SupportActivity/Fragment
     compile 'me.yokeyword:fragmentation-swipeback:1.3.3'
 
@@ -134,5 +137,12 @@ dependencies {
 
     //可滑动的listview https://github.com/yydcdut/SlideAndDragListView
     compile 'com.yydcdut:sdlv:0.7.5'
+    //颜色选择器https://github.com/LarsWerkman/HoloColorPicker
+    compile 'com.larswerkman:HoloColorPicker:1.5'
+    //定制化控件集合 https://github.com/Bearded-Hen/Android-Bootstrap
+    compile 'com.beardedhen:androidbootstrap:2.3.2'
+    //通用的adapter实现 https://github.com/qyxxjd/CommonAdapter
+    implementation 'com.classic.adapter:commonadapter:2.0'
+    implementation 'com.android.support:recyclerview-v7:27.0.2'
 }
 

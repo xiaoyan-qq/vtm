@@ -25,8 +25,8 @@ import com.github.mikephil.charting.highlight.Highlight;
 import com.github.mikephil.charting.listener.ChartTouchListener;
 import com.github.mikephil.charting.listener.OnChartGestureListener;
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
-import com.vondear.rxtools.RxDeviceTool;
-import com.vondear.rxtools.view.dialog.RxDialogLoading;
+import com.vondear.rxtool.RxDeviceTool;
+import com.vondear.rxui.view.dialog.RxDialogLoading;
 
 import org.oscim.backend.canvas.Bitmap;
 import org.oscim.core.GeoPoint;

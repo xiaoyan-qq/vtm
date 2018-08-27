@@ -1,10 +1,12 @@
 package com.cateye.vtm.fragment;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.os.Message;
+import android.support.v7.app.AlertDialog;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.FrameLayout;
@@ -27,16 +29,19 @@ import com.cateye.vtm.adapter.LayerManagerAdapter;
 import com.cateye.vtm.fragment.base.BaseFragment;
 import com.cateye.vtm.util.CatEyeMapManager;
 import com.cateye.vtm.util.SystemConstant;
+import com.github.lazylibrary.util.StringUtils;
+import com.larswerkman.holocolorpicker.ColorPicker;
+import com.larswerkman.holocolorpicker.OpacityBar;
+import com.larswerkman.holocolorpicker.SVBar;
 import com.lzy.okgo.OkGo;
 import com.lzy.okgo.convert.StringConvert;
 import com.lzy.okgo.model.Response;
 import com.lzy.okrx2.adapter.ObservableResponse;
-import com.ta.utdid2.android.utils.StringUtils;
 import com.tencent.map.geolocation.TencentLocation;
-import com.vondear.rxtools.RxLogTool;
-import com.vondear.rxtools.view.RxToast;
-import com.vondear.rxtools.view.dialog.RxDialog;
-import com.vondear.rxtools.view.dialog.RxDialogLoading;
+import com.vondear.rxtool.RxLogTool;
+import com.vondear.rxtool.view.RxToast;
+import com.vondear.rxui.view.dialog.RxDialog;
+import com.vondear.rxui.view.dialog.RxDialogLoading;
 import com.yydcdut.sdlv.Menu;
 import com.yydcdut.sdlv.MenuItem;
 import com.yydcdut.sdlv.SlideAndDragListView;
@@ -86,6 +91,7 @@ import org.oscim.theme.XmlRenderThemeMenuCallback;
 import org.oscim.theme.XmlRenderThemeStyleLayer;
 import org.oscim.theme.XmlRenderThemeStyleMenu;
 import org.oscim.theme.styles.AreaStyle;
+import org.oscim.theme.styles.LineStyle;
 import org.oscim.theme.styles.RenderStyle;
 import org.oscim.theme.styles.TextStyle;
 import org.oscim.tiling.source.bitmap.BitmapTileSource;
@@ -144,6 +150,7 @@ public class CatEyeMainFragment extends BaseFragment {
     private ImageView img_location;//获取当前位置的按钮
     private ImageView img_map_source_selector;
     private ImageView img_contour_selector;//加载等高线数据的按钮
+    private ImageView img_change_contour_color;//修改等高线地图显示颜色的按钮
     private List<ImageView> chkDrawPointLinePolygonList;
     private FrameLayout layer_fragment;//用来显示fragment的布局文件
 //    private java.util.Map<String, MapSourceFromNet.DataBean> netDataSourceMap;//用来记录用户勾选了哪些网络数据显示
@@ -180,6 +187,7 @@ public class CatEyeMainFragment extends BaseFragment {
         //选择地图资源
         img_map_source_selector = (ImageView) rootView.findViewById(R.id.img_map_source_select);
         img_contour_selector = (ImageView) rootView.findViewById(R.id.img_contour_select);
+        img_change_contour_color = (ImageView) rootView.findViewById(R.id.img_change_contour_color);
         img_location = (ImageView) rootView.findViewById(R.id.img_location);
 
         initData();
@@ -187,7 +195,61 @@ public class CatEyeMainFragment extends BaseFragment {
         if (!EventBus.getDefault().isRegistered(this)) {
             EventBus.getDefault().register(this);
         }
-    }
+
+        img_change_contour_color.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                AlertDialog.Builder colorDialogBuilder = new AlertDialog.Builder(
+                        getActivity());
+                LayoutInflater inflater = LayoutInflater.from(getActivity());
+                View dialogview = inflater.inflate(R.layout.color_picker, null);
+                final ColorPicker picker = (ColorPicker) dialogview.findViewById(R.id.color_picker);
+                SVBar svBar = (SVBar) dialogview.findViewById(R.id.color_svbar);
+                OpacityBar opacityBar = (OpacityBar) dialogview.findViewById(R.id.color_opacitybar);
+                picker.addSVBar(svBar);
+                picker.addOpacityBar(opacityBar);
+                colorDialogBuilder.setTitle("选择等高线的显示颜色");
+                colorDialogBuilder.setView(dialogview);
+                colorDialogBuilder.setPositiveButton(R.string.confirmStr,
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                //设置等高线的显示颜色
+                                if (mMap.layers() != null && !mMap.layers().isEmpty()) {
+                                    for (Layer layer : mMap.layers()) {
+                                        if (layer.isEnabled() && layer instanceof VectorTileLayer)
+                                            ((VectorTileLayer) layer).addHook(new VectorTileLayer.TileLoaderThemeHook() {
+                                                @Override
+                                                public boolean process(MapTile tile, RenderBuckets buckets, MapElement element, RenderStyle style, int level) {
+                                                    if (element.tags.containsKey("contour")||element.tags.containsKey("CONTOUR")) {
+                                                        if (style instanceof LineStyle){
+
+                                                        }
+                                                    }
+                                                    return false;
+                                                }
+
+                                                @Override
+                                                public void complete(MapTile tile, boolean success) {
+                                                }
+                                            });
+                                    }
+                                }
+                            }
+                        });
+                colorDialogBuilder.setNegativeButton(R.string.cancelStr,
+                        new DialogInterface.OnClickListener() {
+
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.cancel();
+                            }
+                        });
+                AlertDialog colorPickerDialog = colorDialogBuilder.create();
+                colorPickerDialog.show();
+        }
+    });
+}
 
     @Override
     public void onDestroy() {
@@ -386,11 +448,16 @@ public class CatEyeMainFragment extends BaseFragment {
             public void onError(Throwable e) {
                 RxToast.info("请求失败，请检查网络!", Toast.LENGTH_SHORT);
                 RxLogTool.saveLogFile(e.toString());
+                if (rxDialogLoading!=null&&rxDialogLoading.isShowing()){
+                    rxDialogLoading.dismiss();
+                }
             }
 
             @Override
             public void onComplete() {
-                rxDialogLoading.dismiss();
+                if (rxDialogLoading!=null&&rxDialogLoading.isShowing()){
+                    rxDialogLoading.dismiss();
+                }
             }
         });
     }
@@ -866,7 +933,7 @@ public class CatEyeMainFragment extends BaseFragment {
                         if (geoPointList.get(0).getLongitude() < jingzhuangLonMax && geoPointList.get(0).getLongitude() > jingzhuangLonMin && geoPointList.get(0).getLatitude() < jingzhuangLatMax && geoPointList.get(0).getLatitude() > jingzhuangLatMin) {
                             layerName = "jingzhuang";
                         }
-                        if (layerName==null){
+                        if (layerName == null) {
                             RxToast.info("绘制的线不在指定区域内！");
                             return;
                         }
@@ -957,9 +1024,9 @@ public class CatEyeMainFragment extends BaseFragment {
         }
     }
 
-    public enum BUTTON_AREA {
-        ALL/*所有按钮*/, LOCATION/*定位按钮*/, BOTTOM_LEFT/*左下角*/, BOTTOM_RIGHT/*右下角*/
-    }
+public enum BUTTON_AREA {
+    ALL/*所有按钮*/, LOCATION/*定位按钮*/, BOTTOM_LEFT/*左下角*/, BOTTOM_RIGHT/*右下角*/
+}
 
     @Override
     public void onFragmentResult(int requestCode, int resultCode, Bundle data) {

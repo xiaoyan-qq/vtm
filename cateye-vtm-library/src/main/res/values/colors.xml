@@ -42,4 +42,17 @@
 
     <color name="bg_color_white_alpha">#ccffffff</color>
     <color name="bg_color_gray_alpha">#cc9e9e9e</color>
+
+    <!-- CREATE A COLOR ARRAY IN COLORS XML -->
+    <color name="custom_theme_darker">@color/colorPrimaryDark</color>
+    <color name="custom_theme_dark">@color/colorPrimaryDark_alpha</color>
+    <color name="custom_theme_primary">@color/colorPrimary</color>
+    <color name="custom_theme_light">@color/colorPrimaryLight</color>
+
+    <integer-array name="custom_theme">
+        <item>@color/custom_theme_darker</item> <!-- really much darker color of main color -->
+        <item>@color/custom_theme_dark</item> <!-- a bit darker color of your main color -->
+        <item>@color/custom_theme_primary</item> <!-- main color of your theme -->
+        <item>@color/custom_theme_light</item> <!-- really much lighter color of main color -->
+    </integer-array>
 </resources>
