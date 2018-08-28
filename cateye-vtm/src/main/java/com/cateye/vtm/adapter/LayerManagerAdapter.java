@@ -7,8 +7,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.BaseExpandableListAdapter;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
+import android.widget.ExpandableListAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -22,7 +24,7 @@ import java.util.List;
  * Created by xiaoxiao on 2018/6/22.
  */
 
-public class LayerManagerAdapter extends BaseAdapter {
+public class LayerManagerAdapter extends BaseExpandableListAdapter {
     private Context mContext;
     private List<MapSourceFromNet.DataBean> dataBeanList;
     private LayoutInflater inflater;
@@ -36,63 +38,80 @@ public class LayerManagerAdapter extends BaseAdapter {
     }
 
     @Override
-    public int getCount() {
-        if (dataBeanList != null) {
-            return dataBeanList.size();
-        }
-        return 0;
+    public int getGroupCount() {
+        return dataBeanList.size();
     }
 
     @Override
-    public Object getItem(int i) {
-        if (dataBeanList != null && dataBeanList.size() > i) {
-            return dataBeanList.get(i);
-        }
-        return null;
+    public int getChildrenCount(int groupPosition) {
+        return dataBeanList.get(groupPosition).getMaps().size();
     }
 
     @Override
-    public long getItemId(int i) {
-        return i;
+    public Object getGroup(int groupPosition) {
+        return dataBeanList.get(groupPosition);
     }
 
     @Override
-    public int getItemViewType(int position) {
-        return 0;
+    public Object getChild(int groupPosition, int childPosition) {
+        return dataBeanList.get(groupPosition).getMaps().get(childPosition);
     }
 
     @Override
-    public int getViewTypeCount() {
-        return 3;
+    public long getGroupId(int groupPosition) {
+        return groupPosition;
     }
 
     @Override
-    public View getView(final int i, View view, ViewGroup viewGroup) {
-        ViewHolder holder= new ViewHolder();;
-        if (view == null) {
-            view = inflater.inflate(R.layout.item_layer_manager, null);
+    public long getChildId(int groupPosition, int childPosition) {
+        return groupPosition * 1000 + childPosition;
+    }
+
+    @Override
+    public boolean hasStableIds() {
+        return true;
+    }
+
+    @Override
+    public View getGroupView(int groupPosition, boolean isExpanded, View convertView, ViewGroup parent) {
+        convertView = inflater.inflate(R.layout.item_layer_manager_group, null);
+        TextView tv_groupName = (TextView) convertView.findViewById(R.id.tv_group_name);
+        tv_groupName.setText(dataBeanList.get(groupPosition).getGroup());
+        return convertView;
+    }
+
+    @Override
+    public View getChildView(int groupPosition, int childPosition, boolean isLastChild, View convertView, ViewGroup parent) {
+        ViewHolder holder = new ViewHolder();
+        if (convertView == null) {
+            convertView = inflater.inflate(R.layout.item_layer_manager, null);
             holder = new ViewHolder();
-            holder.img_icon = (ImageView) view.findViewById(R.id.img_item_layer_manager_icon);
-            holder.tv_name = (TextView) view.findViewById(R.id.tv_item_layer_manager_name);
-            holder.chk_visibile = (CheckBox) view.findViewById(R.id.chk_item_layer_manager_visibile);
-            view.setTag(holder);
+            holder.img_icon = (ImageView) convertView.findViewById(R.id.img_item_layer_manager_icon);
+            holder.tv_name = (TextView) convertView.findViewById(R.id.tv_item_layer_manager_name);
+            holder.chk_visibile = (CheckBox) convertView.findViewById(R.id.chk_item_layer_manager_visibile);
+            convertView.setTag(holder);
         } else {
-            holder = (ViewHolder) view.getTag();
+            holder = (ViewHolder) convertView.getTag();
         }
-        if (dataBeanList != null && dataBeanList.size() > i) {
-            final MapSourceFromNet.DataBean dataBean = dataBeanList.get(i);
-            holder.tv_name.setText(dataBean.getAbstractX() + "(" + dataBean.getGroup() + ")");
-            holder.chk_visibile.setChecked(dataBean.isShow());
+        if (dataBeanList != null && dataBeanList.size() > groupPosition && dataBeanList.get(groupPosition).getMaps().size() > childPosition) {
+            final MapSourceFromNet.DataBean.MapsBean mapsBean = dataBeanList.get(groupPosition).getMaps().get(childPosition);
+            holder.tv_name.setText(mapsBean.getAbstractX());
+            holder.chk_visibile.setChecked(mapsBean.isShow());
 
             //用户点击勾选框，实时修改图层的显隐状态
             holder.chk_visibile.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    dataBean.setShow(((CompoundButton)view).isChecked());
+                    mapsBean.setShow(((CompoundButton) view).isChecked());
                 }
             });
         }
-        return view;
+        return convertView;
+    }
+
+    @Override
+    public boolean isChildSelectable(int groupPosition, int childPosition) {
+        return false;
     }
 
     protected class ViewHolder {

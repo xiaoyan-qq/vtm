@@ -55,56 +55,31 @@ public class MapSourceFromNet {
     @JSONType(serialzeFeatures= SerializerFeature.BeanToArray, parseFeatures= Feature.SupportArrayToBean)
     public static class DataBean {
         /**
-         * id : 8
-         * serviceId : 1
-         * title : china_city_polygon
-         * _abstract : 中国城市面
-         * srs : EPSG:900913
-         * profile : mercator
-         * href : http://39.107.104.63:8080/xyz/1.0.0/china_city_polygon@EPSG:900913@png
-         * minX : 73.1985473632812
-         * minY : 3.58836889266968
-         * maxX : 135.403656005859
-         * maxY : 53.8118324279785
-         * originX : 73.1985473632812
-         * originY : 3.58836889266968
-         * minZoom : 0
-         * maxZoom : 11
-         * width : 256
-         * height : 256
-         * mimeType : image/png
-         * extension : png
-         * kind : 2
-         * source : http://${geoserver}/geoserver/gwc/service/tms/1.0.0/lbi:s_ods_city_simplify@EPSG:900913@png
-         * fileExtension : png
-         * abstract : 中国城市面
+         * group : L2
+         * id : 3
+         * kind : 1
+         * maps : [{"abstract":"中国城市面","extension":"png","fileExtension":"png","group":"L2","height":256,"href":"http://39.107.104.63:8080/xyz/1.0.0/china_city_polygon@EPSG:900913@png","id":8,"maxX":135.403656005859,"maxY":53.8118324279785,"maxZoom":11,"mimeType":"image/png","minX":73.1985473632812,"minY":3.58836889266968,"minZoom":0,"originX":73.1985473632812,"originY":3.58836889266968,"profile":"mercator","serviceId":1,"srs":"EPSG:900913","title":"china_city_polygon","width":256}]
+         * memo : 中国城市面
+         * name : china_city_polygon
+         * type : 0
          */
 
+        private String group;
         private int id;
-        private int serviceId;
-        private String title;
-        private String _abstract;
-        private String srs;
-        private String profile;
-        private String href;
-        private double minX;
-        private double minY;
-        private double maxX;
-        private double maxY;
-        private double originX;
-        private double originY;
-        private int minZoom;
-        private int maxZoom;
-        private int width;
-        private int height;
-        private String mimeType;
-        private String extension;
         private int kind;
-        private String source;
-        private String fileExtension;
-        private String abstractX;
-        private String group;//layer的图层所在分组
-        private boolean isShow=false;//本地字段，用来标识是否已经添加到地图界面上
+        private String memo;
+        private String name;
+        private int type;
+        private List<MapsBean> maps;
+        private boolean isShow=false;//是否显示，只在本地使用
+
+        public String getGroup() {
+            return group;
+        }
+
+        public void setGroup(String group) {
+            this.group = group;
+        }
 
         public int getId() {
             return id;
@@ -112,152 +87,6 @@ public class MapSourceFromNet {
 
         public void setId(int id) {
             this.id = id;
-        }
-
-        public int getServiceId() {
-            return serviceId;
-        }
-
-        public void setServiceId(int serviceId) {
-            this.serviceId = serviceId;
-        }
-
-        public String getTitle() {
-            return title;
-        }
-
-        public void setTitle(String title) {
-            this.title = title;
-        }
-
-        @JSONField(name = "_abstract")
-        public String get_abstract() {
-            return _abstract;
-        }
-
-        @JSONField(name = "_abstract")
-        public void set_abstract(String _abstract) {
-            this._abstract = _abstract;
-        }
-
-        public String getSrs() {
-            return srs;
-        }
-
-        public void setSrs(String srs) {
-            this.srs = srs;
-        }
-
-        public String getProfile() {
-            return profile;
-        }
-
-        public void setProfile(String profile) {
-            this.profile = profile;
-        }
-
-        public String getHref() {
-            return href;
-        }
-
-        public void setHref(String href) {
-            this.href = href;
-        }
-
-        public double getMinX() {
-            return minX;
-        }
-
-        public void setMinX(double minX) {
-            this.minX = minX;
-        }
-
-        public double getMinY() {
-            return minY;
-        }
-
-        public void setMinY(double minY) {
-            this.minY = minY;
-        }
-
-        public double getMaxX() {
-            return maxX;
-        }
-
-        public void setMaxX(double maxX) {
-            this.maxX = maxX;
-        }
-
-        public double getMaxY() {
-            return maxY;
-        }
-
-        public void setMaxY(double maxY) {
-            this.maxY = maxY;
-        }
-
-        public double getOriginX() {
-            return originX;
-        }
-
-        public void setOriginX(double originX) {
-            this.originX = originX;
-        }
-
-        public double getOriginY() {
-            return originY;
-        }
-
-        public void setOriginY(double originY) {
-            this.originY = originY;
-        }
-
-        public int getMinZoom() {
-            return minZoom;
-        }
-
-        public void setMinZoom(int minZoom) {
-            this.minZoom = minZoom;
-        }
-
-        public int getMaxZoom() {
-            return maxZoom;
-        }
-
-        public void setMaxZoom(int maxZoom) {
-            this.maxZoom = maxZoom;
-        }
-
-        public int getWidth() {
-            return width;
-        }
-
-        public void setWidth(int width) {
-            this.width = width;
-        }
-
-        public int getHeight() {
-            return height;
-        }
-
-        public void setHeight(int height) {
-            this.height = height;
-        }
-
-        public String getMimeType() {
-            return mimeType;
-        }
-
-        public void setMimeType(String mimeType) {
-            this.mimeType = mimeType;
-        }
-
-        public String getExtension() {
-            return extension;
-        }
-
-        public void setExtension(String extension) {
-            this.extension = extension;
         }
 
         public int getKind() {
@@ -268,30 +97,36 @@ public class MapSourceFromNet {
             this.kind = kind;
         }
 
-        public String getSource() {
-            return source;
+        public String getMemo() {
+            return memo;
         }
 
-        public void setSource(String source) {
-            this.source = source;
+        public void setMemo(String memo) {
+            this.memo = memo;
         }
 
-        public String getFileExtension() {
-            return fileExtension;
+        public String getName() {
+            return name;
         }
 
-        public void setFileExtension(String fileExtension) {
-            this.fileExtension = fileExtension;
+        public void setName(String name) {
+            this.name = name;
         }
 
-        @JSONField(name = "abstract")
-        public String getAbstractX() {
-            return abstractX;
+        public int getType() {
+            return type;
         }
 
-        @JSONField(name = "abstract")
-        public void setAbstractX(String abstractX) {
-            this.abstractX = abstractX;
+        public void setType(int type) {
+            this.type = type;
+        }
+
+        public List<MapsBean> getMaps() {
+            return maps;
+        }
+
+        public void setMaps(List<MapsBean> maps) {
+            this.maps = maps;
         }
 
         public boolean isShow() {
@@ -301,13 +136,258 @@ public class MapSourceFromNet {
         public void setShow(boolean show) {
             isShow = show;
         }
+        public static class MapsBean {
+            /**
+             * abstract : 中国城市面
+             * extension : png
+             * fileExtension : png
+             * group : L2
+             * height : 256
+             * href : http://39.107.104.63:8080/xyz/1.0.0/china_city_polygon@EPSG:900913@png
+             * id : 8
+             * maxX : 135.403656005859
+             * maxY : 53.8118324279785
+             * maxZoom : 11
+             * mimeType : image/png
+             * minX : 73.1985473632812
+             * minY : 3.58836889266968
+             * minZoom : 0
+             * originX : 73.1985473632812
+             * originY : 3.58836889266968
+             * profile : mercator
+             * serviceId : 1
+             * srs : EPSG:900913
+             * title : china_city_polygon
+             * width : 256
+             */
 
-        public String getGroup() {
-            return group;
-        }
+            @JSONField(name = "abstract")
+            private String abstractX;
+            private String extension;
+            private String fileExtension;
+            private String group;
+            private int height;
+            private String href;
+            private int id;
+            private double maxX;
+            private double maxY;
+            private int maxZoom;
+            private String mimeType;
+            private double minX;
+            private double minY;
+            private int minZoom;
+            private double originX;
+            private double originY;
+            private String profile;
+            private int serviceId;
+            private String srs;
+            private String title;
+            private int width;
 
-        public void setGroup(String group) {
-            this.group = group;
+            @JSONField(name = "abstract")
+            public String getAbstractX() {
+                return abstractX;
+            }
+
+            @JSONField(name = "abstract")
+            public void setAbstractX(String abstractX) {
+                this.abstractX = abstractX;
+            }
+
+            public String getExtension() {
+                return extension;
+            }
+
+            public void setExtension(String extension) {
+                this.extension = extension;
+            }
+
+            public String getFileExtension() {
+                return fileExtension;
+            }
+
+            public void setFileExtension(String fileExtension) {
+                this.fileExtension = fileExtension;
+            }
+
+            public String getGroup() {
+                return group;
+            }
+
+            public void setGroup(String group) {
+                this.group = group;
+            }
+
+            public int getHeight() {
+                return height;
+            }
+
+            public void setHeight(int height) {
+                this.height = height;
+            }
+
+            public String getHref() {
+                return href;
+            }
+
+            public void setHref(String href) {
+                this.href = href;
+            }
+
+            public int getId() {
+                return id;
+            }
+
+            public void setId(int id) {
+                this.id = id;
+            }
+
+            public double getMaxX() {
+                return maxX;
+            }
+
+            public void setMaxX(double maxX) {
+                this.maxX = maxX;
+            }
+
+            public double getMaxY() {
+                return maxY;
+            }
+
+            public void setMaxY(double maxY) {
+                this.maxY = maxY;
+            }
+
+            public int getMaxZoom() {
+                return maxZoom;
+            }
+
+            public void setMaxZoom(int maxZoom) {
+                this.maxZoom = maxZoom;
+            }
+
+            public String getMimeType() {
+                return mimeType;
+            }
+
+            public void setMimeType(String mimeType) {
+                this.mimeType = mimeType;
+            }
+
+            public double getMinX() {
+                return minX;
+            }
+
+            public void setMinX(double minX) {
+                this.minX = minX;
+            }
+
+            public double getMinY() {
+                return minY;
+            }
+
+            public void setMinY(double minY) {
+                this.minY = minY;
+            }
+
+            public int getMinZoom() {
+                return minZoom;
+            }
+
+            public void setMinZoom(int minZoom) {
+                this.minZoom = minZoom;
+            }
+
+            public double getOriginX() {
+                return originX;
+            }
+
+            public void setOriginX(double originX) {
+                this.originX = originX;
+            }
+
+            public double getOriginY() {
+                return originY;
+            }
+
+            public void setOriginY(double originY) {
+                this.originY = originY;
+            }
+
+            public String getProfile() {
+                return profile;
+            }
+
+            public void setProfile(String profile) {
+                this.profile = profile;
+            }
+
+            public int getServiceId() {
+                return serviceId;
+            }
+
+            public void setServiceId(int serviceId) {
+                this.serviceId = serviceId;
+            }
+
+            public String getSrs() {
+                return srs;
+            }
+
+            public void setSrs(String srs) {
+                this.srs = srs;
+            }
+
+            public String getTitle() {
+                return title;
+            }
+
+            public void setTitle(String title) {
+                this.title = title;
+            }
+
+            public int getWidth() {
+                return width;
+            }
+
+            public void setWidth(int width) {
+                this.width = width;
+            }
+
         }
+        /*{
+			"group":"L2",
+			"id":3,
+			"kind":1,
+			"maps":[
+				{
+					"abstract":"中国城市面",
+					"extension":"png",
+					"fileExtension":"png",
+					"group":"L2",
+					"height":256,
+					"href":"http://39.107.104.63:8080/xyz/1.0.0/china_city_polygon@EPSG:900913@png",
+					"id":8,
+					"maxX":135.403656005859,
+					"maxY":53.8118324279785,
+					"maxZoom":11,
+					"mimeType":"image/png",
+					"minX":73.1985473632812,
+					"minY":3.58836889266968,
+					"minZoom":0,
+					"originX":73.1985473632812,
+					"originY":3.58836889266968,
+					"profile":"mercator",
+					"serviceId":1,
+					"srs":"EPSG:900913",
+					"title":"china_city_polygon",
+					"width":256
+				}
+			],
+			"memo":"中国城市面",
+			"name":"china_city_polygon",
+			"type":0
+		}*/
+
     }
 }

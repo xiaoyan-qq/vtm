@@ -9,6 +9,7 @@ import android.os.Message;
 import android.support.v7.app.AlertDialog;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.ExpandableListView;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -405,7 +406,7 @@ public class CatEyeMainFragment extends BaseFragment {
      */
     private void getMapDataSourceFromNet() {
         final RxDialogLoading rxDialogLoading = new RxDialogLoading(getContext());
-        OkGo.<String>get(URL_MAP_SOURCE_NET).tag(this).converter(new StringConvert()).adapt(new ObservableResponse<String>()).subscribeOn(Schedulers.io()).doOnSubscribe(new Consumer<Disposable>() {
+        OkGo.<String>get(URL_MAP_SOURCE_NET.replace(SystemConstant.USER_ID,"1")).tag(this).converter(new StringConvert()).adapt(new ObservableResponse<String>()).subscribeOn(Schedulers.io()).doOnSubscribe(new Consumer<Disposable>() {
             @Override
             public void accept(Disposable disposable) throws Exception {
                 rxDialogLoading.show();
@@ -423,7 +424,7 @@ public class CatEyeMainFragment extends BaseFragment {
                 if (mapSourceFromNet != null) {
                     List<MapSourceFromNet.DataBean> dataBeanList = mapSourceFromNet.getData();
                     if (dataBeanList != null && !dataBeanList.isEmpty()) {
-                        Observable.fromIterable(dataBeanList).subscribeOn(Schedulers.computation()).filter(new Predicate<MapSourceFromNet.DataBean>() {
+                        Observable.fromIterable(dataBeanList).subscribeOn(Schedulers.computation())/*.filter(new Predicate<MapSourceFromNet.DataBean>() {
                             @Override
                             public boolean test(MapSourceFromNet.DataBean dataBean) throws Exception {
                                 if (dataBean != null && dataBean.getExtension() != null && (dataBean.getExtension().contains("png") || dataBean.getExtension().contains("json") || dataBean.getExtension().contains("jpg") || dataBean.getExtension().contains("jpeg")) && dataBean.getHref() != null && dataBean.getHref().contains("/xyz/")) {
@@ -431,7 +432,7 @@ public class CatEyeMainFragment extends BaseFragment {
                                 }
                                 return false;
                             }
-                        }).toList().observeOn(AndroidSchedulers.mainThread()).subscribe(new Consumer<List<MapSourceFromNet.DataBean>>() {
+                        })*/.toList().observeOn(AndroidSchedulers.mainThread()).subscribe(new Consumer<List<MapSourceFromNet.DataBean>>() {
                             @Override
                             public void accept(List<MapSourceFromNet.DataBean> dataBeanList) throws Exception {
                                 if (dataBeanList != null) {
@@ -474,38 +475,12 @@ public class CatEyeMainFragment extends BaseFragment {
     private int dragBeginPosition = -1;
 
     private void showLayerManagerDialog(final List<MapSourceFromNet.DataBean> dataBeanList) {
-        //使用自定义listview，增加调整图层顺序与图层
+        //使用ExpandableListView展示二级列表
         layerManagerRootView = LayoutInflater.from(getActivity()).inflate(R.layout.fragment_layer_manager, null);
-        SlideAndDragListView slideAndDragListView = (SlideAndDragListView) layerManagerRootView.findViewById(R.id.sadLv_layerlist);
-
-        Menu menu = new Menu(true, 0);//第1个参数表示滑动 item 是否能滑的过头，像弹簧那样( true 表示过头，就像 Gif 中显示的那样；false 表示不过头，就像 Android QQ 中的那样)
-        menu.addItem(new MenuItem.Builder().setText("下载").setWidth(120)
-                .setBackground(new ColorDrawable(getResources().getColor(R.color.color_blue_alpha_700)))
-                .setDirection(MenuItem.DIRECTION_RIGHT)//设置方向 (默认方向为 DIRECTION_LEFT )
-                .build());
-        slideAndDragListView.setMenu(menu);
-        slideAndDragListView.setOnDragDropListener(new SlideAndDragListView.OnDragDropListener() {
-            @Override
-            public void onDragViewStart(int beginPosition) {
-                mDraggedEntity = dataBeanList.get(beginPosition);
-                dragBeginPosition = beginPosition;
-            }
-
-            @Override
-            public void onDragDropViewMoved(int fromPosition, int toPosition) {
-                MapSourceFromNet.DataBean dataBean = dataBeanList.remove(fromPosition);
-                dataBeanList.add(toPosition, dataBean);
-            }
-
-            @Override
-            public void onDragViewDown(int finalPosition) {
-                dataBeanList.set(finalPosition, mDraggedEntity);
-            }
-        });
-
+        ExpandableListView expandableListView = (ExpandableListView) layerManagerRootView.findViewById(R.id.sadLv_layerlist);
 
         layerManagerAdapter = new LayerManagerAdapter(getActivity(), dataBeanList);
-        slideAndDragListView.setAdapter(layerManagerAdapter);
+        expandableListView.setAdapter(layerManagerAdapter);
 
         //增加按钮
         TextView tv_add = (TextView) layerManagerRootView.findViewById(R.id.tv_layerlist_add);
@@ -528,20 +503,22 @@ public class CatEyeMainFragment extends BaseFragment {
                 }
                 //根据当前的资源选择，显示对应的图层
                 for (MapSourceFromNet.DataBean dataBean : dataBeanList) {
-                    boolean isShow = dataBean.isShow();
-                    if (isShow) {
-                        if (dataBean.getExtension().contains("json")) {
-                            ContourGeojsonTileSource mTileSource = ContourGeojsonTileSource.builder()
-                                    .url(dataBean.getHref()).tilePath("/{X}/{Y}/{Z}.json" /*+ stringDataBeanMap.get(key).getExtension()*/)
-                                    .zoomMax(18).build();
-                            createGeoJsonTileLayer(getActivity(), mTileSource, true, dataBean.getGroup());
-                        } else if (dataBean.getExtension().contains(".map")) {
-                            addLocalMapFileLayer(dataBean.getHref());
-                        } else {
-                            BitmapTileSource mTileSource = BitmapTileSource.builder()
-                                    .url(dataBean.getHref()).tilePath("/{X}/{Y}/{Z}." + dataBean.getExtension())
-                                    .zoomMax(18).build();
-                            createBitmapTileLayer(getActivity(), mTileSource, true, dataBean.getGroup());
+                    for (MapSourceFromNet.DataBean.MapsBean mapsBean:dataBean.getMaps()){
+                        boolean isShow = mapsBean.isShow();
+                        if (isShow) {
+                            if (mapsBean.getExtension().contains("json")) {
+                                ContourGeojsonTileSource mTileSource = ContourGeojsonTileSource.builder()
+                                        .url(mapsBean.getHref()).tilePath("/{X}/{Y}/{Z}.json" /*+ stringDataBeanMap.get(key).getExtension()*/)
+                                        .zoomMax(18).build();
+                                createGeoJsonTileLayer(getActivity(), mTileSource, true, mapsBean.getGroup());
+                            } else if (mapsBean.getExtension().contains(".map")) {
+                                addLocalMapFileLayer(mapsBean.getHref());
+                            } else {
+                                BitmapTileSource mTileSource = BitmapTileSource.builder()
+                                        .url(mapsBean.getHref()).tilePath("/{X}/{Y}/{Z}." + mapsBean.getExtension())
+                                        .zoomMax(18).build();
+                                createBitmapTileLayer(getActivity(), mTileSource, true, mapsBean.getGroup());
+                            }
                         }
                     }
                 }
@@ -608,15 +585,17 @@ public class CatEyeMainFragment extends BaseFragment {
                 //判断当前图层中是否已经存在选择的文件，如果存在，则不再添加
                 if (layerDataBeanList != null && !layerDataBeanList.isEmpty()) {
                     for (MapSourceFromNet.DataBean dataBean : layerDataBeanList) {
-                        if (dataBean.getHref().equals(file)) {
-                            RxToast.info("已经添加过相同的图层！无法再次添加！");
-                            return;
+                        for (MapSourceFromNet.DataBean.MapsBean mapsBean:dataBean.getMaps()){
+                            if (mapsBean.getHref().equals(file)) {
+                                RxToast.info("已经添加过相同的图层！无法再次添加！");
+                                return;
+                            }
                         }
                     }
                 }
                 File mapFile = new File(file);
                 if (mapFile.exists()) {
-                    MapSourceFromNet.DataBean mapFileDataBean = new MapSourceFromNet.DataBean();
+                    MapSourceFromNet.DataBean.MapsBean mapFileDataBean = new MapSourceFromNet.DataBean.MapsBean();
                     mapFileDataBean.setAbstractX(mapFile.getName());
                     mapFileDataBean.setHref(file);
                     mapFileDataBean.setShow(false);

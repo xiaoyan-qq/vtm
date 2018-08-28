@@ -8,7 +8,8 @@ public class SystemConstant {
     public static final int MSG_WHAT_DRAW_RESULT = 0x1005;//用户在绘制界面点击
 
     public static final String BASE_URL = "http://39.107.104.63:8080";
-    public static final String URL_MAP_SOURCE_NET = BASE_URL + "/meta/maps";
+    public static final String USER_ID = "{userId}";
+    public static final String URL_MAP_SOURCE_NET = BASE_URL + "/projects/" + USER_ID + "/datasets";
     public static final String URL_CONTOUR_CALCULATE = BASE_URL + "/dem/contour";
 
     public static final String DATA_CONTOUR_CHART = "DATA_CONTOUR_CHART";
