@@ -17,8 +17,12 @@ import android.widget.TextView;
 import com.cateye.android.entity.MapSourceFromNet;
 import com.cateye.android.vtm.R;
 
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * Created by xiaoxiao on 2018/6/22.
@@ -26,12 +30,12 @@ import java.util.List;
 
 public class LayerManagerAdapter extends BaseExpandableListAdapter {
     private Context mContext;
-    private List<MapSourceFromNet.DataBean> dataBeanList;
+    private List<List<MapSourceFromNet.DataBean>> dataBeanList;
     private LayoutInflater inflater;
 
     public LayerManagerAdapter(Context mContext, List<MapSourceFromNet.DataBean> dataBeanList) {
         this.mContext = mContext;
-        this.dataBeanList = dataBeanList;
+        this.dataBeanList = sortListDataAndGroup();
         this.inflater = LayoutInflater.from(mContext);
         //对传递进来的数据按照图层分组排序
         sortListData();
@@ -121,17 +125,39 @@ public class LayerManagerAdapter extends BaseExpandableListAdapter {
     }
 
     /**
-     * 对传递进来的数据做排序
+     * 对传递进来的数据做分组和排序
      */
     @SuppressLint("NewApi")
-    public void sortListData() {
+    public List<List<MapSourceFromNet.DataBean>> sortListDataAndGroup(List<MapSourceFromNet.DataBean> dataBeanList) {
         if (dataBeanList != null && !dataBeanList.isEmpty()) {
+            //使用map对现有的网络数据进行分组
+            Map<String, List<MapSourceFromNet.DataBean>> map = new TreeMap<>(new MapKeyComparator());
+            for (MapSourceFromNet.DataBean dataBean : dataBeanList) {
+                String group = dataBean.getGroup();
+                List<MapSourceFromNet.DataBean> groupDataList = map.get(group);
+                if (groupDataList == null) {
+                    groupDataList = new ArrayList<>();
+                    map.put(group, groupDataList);
+                }
+                groupDataList.add(dataBean);
+            }
+
+            List<List<MapSourceFromNet.DataBean>> dataBeanListGroup=new ArrayList<>();
             dataBeanList.sort(new Comparator<MapSourceFromNet.DataBean>() {
                 @Override
                 public int compare(MapSourceFromNet.DataBean dataBean, MapSourceFromNet.DataBean t1) {
                     return dataBean.getGroup().compareTo(t1.getGroup());
                 }
             });
+        }
+    }
+
+    private class MapKeyComparator implements Comparator<String>{
+
+        @Override
+        public int compare(String str1, String str2) {
+
+            return str1.compareTo(str2);
         }
     }
 }
