@@ -222,9 +222,9 @@ public class CatEyeMainFragment extends BaseFragment {
                                             ((VectorTileLayer) layer).addHook(new VectorTileLayer.TileLoaderThemeHook() {
                                                 @Override
                                                 public boolean process(MapTile tile, RenderBuckets buckets, MapElement element, RenderStyle style, int level) {
-                                                    if (element.tags.containsKey("contour")||element.tags.containsKey("CONTOUR")) {
-                                                        if (style instanceof LineStyle){
-
+                                                    if (element.tags.containsKey("contour") || element.tags.containsKey("CONTOUR")) {
+                                                        if (style instanceof LineStyle) {
+//                                                            ((LineStyle)style).color=
                                                         }
                                                     }
                                                     return false;
@@ -248,9 +248,9 @@ public class CatEyeMainFragment extends BaseFragment {
                         });
                 AlertDialog colorPickerDialog = colorDialogBuilder.create();
                 colorPickerDialog.show();
-        }
-    });
-}
+            }
+        });
+    }
 
     @Override
     public void onDestroy() {
@@ -406,7 +406,7 @@ public class CatEyeMainFragment extends BaseFragment {
      */
     private void getMapDataSourceFromNet() {
         final RxDialogLoading rxDialogLoading = new RxDialogLoading(getContext());
-        OkGo.<String>get(URL_MAP_SOURCE_NET.replace(SystemConstant.USER_ID,"1")).tag(this).converter(new StringConvert()).adapt(new ObservableResponse<String>()).subscribeOn(Schedulers.io()).doOnSubscribe(new Consumer<Disposable>() {
+        OkGo.<String>get(URL_MAP_SOURCE_NET.replace(SystemConstant.USER_ID, "1")).tag(this).converter(new StringConvert()).adapt(new ObservableResponse<String>()).subscribeOn(Schedulers.io()).doOnSubscribe(new Consumer<Disposable>() {
             @Override
             public void accept(Disposable disposable) throws Exception {
                 rxDialogLoading.show();
@@ -449,14 +449,14 @@ public class CatEyeMainFragment extends BaseFragment {
             public void onError(Throwable e) {
                 RxToast.info("请求失败，请检查网络!", Toast.LENGTH_SHORT);
                 RxLogTool.saveLogFile(e.toString());
-                if (rxDialogLoading!=null&&rxDialogLoading.isShowing()){
+                if (rxDialogLoading != null && rxDialogLoading.isShowing()) {
                     rxDialogLoading.dismiss();
                 }
             }
 
             @Override
             public void onComplete() {
-                if (rxDialogLoading!=null&&rxDialogLoading.isShowing()){
+                if (rxDialogLoading != null && rxDialogLoading.isShowing()) {
                     rxDialogLoading.dismiss();
                 }
             }
@@ -503,22 +503,20 @@ public class CatEyeMainFragment extends BaseFragment {
                 }
                 //根据当前的资源选择，显示对应的图层
                 for (MapSourceFromNet.DataBean dataBean : dataBeanList) {
-                    for (MapSourceFromNet.DataBean.MapsBean mapsBean:dataBean.getMaps()){
-                        boolean isShow = mapsBean.isShow();
-                        if (isShow) {
-                            if (mapsBean.getExtension().contains("json")) {
-                                ContourGeojsonTileSource mTileSource = ContourGeojsonTileSource.builder()
-                                        .url(mapsBean.getHref()).tilePath("/{X}/{Y}/{Z}.json" /*+ stringDataBeanMap.get(key).getExtension()*/)
-                                        .zoomMax(18).build();
-                                createGeoJsonTileLayer(getActivity(), mTileSource, true, mapsBean.getGroup());
-                            } else if (mapsBean.getExtension().contains(".map")) {
-                                addLocalMapFileLayer(mapsBean.getHref());
-                            } else {
-                                BitmapTileSource mTileSource = BitmapTileSource.builder()
-                                        .url(mapsBean.getHref()).tilePath("/{X}/{Y}/{Z}." + mapsBean.getExtension())
-                                        .zoomMax(18).build();
-                                createBitmapTileLayer(getActivity(), mTileSource, true, mapsBean.getGroup());
-                            }
+                    boolean isShow = dataBean.isShow();
+                    if (isShow) {
+                        if (dataBean.getMaps().get(0).getExtension().contains("json")) {
+                            ContourGeojsonTileSource mTileSource = ContourGeojsonTileSource.builder()
+                                    .url(dataBean.getMaps().get(0).getHref()).tilePath("/{X}/{Y}/{Z}.json" /*+ stringDataBeanMap.get(key).getExtension()*/)
+                                    .zoomMax(18).build();
+                            createGeoJsonTileLayer(getActivity(), mTileSource, true, dataBean.getGroup());
+                        } else if (dataBean.getMaps().get(0).getExtension().contains(".map")) {
+                            addLocalMapFileLayer(dataBean.getMaps().get(0).getHref());
+                        } else {
+                            BitmapTileSource mTileSource = BitmapTileSource.builder()
+                                    .url(dataBean.getMaps().get(0).getHref()).tilePath("/{X}/{Y}/{Z}." + dataBean.getMaps().get(0).getExtension())
+                                    .zoomMax(18).build();
+                            createBitmapTileLayer(getActivity(), mTileSource, true, dataBean.getGroup());
                         }
                     }
                 }
@@ -585,11 +583,9 @@ public class CatEyeMainFragment extends BaseFragment {
                 //判断当前图层中是否已经存在选择的文件，如果存在，则不再添加
                 if (layerDataBeanList != null && !layerDataBeanList.isEmpty()) {
                     for (MapSourceFromNet.DataBean dataBean : layerDataBeanList) {
-                        for (MapSourceFromNet.DataBean.MapsBean mapsBean:dataBean.getMaps()){
-                            if (mapsBean.getHref().equals(file)) {
-                                RxToast.info("已经添加过相同的图层！无法再次添加！");
-                                return;
-                            }
+                        if (dataBean.getKind() == -1) {
+                            RxToast.info("已经添加过相同的图层！无法再次添加！");
+                            return;
                         }
                     }
                 }
@@ -598,13 +594,16 @@ public class CatEyeMainFragment extends BaseFragment {
                     MapSourceFromNet.DataBean.MapsBean mapFileDataBean = new MapSourceFromNet.DataBean.MapsBean();
                     mapFileDataBean.setAbstractX(mapFile.getName());
                     mapFileDataBean.setHref(file);
-                    mapFileDataBean.setShow(false);
                     mapFileDataBean.setGroup(LAYER_GROUP_ENUM.BASE_VECTOR_GROUP.name);
                     mapFileDataBean.setExtension(".map");
+
+                    MapSourceFromNet.DataBean localDataBean = new MapSourceFromNet.DataBean();
+                    localDataBean.setMaps(new ArrayList<MapSourceFromNet.DataBean.MapsBean>());
+                    localDataBean.getMaps().add(mapFileDataBean);
                     if (layerDataBeanList != null) {
-                        layerDataBeanList.add(mapFileDataBean);
-//                        layerManagerAdapter.sortListData();//重新排序
+                        layerDataBeanList.add(localDataBean);
                         if (layerManagerAdapter != null) {
+                            layerManagerAdapter.sortListDataAndGroup(layerDataBeanList);
                             layerManagerAdapter.notifyDataSetChanged();
                         }
                     }
@@ -1003,9 +1002,9 @@ public class CatEyeMainFragment extends BaseFragment {
         }
     }
 
-public enum BUTTON_AREA {
-    ALL/*所有按钮*/, LOCATION/*定位按钮*/, BOTTOM_LEFT/*左下角*/, BOTTOM_RIGHT/*右下角*/
-}
+    public enum BUTTON_AREA {
+        ALL/*所有按钮*/, LOCATION/*定位按钮*/, BOTTOM_LEFT/*左下角*/, BOTTOM_RIGHT/*右下角*/
+    }
 
     @Override
     public void onFragmentResult(int requestCode, int resultCode, Bundle data) {

@@ -30,35 +30,39 @@ import java.util.TreeMap;
 
 public class LayerManagerAdapter extends BaseExpandableListAdapter {
     private Context mContext;
-    private List<List<MapSourceFromNet.DataBean>> dataBeanList;
+    private Map<String, List<MapSourceFromNet.DataBean>> dataBeanMap;
     private LayoutInflater inflater;
+    private List<String> keyList;
 
     public LayerManagerAdapter(Context mContext, List<MapSourceFromNet.DataBean> dataBeanList) {
         this.mContext = mContext;
-        this.dataBeanList = sortListDataAndGroup();
+        this.dataBeanMap = new TreeMap<>(new MapKeyComparator());
+        this.dataBeanMap = sortListDataAndGroup(dataBeanList);
         this.inflater = LayoutInflater.from(mContext);
-        //对传递进来的数据按照图层分组排序
-        sortListData();
+        this.keyList = new ArrayList<>();
+        if (this.dataBeanMap != null) {
+            keyList.addAll(dataBeanMap.keySet());
+        }
     }
 
     @Override
     public int getGroupCount() {
-        return dataBeanList.size();
+        return dataBeanMap.size();
     }
 
     @Override
     public int getChildrenCount(int groupPosition) {
-        return dataBeanList.get(groupPosition).getMaps().size();
+        return dataBeanMap.get(keyList.get(groupPosition)).size();
     }
 
     @Override
     public Object getGroup(int groupPosition) {
-        return dataBeanList.get(groupPosition);
+        return dataBeanMap.get(keyList.get(groupPosition));
     }
 
     @Override
     public Object getChild(int groupPosition, int childPosition) {
-        return dataBeanList.get(groupPosition).getMaps().get(childPosition);
+        return dataBeanMap.get(keyList.get(groupPosition)).get(childPosition);
     }
 
     @Override
@@ -80,7 +84,7 @@ public class LayerManagerAdapter extends BaseExpandableListAdapter {
     public View getGroupView(int groupPosition, boolean isExpanded, View convertView, ViewGroup parent) {
         convertView = inflater.inflate(R.layout.item_layer_manager_group, null);
         TextView tv_groupName = (TextView) convertView.findViewById(R.id.tv_group_name);
-        tv_groupName.setText(dataBeanList.get(groupPosition).getGroup());
+        tv_groupName.setText(keyList.get(groupPosition));
         return convertView;
     }
 
@@ -97,16 +101,16 @@ public class LayerManagerAdapter extends BaseExpandableListAdapter {
         } else {
             holder = (ViewHolder) convertView.getTag();
         }
-        if (dataBeanList != null && dataBeanList.size() > groupPosition && dataBeanList.get(groupPosition).getMaps().size() > childPosition) {
-            final MapSourceFromNet.DataBean.MapsBean mapsBean = dataBeanList.get(groupPosition).getMaps().get(childPosition);
-            holder.tv_name.setText(mapsBean.getAbstractX());
-            holder.chk_visibile.setChecked(mapsBean.isShow());
+        if (dataBeanMap != null && dataBeanMap.size() > groupPosition && dataBeanMap.get(keyList.get(groupPosition)).size() > childPosition) {
+            final MapSourceFromNet.DataBean dataBean = dataBeanMap.get(keyList.get(groupPosition)).get(childPosition);
+            holder.tv_name.setText(dataBean.getMemo());
+            holder.chk_visibile.setChecked(dataBean.isShow());
 
             //用户点击勾选框，实时修改图层的显隐状态
             holder.chk_visibile.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    mapsBean.setShow(((CompoundButton) view).isChecked());
+                    dataBean.setShow(((CompoundButton) view).isChecked());
                 }
             });
         }
@@ -128,31 +132,23 @@ public class LayerManagerAdapter extends BaseExpandableListAdapter {
      * 对传递进来的数据做分组和排序
      */
     @SuppressLint("NewApi")
-    public List<List<MapSourceFromNet.DataBean>> sortListDataAndGroup(List<MapSourceFromNet.DataBean> dataBeanList) {
+    public Map<String, List<MapSourceFromNet.DataBean>> sortListDataAndGroup(List<MapSourceFromNet.DataBean> dataBeanList) {
+        //使用map对现有的网络数据进行分组
+        dataBeanMap.clear();
         if (dataBeanList != null && !dataBeanList.isEmpty()) {
-            //使用map对现有的网络数据进行分组
-            Map<String, List<MapSourceFromNet.DataBean>> map = new TreeMap<>(new MapKeyComparator());
             for (MapSourceFromNet.DataBean dataBean : dataBeanList) {
                 String group = dataBean.getGroup();
-                List<MapSourceFromNet.DataBean> groupDataList = map.get(group);
-                if (groupDataList == null) {
-                    groupDataList = new ArrayList<>();
-                    map.put(group, groupDataList);
+                if (!dataBeanMap.containsKey(group)) {
+                    List<MapSourceFromNet.DataBean> groupDataList = new ArrayList<>();
+                    dataBeanMap.put(group, groupDataList);
                 }
-                groupDataList.add(dataBean);
+                dataBeanMap.get(group).add(dataBean);
             }
-
-            List<List<MapSourceFromNet.DataBean>> dataBeanListGroup=new ArrayList<>();
-            dataBeanList.sort(new Comparator<MapSourceFromNet.DataBean>() {
-                @Override
-                public int compare(MapSourceFromNet.DataBean dataBean, MapSourceFromNet.DataBean t1) {
-                    return dataBean.getGroup().compareTo(t1.getGroup());
-                }
-            });
         }
+        return dataBeanMap;
     }
 
-    private class MapKeyComparator implements Comparator<String>{
+    private class MapKeyComparator implements Comparator<String> {
 
         @Override
         public int compare(String str1, String str2) {
