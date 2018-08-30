@@ -3,7 +3,6 @@ package com.cateye.vtm.fragment;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.os.Message;
 import android.support.v7.app.AlertDialog;
@@ -43,9 +42,6 @@ import com.vondear.rxtool.RxLogTool;
 import com.vondear.rxtool.view.RxToast;
 import com.vondear.rxui.view.dialog.RxDialog;
 import com.vondear.rxui.view.dialog.RxDialogLoading;
-import com.yydcdut.sdlv.Menu;
-import com.yydcdut.sdlv.MenuItem;
-import com.yydcdut.sdlv.SlideAndDragListView;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -119,7 +115,6 @@ import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Consumer;
-import io.reactivex.functions.Predicate;
 import io.reactivex.schedulers.Schedulers;
 
 import static com.cateye.vtm.util.SystemConstant.URL_CONTOUR_CALCULATE;
@@ -598,6 +593,11 @@ public class CatEyeMainFragment extends BaseFragment {
                     mapFileDataBean.setExtension(".map");
 
                     MapSourceFromNet.DataBean localDataBean = new MapSourceFromNet.DataBean();
+                    localDataBean.setGroup(LAYER_GROUP_ENUM.BASE_VECTOR_GROUP.name);
+                    localDataBean.setMemo(mapFile.getName());
+//                    localDataBean.setKind(-1);
+//                    localDataBean.setId(-1);
+//                    localDataBean.setType(-1);
                     localDataBean.setMaps(new ArrayList<MapSourceFromNet.DataBean.MapsBean>());
                     localDataBean.getMaps().add(mapFileDataBean);
                     if (layerDataBeanList != null) {
