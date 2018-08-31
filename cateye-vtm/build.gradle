@@ -144,5 +144,7 @@ dependencies {
     //通用的adapter实现 https://github.com/qyxxjd/CommonAdapter
     implementation 'com.classic.adapter:commonadapter:2.0'
     implementation 'com.android.support:recyclerview-v7:27.0.2'
+    //https://github.com/woxingxiao/BubbleSeekBar/blob/master/README_zh.md
+    implementation 'com.xw.repo:bubbleseekbar:3.19'
 }
 

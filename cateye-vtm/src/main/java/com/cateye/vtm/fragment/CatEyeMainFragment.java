@@ -158,6 +158,7 @@ public class CatEyeMainFragment extends BaseFragment {
     private List<MapSourceFromNet.DataBean> layerDataBeanList;//记录图层管理中的图层信息
     private View layerManagerRootView;//图层管理对话框的根视图
     private LayerManagerAdapter layerManagerAdapter;//图层管理对应的adapter
+    private List<MapSourceFromNet.DataBean> multiTimeLayerList;//记录拥有多个时序图层的list，如果存在，则需要提供切换时序的控件
 
     @Override
     public int getFragmentLayoutId() {
@@ -179,6 +180,7 @@ public class CatEyeMainFragment extends BaseFragment {
         chkDrawPointLinePolygonList.add(chk_draw_point);
         chkDrawPointLinePolygonList.add(chk_draw_line);
         chkDrawPointLinePolygonList.add(chk_draw_polygon);
+        multiTimeLayerList=new ArrayList<>();
 
         //选择地图资源
         img_map_source_selector = (ImageView) rootView.findViewById(R.id.img_map_source_select);
@@ -496,10 +498,12 @@ public class CatEyeMainFragment extends BaseFragment {
                         mapLayerIterator.remove();
                     }
                 }
+                //清空多图层列表list数据，重新筛选获取
+                multiTimeLayerList.clear();
                 //根据当前的资源选择，显示对应的图层
                 for (MapSourceFromNet.DataBean dataBean : dataBeanList) {
                     boolean isShow = dataBean.isShow();
-                    if (isShow) {
+                    if (isShow) {//设置为选中可显示状态
                         if (dataBean.getMaps().get(0).getExtension().contains("json")) {
                             ContourGeojsonTileSource mTileSource = ContourGeojsonTileSource.builder()
                                     .url(dataBean.getMaps().get(0).getHref()).tilePath("/{X}/{Y}/{Z}.json" /*+ stringDataBeanMap.get(key).getExtension()*/)
@@ -513,11 +517,38 @@ public class CatEyeMainFragment extends BaseFragment {
                                     .zoomMax(18).build();
                             createBitmapTileLayer(getActivity(), mTileSource, true, dataBean.getGroup());
                         }
+
+                        if (dataBean.getMaps()!=null&&dataBean.getMaps().size()>1){
+                            multiTimeLayerList.add(dataBean);
+                        }
                     }
                 }
                 mMap.clearMap();
             }
         }).show();
+    }
+
+    /**
+     * @method : showMultiTimeLayerSelectFragment
+     * @Author : xiaoxiao
+     * @Describe : 显示时序选择控件
+     * @param : multiTimeLayerList - 多时序显示数据
+     * @return :
+     * @Date : 2018/8/31
+    */
+    private void showMultiTimeLayerSelectFragment(List<MapSourceFromNet.DataBean> multiTimeLayerList){
+        if (multiTimeLayerList!=null&&!multiTimeLayerList.isEmpty()){
+            MultiTimeLayerSelectFragment fragment = findFragment(MultiTimeLayerSelectFragment.class);
+            //自动弹出绘制点线面的fragment
+            Bundle bundle = new Bundle();
+            bundle.putSerializable(SystemConstant.BUNDLE_MULTI_TIME_SELECTOR_DATA, (ArrayList)multiTimeLayerList);
+            if (fragment != null) {
+                fragment.setArguments(bundle);
+                start(fragment);
+            } else {
+                loadRootFragment(R.id.layer_main_cateye_top, com.cateye.vtm.fragment.DrawPointLinePolygonFragment.newInstance(bundle));
+            }
+        }
     }
 
     /**

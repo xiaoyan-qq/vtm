@@ -5,9 +5,10 @@ import com.alibaba.fastjson.annotation.JSONType;
 import com.alibaba.fastjson.parser.Feature;
 import com.alibaba.fastjson.serializer.SerializerFeature;
 
+import java.io.Serializable;
 import java.util.List;
 
-public class MapSourceFromNet {
+public class MapSourceFromNet implements Serializable{
 
     /**
      * success : true
@@ -53,7 +54,7 @@ public class MapSourceFromNet {
         this.data = data;
     }
     @JSONType(serialzeFeatures= SerializerFeature.BeanToArray, parseFeatures= Feature.SupportArrayToBean)
-    public static class DataBean {
+    public static class DataBean implements Serializable{
         /**
          * group : L2
          * id : 3
@@ -136,7 +137,7 @@ public class MapSourceFromNet {
         public void setShow(boolean show) {
             isShow = show;
         }
-        public static class MapsBean {
+        public static class MapsBean implements Serializable{
             /**
              * abstract : 中国城市面
              * extension : png

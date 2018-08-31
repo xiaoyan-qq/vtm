@@ -22,4 +22,6 @@ public class SystemConstant {
     public static final int DRAW_CONTOUR_LINE = 1;//绘制等高线的线段
     public static final String LATITUDE = "LATITUDE";//latitude
     public static final String LONGITUDE = "LONGITUDE";//longitude
+
+    public static final String BUNDLE_MULTI_TIME_SELECTOR_DATA = "BUNDLE_MULTI_TIME_SELECTOR_DATA";//多时序选择所需要的数据
 }

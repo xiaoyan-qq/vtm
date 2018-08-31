@@ -24,6 +24,19 @@ import me.yokeyword.fragmentation.SupportFragment;
 public abstract class BaseFragment extends SupportFragment implements BaseFragmentInterface {
     protected View rootView;//当前fragment的根View
     protected Context mContext;
+    protected Bundle bundle;
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        if (savedInstanceState != null) {
+            //获取当前的绘制状态
+            bundle = savedInstanceState;
+        }
+        if (getArguments() != null) {
+            bundle = getArguments();
+        }
+    }
 
     @Nullable
     @Override
