@@ -180,7 +180,7 @@ public class CatEyeMainFragment extends BaseFragment {
         chkDrawPointLinePolygonList.add(chk_draw_point);
         chkDrawPointLinePolygonList.add(chk_draw_line);
         chkDrawPointLinePolygonList.add(chk_draw_polygon);
-        multiTimeLayerList=new ArrayList<>();
+        multiTimeLayerList = new ArrayList<>();
 
         //选择地图资源
         img_map_source_selector = (ImageView) rootView.findViewById(R.id.img_map_source_select);
@@ -508,6 +508,7 @@ public class CatEyeMainFragment extends BaseFragment {
                             ContourGeojsonTileSource mTileSource = ContourGeojsonTileSource.builder()
                                     .url(dataBean.getMaps().get(0).getHref()).tilePath("/{X}/{Y}/{Z}.json" /*+ stringDataBeanMap.get(key).getExtension()*/)
                                     .zoomMax(18).build();
+                            mTileSource.setOption(SystemConstant.LAYER_KEY_ID, dataBean.getId() + "");
                             createGeoJsonTileLayer(getActivity(), mTileSource, true, dataBean.getGroup());
                         } else if (dataBean.getMaps().get(0).getExtension().contains(".map")) {
                             addLocalMapFileLayer(dataBean.getMaps().get(0).getHref());
@@ -516,37 +517,39 @@ public class CatEyeMainFragment extends BaseFragment {
                                     .url(dataBean.getMaps().get(0).getHref()).tilePath("/{X}/{Y}/{Z}." + dataBean.getMaps().get(0).getExtension())
                                     .zoomMax(18).build();
                             createBitmapTileLayer(getActivity(), mTileSource, true, dataBean.getGroup());
+                            mTileSource.setOption(SystemConstant.LAYER_KEY_ID, dataBean.getId() + "");
                         }
 
-                        if (dataBean.getMaps()!=null&&dataBean.getMaps().size()>1){
+                        if (dataBean.getMaps() != null && dataBean.getMaps().size() > 1) {
                             multiTimeLayerList.add(dataBean);
                         }
                     }
                 }
+                showMultiTimeLayerSelectFragment(multiTimeLayerList);
                 mMap.clearMap();
             }
         }).show();
     }
 
     /**
+     * @param : multiTimeLayerList - 多时序显示数据
+     * @return :
      * @method : showMultiTimeLayerSelectFragment
      * @Author : xiaoxiao
      * @Describe : 显示时序选择控件
-     * @param : multiTimeLayerList - 多时序显示数据
-     * @return :
      * @Date : 2018/8/31
-    */
-    private void showMultiTimeLayerSelectFragment(List<MapSourceFromNet.DataBean> multiTimeLayerList){
-        if (multiTimeLayerList!=null&&!multiTimeLayerList.isEmpty()){
+     */
+    private void showMultiTimeLayerSelectFragment(List<MapSourceFromNet.DataBean> multiTimeLayerList) {
+        if (multiTimeLayerList != null && !multiTimeLayerList.isEmpty()) {
             MultiTimeLayerSelectFragment fragment = findFragment(MultiTimeLayerSelectFragment.class);
             //自动弹出绘制点线面的fragment
             Bundle bundle = new Bundle();
-            bundle.putSerializable(SystemConstant.BUNDLE_MULTI_TIME_SELECTOR_DATA, (ArrayList)multiTimeLayerList);
+            bundle.putSerializable(SystemConstant.BUNDLE_MULTI_TIME_SELECTOR_DATA, (ArrayList) multiTimeLayerList);
             if (fragment != null) {
                 fragment.setArguments(bundle);
                 start(fragment);
             } else {
-                loadRootFragment(R.id.layer_main_cateye_top, com.cateye.vtm.fragment.DrawPointLinePolygonFragment.newInstance(bundle));
+                loadRootFragment(R.id.layer_main_cateye_top, MultiTimeLayerSelectFragment.newInstance(bundle));
             }
         }
     }
@@ -808,6 +811,10 @@ public class CatEyeMainFragment extends BaseFragment {
         BitmapTileLayer mBitmapLayer = new BitmapTileLayer(mMap, mTileSource);
         mMap.layers().add(mBitmapLayer, LAYER_GROUP_ENUM.getGroupByName(layerGroup).orderIndex);
         mMap.updateMap(true);
+
+        MapPosition mapPosition=mMap.getMapPosition();
+        mapPosition.setPosition(mapPosition.getLatitude(),mapPosition.getLongitude()+0.0000001);
+        mMap.setMapPosition(mapPosition);
     }
 
     private void createGeoJsonTileLayer(Context mContext, GeojsonTileSource mTileSource, boolean USE_CACHE, String layerGroup) {
@@ -1004,6 +1011,42 @@ public class CatEyeMainFragment extends BaseFragment {
                     }
                 }
                 break;
+            case SystemConstant.MSG_WHAT_DRAW_LAYER_TIME_SELECT:
+                int dataBeanId = msg.arg1;
+                int mapLayerIndex = msg.arg2;
+                replaceMultiLayerIndex(dataBeanId, mapLayerIndex);
+                break;
+        }
+    }
+
+    private void replaceMultiLayerIndex(int dataBeanId, int layerIndex) {
+        //首先遍历所有的图层数据，找出指定id的图层数据
+        MapSourceFromNet.DataBean replaceDataBean = null;
+        if (layerDataBeanList != null && !layerDataBeanList.isEmpty()) {
+            for (MapSourceFromNet.DataBean dataBean : layerDataBeanList) {
+                if (dataBeanId == dataBean.getId()) {
+                    replaceDataBean = dataBean;
+                    break;
+                }
+            }
+            //如果能找到指定的数据，则遍历图层列表,将原有的该资源对应的layer移除
+            if (replaceDataBean != null) {
+                Iterator iterator = mMap.layers().iterator();
+                while (iterator.hasNext()) {
+                    Layer layer = (Layer) iterator.next();
+                    if (layer instanceof BitmapTileLayer) {
+                        String id = ((BitmapTileLayer) layer).getTileSource().getOption(SystemConstant.LAYER_KEY_ID);
+                        if (id != null && id.equals(dataBeanId+"")) {
+                            iterator.remove();
+                        }
+                    }
+                }
+                BitmapTileSource mTileSource = BitmapTileSource.builder()
+                        .url(replaceDataBean.getMaps().get(layerIndex).getHref()).tilePath("/{X}/{Y}/{Z}." + replaceDataBean.getMaps().get(layerIndex).getExtension())
+                        .zoomMax(18).build();
+                createBitmapTileLayer(getActivity(), mTileSource, true, replaceDataBean.getGroup());
+                mTileSource.setOption(SystemConstant.LAYER_KEY_ID, replaceDataBean.getId() + "");
+            }
         }
     }
 

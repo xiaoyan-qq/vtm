@@ -184,6 +184,7 @@ public class MapSourceFromNet implements Serializable{
             private String srs;
             private String title;
             private int width;
+            private String recordDate;
 
             @JSONField(name = "abstract")
             public String getAbstractX() {
@@ -355,6 +356,13 @@ public class MapSourceFromNet implements Serializable{
                 this.width = width;
             }
 
+            public String getRecordDate() {
+                return recordDate;
+            }
+
+            public void setRecordDate(String recordDate) {
+                this.recordDate = recordDate;
+            }
         }
         /*{
 			"group":"L2",

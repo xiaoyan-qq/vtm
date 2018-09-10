@@ -177,7 +177,7 @@ public class BitmapTileLayer extends TileLayer {
         //        };
     };
 
-    public TileSource getmTileSource() {
+    public TileSource getTileSource() {
         return mTileSource;
     }
 }

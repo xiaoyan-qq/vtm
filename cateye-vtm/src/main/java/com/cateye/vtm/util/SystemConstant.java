@@ -6,6 +6,7 @@ public class SystemConstant {
     public static final int MSG_WHAT_MAIN_AREA_HIDEN_VISIBLE = 0x1003;//显示隐藏主界面上的某些元素
     public static final int MSG_WHAT_DRAW_POINT_LINE_POLYGON_TAP = 0x1004;//用户在绘制界面点击
     public static final int MSG_WHAT_DRAW_RESULT = 0x1005;//用户在绘制界面点击
+    public static final int MSG_WHAT_DRAW_LAYER_TIME_SELECT = 0x1006;//某些图层存在多时序，用户拖动时序选择控件切换图层显示
 
     public static final String BASE_URL = "http://39.107.104.63:8080";
     public static final String USER_ID = "{userId}";
@@ -24,4 +25,5 @@ public class SystemConstant {
     public static final String LONGITUDE = "LONGITUDE";//longitude
 
     public static final String BUNDLE_MULTI_TIME_SELECTOR_DATA = "BUNDLE_MULTI_TIME_SELECTOR_DATA";//多时序选择所需要的数据
+    public static final String LAYER_KEY_ID = "LAYER_KEY_ID";//记录图层id
 }
