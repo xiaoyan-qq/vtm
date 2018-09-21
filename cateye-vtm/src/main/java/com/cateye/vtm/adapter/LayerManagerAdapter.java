@@ -6,20 +6,20 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.BaseAdapter;
 import android.widget.BaseExpandableListAdapter;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
-import android.widget.ExpandableListAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.cateye.android.entity.MapSourceFromNet;
 import com.cateye.android.vtm.R;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -34,6 +34,9 @@ public class LayerManagerAdapter extends BaseExpandableListAdapter {
     private LayoutInflater inflater;
     private List<String> keyList;
 
+    String translateJson = "{\"L0\":\"基础栅格图层\",\"L1\":\"项目栅格图层\",\"L2\":\"基础矢量图层\",\"L3\":\"项目矢量图层\"}";
+    private JSONObject layerGroupNameJsonObject;//用于翻译图层名称的map
+
     public LayerManagerAdapter(Context mContext, List<MapSourceFromNet.DataBean> dataBeanList) {
         this.mContext = mContext;
         this.dataBeanMap = new TreeMap<>(new MapKeyComparator());
@@ -42,6 +45,11 @@ public class LayerManagerAdapter extends BaseExpandableListAdapter {
         this.keyList = new ArrayList<>();
         if (this.dataBeanMap != null) {
             keyList.addAll(dataBeanMap.keySet());
+        }
+        try {
+            layerGroupNameJsonObject = new JSONObject(translateJson);
+        } catch (JSONException e) {
+            e.printStackTrace();
         }
     }
 
@@ -84,7 +92,11 @@ public class LayerManagerAdapter extends BaseExpandableListAdapter {
     public View getGroupView(int groupPosition, boolean isExpanded, View convertView, ViewGroup parent) {
         convertView = inflater.inflate(R.layout.item_layer_manager_group, null);
         TextView tv_groupName = (TextView) convertView.findViewById(R.id.tv_group_name);
-        tv_groupName.setText(keyList.get(groupPosition));
+        String groupName = keyList.get(groupPosition);
+        if (layerGroupNameJsonObject != null) {
+            groupName = layerGroupNameJsonObject.optString(groupName, groupName);
+        }
+        tv_groupName.setText(groupName);
         return convertView;
     }
 

@@ -147,6 +147,7 @@ public class CatEyeMainFragment extends BaseFragment {
     private ImageView img_map_source_selector;
     private ImageView img_contour_selector;//加载等高线数据的按钮
     private ImageView img_change_contour_color;//修改等高线地图显示颜色的按钮
+    private ImageView img_select_project;//选择当前项目的按钮
     private List<ImageView> chkDrawPointLinePolygonList;
     private FrameLayout layer_fragment;//用来显示fragment的布局文件
 //    private java.util.Map<String, MapSourceFromNet.DataBean> netDataSourceMap;//用来记录用户勾选了哪些网络数据显示
@@ -176,6 +177,7 @@ public class CatEyeMainFragment extends BaseFragment {
         chk_draw_point = (ImageView) rootView.findViewById(R.id.chk_draw_vector_point);
         chk_draw_line = (ImageView) rootView.findViewById(R.id.chk_draw_vector_line);
         chk_draw_polygon = (ImageView) rootView.findViewById(R.id.chk_draw_vector_polygon);
+        img_select_project = rootView.findViewById(R.id.img_project);
         chkDrawPointLinePolygonList = new ArrayList<>();
         chkDrawPointLinePolygonList.add(chk_draw_point);
         chkDrawPointLinePolygonList.add(chk_draw_line);
@@ -193,6 +195,14 @@ public class CatEyeMainFragment extends BaseFragment {
         if (!EventBus.getDefault().isRegistered(this)) {
             EventBus.getDefault().register(this);
         }
+
+        //选择当前操作项目的按钮
+        img_select_project.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                ((MainActivity) getActivity()).setCurrentProject();//弹出选择当前项目的对话框
+            }
+        });
 
         img_change_contour_color.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -364,7 +374,11 @@ public class CatEyeMainFragment extends BaseFragment {
                 if (layerDataBeanList != null) {
                     showLayerManagerDialog(layerDataBeanList);
                 } else {
-                    getMapDataSourceFromNet();
+                    if (SystemConstant.CURRENT_PROJECTS_ID < 0) {//没有获取到当前作业的项目ID，提示用户
+                        RxToast.info("无法获取当前作业项目，请检查您的网络设置");
+                    } else {
+                        getMapDataSourceFromNet();
+                    }
                 }
             } else if (view.getId() == R.id.img_contour_select) {//选择等高线文件
                 final RxDialog dialog = new RxDialog(getContext());
@@ -403,7 +417,7 @@ public class CatEyeMainFragment extends BaseFragment {
      */
     private void getMapDataSourceFromNet() {
         final RxDialogLoading rxDialogLoading = new RxDialogLoading(getContext());
-        OkGo.<String>get(URL_MAP_SOURCE_NET.replace(SystemConstant.USER_ID, "1")).tag(this).converter(new StringConvert()).adapt(new ObservableResponse<String>()).subscribeOn(Schedulers.io()).doOnSubscribe(new Consumer<Disposable>() {
+        OkGo.<String>get(URL_MAP_SOURCE_NET.replace(SystemConstant.USER_ID, SystemConstant.CURRENT_PROJECTS_ID + "")).tag(this).converter(new StringConvert()).adapt(new ObservableResponse<String>()).subscribeOn(Schedulers.io()).doOnSubscribe(new Consumer<Disposable>() {
             @Override
             public void accept(Disposable disposable) throws Exception {
                 rxDialogLoading.show();
@@ -435,6 +449,8 @@ public class CatEyeMainFragment extends BaseFragment {
                                 if (dataBeanList != null) {
                                     layerDataBeanList = dataBeanList;
                                     showLayerManagerDialog(dataBeanList);
+                                }else {
+                                    RxToast.warning("当前项目没有可作业的图层，请联系系统管理员确认！");
                                 }
                             }
                         });
@@ -491,13 +507,7 @@ public class CatEyeMainFragment extends BaseFragment {
         new CanDialog.Builder(getActivity()).setView(layerManagerRootView).setNegativeButton("取消", true, null).setPositiveButton("确定", true, new CanDialogInterface.OnClickListener() {
             @Override
             public void onClick(CanDialog dialog, int checkItem, CharSequence text, boolean[] checkItems) {
-                Iterator mapLayerIterator = mMap.layers().iterator();
-                while (mapLayerIterator.hasNext()) {
-                    Layer layer = (Layer) mapLayerIterator.next();
-                    if (!(layer instanceof MapEventLayer) && !(layer instanceof MapEventLayer2) && !(layer instanceof LocationLayer) && !(layer instanceof MapScaleBarLayer)) {
-                        mapLayerIterator.remove();
-                    }
-                }
+                clearAllMapLayers();
                 //清空多图层列表list数据，重新筛选获取
                 multiTimeLayerList.clear();
                 //根据当前的资源选择，显示对应的图层
@@ -612,9 +622,13 @@ public class CatEyeMainFragment extends BaseFragment {
                 //判断当前图层中是否已经存在选择的文件，如果存在，则不再添加
                 if (layerDataBeanList != null && !layerDataBeanList.isEmpty()) {
                     for (MapSourceFromNet.DataBean dataBean : layerDataBeanList) {
-                        if (dataBean.getKind() == -1) {
-                            RxToast.info("已经添加过相同的图层！无法再次添加！");
-                            return;
+                        if (dataBean.getMaps()!=null) {
+                            for (MapSourceFromNet.DataBean.MapsBean mapsBean:dataBean.getMaps()){
+                                if (file.equals(mapsBean.getHref())){
+                                    RxToast.info("已经添加过相同的图层！无法再次添加！");
+                                    return;
+                                }
+                            }
                         }
                     }
                 }
@@ -740,7 +754,7 @@ public class CatEyeMainFragment extends BaseFragment {
             VectorTileLayer mTileLayer = new OsmTileLayer(mMap);
             mTileLayer.setTileSource(mTileSource);
             mMap.layers().add(mTileLayer, LAYER_GROUP_ENUM.BASE_VECTOR_GROUP.orderIndex);
-            LabelLayer labelLayer = new LabelLayer(mMap, mTileLayer);
+//            LabelLayer labelLayer = new LabelLayer(mMap, mTileLayer);
             mMap.layers().add(new LabelLayer(mMap, mTileLayer), LAYER_GROUP_ENUM.OTHER_GROUP.orderIndex);
             mMap.layers().add(new BuildingLayer(mMap, mTileLayer), LAYER_GROUP_ENUM.OTHER_GROUP.orderIndex);
 
@@ -812,8 +826,8 @@ public class CatEyeMainFragment extends BaseFragment {
         mMap.layers().add(mBitmapLayer, LAYER_GROUP_ENUM.getGroupByName(layerGroup).orderIndex);
         mMap.updateMap(true);
 
-        MapPosition mapPosition=mMap.getMapPosition();
-        mapPosition.setPosition(mapPosition.getLatitude(),mapPosition.getLongitude()+0.0000001);
+        MapPosition mapPosition = mMap.getMapPosition();
+        mapPosition.setPosition(mapPosition.getLatitude(), mapPosition.getLongitude() + 0.0000001);
         mMap.setMapPosition(mapPosition);
     }
 
@@ -1036,7 +1050,7 @@ public class CatEyeMainFragment extends BaseFragment {
                     Layer layer = (Layer) iterator.next();
                     if (layer instanceof BitmapTileLayer) {
                         String id = ((BitmapTileLayer) layer).getTileSource().getOption(SystemConstant.LAYER_KEY_ID);
-                        if (id != null && id.equals(dataBeanId+"")) {
+                        if (id != null && id.equals(dataBeanId + "")) {
                             iterator.remove();
                         }
                     }
@@ -1086,6 +1100,26 @@ public class CatEyeMainFragment extends BaseFragment {
         switch (requestCode) {
             case 1:
                 break;
+        }
+    }
+
+    /**
+     * @method : clearAllLayers
+     * @Author : xiaoxiao
+     * @Describe : 清空地图上所有图层
+     * @param :
+     * @return :
+     * @Date : 2018/9/21
+    */
+    public void clearAllMapLayers(){
+        if (mMap!=null&&mMap.layers()!=null){
+            Iterator mapLayerIterator = mMap.layers().iterator();
+            while (mapLayerIterator.hasNext()) {
+                Layer layer = (Layer) mapLayerIterator.next();
+                if (!(layer instanceof MapEventLayer) && !(layer instanceof MapEventLayer2) && !(layer instanceof LocationLayer) && !(layer instanceof MapScaleBarLayer)) {
+                    mapLayerIterator.remove();
+                }
+            }
         }
     }
 }

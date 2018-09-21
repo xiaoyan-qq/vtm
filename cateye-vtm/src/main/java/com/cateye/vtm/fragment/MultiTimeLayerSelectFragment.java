@@ -90,7 +90,9 @@ public class MultiTimeLayerSelectFragment extends BaseFragment {
                                 .hideBubble()
                                 .showSectionMark()
                                 .seekBySection()
-                                .autoAdjustSectionMark().seekStepSection()
+                                .touchToSeek()//支持点击滑动
+                                .autoAdjustSectionMark()//自动依附到最近的标志位上
+                                .seekStepSection()
                                 .sectionTextPosition(BubbleSeekBar.TextPosition.BELOW_SECTION_MARK)
                                 .build();
                         seekBar.setCustomSectionTextArray(new BubbleSeekBar.CustomSectionTextArray() {
@@ -109,7 +111,7 @@ public class MultiTimeLayerSelectFragment extends BaseFragment {
                                 //用户修改progress，自动替换指定的图层
                                 Message msg = new Message();
                                 msg.what = SystemConstant.MSG_WHAT_DRAW_LAYER_TIME_SELECT;
-                                MapSourceFromNet.DataBean dataBean=dataBeanList.get(group);
+                                MapSourceFromNet.DataBean dataBean = dataBeanList.get(group);
                                 msg.arg1 = dataBean.getId();//将当前图层的id传递给主Fragment
                                 msg.arg2 = progress;
                                 EventBus.getDefault().post(msg);
