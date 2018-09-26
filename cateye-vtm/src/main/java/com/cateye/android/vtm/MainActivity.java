@@ -272,7 +272,20 @@ public class MainActivity extends SupportActivity implements TencentLocationList
                             public void onClick(CanDialog dialog, int checkItem, CharSequence text, boolean[] checkItems) {
                                 if (SystemConstant.CURRENT_PROJECTS_ID != projectList.get(checkItem).getId()) {
                                     //清空map中的layer
-                                    mainFragment.clearAllMapLayers();
+                                    if (mainFragment!=null){
+                                        mainFragment.clearAllMapLayers();
+                                        //清空当前已选中的图层
+                                        if (mainFragment.getLayerDataBeanList()!=null){
+                                            mainFragment.getLayerDataBeanList().clear();
+                                        }
+
+                                        //隐藏顶部时间序列选择控件
+                                        if (mainFragment.getMultiTimeLayerList()!=null){
+                                            mainFragment.getMultiTimeLayerList().clear();
+                                        }
+                                        popTo(CatEyeMainFragment.class, false);
+                                    }
+
                                     if (SystemConstant.CURRENT_PROJECTS_ID != -1) {
                                         RxToast.info("切换项目，自动清除当前地图所有图层");
                                     }

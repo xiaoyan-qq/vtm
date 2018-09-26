@@ -371,7 +371,7 @@ public class CatEyeMainFragment extends BaseFragment {
                     popChild();
                 }
             } else if (view.getId() == R.id.img_map_source_select) {//选择地图资源
-                if (layerDataBeanList != null) {
+                if (layerDataBeanList != null&&!layerDataBeanList.isEmpty()) {
                     showLayerManagerDialog(layerDataBeanList);
                 } else {
                     if (SystemConstant.CURRENT_PROJECTS_ID < 0) {//没有获取到当前作业的项目ID，提示用户
@@ -454,6 +454,8 @@ public class CatEyeMainFragment extends BaseFragment {
                                 }
                             }
                         });
+                    }else {
+                        RxToast.warning("当前项目没有可作业的图层，请联系系统管理员确认！");
                     }
                 }
             }
@@ -1121,5 +1123,13 @@ public class CatEyeMainFragment extends BaseFragment {
                 }
             }
         }
+    }
+
+    public List<MapSourceFromNet.DataBean> getLayerDataBeanList() {
+        return layerDataBeanList;
+    }
+
+    public List<MapSourceFromNet.DataBean> getMultiTimeLayerList() {
+        return multiTimeLayerList;
     }
 }
