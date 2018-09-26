@@ -13,6 +13,7 @@ import com.canyinghao.candialog.CanDialogInterface;
 import com.cateye.android.entity.DataFromNet;
 import com.cateye.android.entity.Project;
 import com.cateye.vtm.fragment.CatEyeMainFragment;
+import com.cateye.vtm.fragment.MultiTimeLayerSelectFragment;
 import com.cateye.vtm.util.SystemConstant;
 import com.lzy.okgo.OkGo;
 import com.lzy.okgo.convert.StringConvert;
@@ -272,18 +273,21 @@ public class MainActivity extends SupportActivity implements TencentLocationList
                             public void onClick(CanDialog dialog, int checkItem, CharSequence text, boolean[] checkItems) {
                                 if (SystemConstant.CURRENT_PROJECTS_ID != projectList.get(checkItem).getId()) {
                                     //清空map中的layer
-                                    if (mainFragment!=null){
+                                    if (mainFragment != null) {
                                         mainFragment.clearAllMapLayers();
                                         //清空当前已选中的图层
-                                        if (mainFragment.getLayerDataBeanList()!=null){
+                                        if (mainFragment.getLayerDataBeanList() != null) {
                                             mainFragment.getLayerDataBeanList().clear();
                                         }
 
                                         //隐藏顶部时间序列选择控件
-                                        if (mainFragment.getMultiTimeLayerList()!=null){
+                                        if (mainFragment.getMultiTimeLayerList() != null) {
                                             mainFragment.getMultiTimeLayerList().clear();
                                         }
-                                        popTo(CatEyeMainFragment.class, false);
+                                        if (mainFragment.findChildFragment(MultiTimeLayerSelectFragment.class) != null) {
+                                            mainFragment.popToChild(MultiTimeLayerSelectFragment.class, true);
+                                        }
+
                                     }
 
                                     if (SystemConstant.CURRENT_PROJECTS_ID != -1) {

@@ -371,7 +371,7 @@ public class CatEyeMainFragment extends BaseFragment {
                     popChild();
                 }
             } else if (view.getId() == R.id.img_map_source_select) {//选择地图资源
-                if (layerDataBeanList != null&&!layerDataBeanList.isEmpty()) {
+                if (layerDataBeanList != null && !layerDataBeanList.isEmpty()) {
                     showLayerManagerDialog(layerDataBeanList);
                 } else {
                     if (SystemConstant.CURRENT_PROJECTS_ID < 0) {//没有获取到当前作业的项目ID，提示用户
@@ -449,12 +449,12 @@ public class CatEyeMainFragment extends BaseFragment {
                                 if (dataBeanList != null) {
                                     layerDataBeanList = dataBeanList;
                                     showLayerManagerDialog(dataBeanList);
-                                }else {
+                                } else {
                                     RxToast.warning("当前项目没有可作业的图层，请联系系统管理员确认！");
                                 }
                             }
                         });
-                    }else {
+                    } else {
                         RxToast.warning("当前项目没有可作业的图层，请联系系统管理员确认！");
                     }
                 }
@@ -563,6 +563,8 @@ public class CatEyeMainFragment extends BaseFragment {
             } else {
                 loadRootFragment(R.id.layer_main_cateye_top, MultiTimeLayerSelectFragment.newInstance(bundle));
             }
+        } else {
+            popToChild(MultiTimeLayerSelectFragment.class, true);
         }
     }
 
@@ -624,9 +626,9 @@ public class CatEyeMainFragment extends BaseFragment {
                 //判断当前图层中是否已经存在选择的文件，如果存在，则不再添加
                 if (layerDataBeanList != null && !layerDataBeanList.isEmpty()) {
                     for (MapSourceFromNet.DataBean dataBean : layerDataBeanList) {
-                        if (dataBean.getMaps()!=null) {
-                            for (MapSourceFromNet.DataBean.MapsBean mapsBean:dataBean.getMaps()){
-                                if (file.equals(mapsBean.getHref())){
+                        if (dataBean.getMaps() != null) {
+                            for (MapSourceFromNet.DataBean.MapsBean mapsBean : dataBean.getMaps()) {
+                                if (file.equals(mapsBean.getHref())) {
                                     RxToast.info("已经添加过相同的图层！无法再次添加！");
                                     return;
                                 }
@@ -1106,15 +1108,15 @@ public class CatEyeMainFragment extends BaseFragment {
     }
 
     /**
+     * @param :
+     * @return :
      * @method : clearAllLayers
      * @Author : xiaoxiao
      * @Describe : 清空地图上所有图层
-     * @param :
-     * @return :
      * @Date : 2018/9/21
-    */
-    public void clearAllMapLayers(){
-        if (mMap!=null&&mMap.layers()!=null){
+     */
+    public void clearAllMapLayers() {
+        if (mMap != null && mMap.layers() != null) {
             Iterator mapLayerIterator = mMap.layers().iterator();
             while (mapLayerIterator.hasNext()) {
                 Layer layer = (Layer) mapLayerIterator.next();
