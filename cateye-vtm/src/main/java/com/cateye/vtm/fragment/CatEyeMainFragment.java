@@ -72,14 +72,8 @@ import org.oscim.layers.tile.vector.OsmTileLayer;
 import org.oscim.layers.tile.vector.VectorTileLayer;
 import org.oscim.layers.tile.vector.labeling.LabelLayer;
 import org.oscim.map.Map;
-import org.oscim.renderer.BitmapRenderer;
-import org.oscim.renderer.GLViewport;
 import org.oscim.renderer.bucket.RenderBuckets;
-import org.oscim.scalebar.CatEyeMapScaleBar;
-import org.oscim.scalebar.ImperialUnitAdapter;
-import org.oscim.scalebar.MapScaleBar;
 import org.oscim.scalebar.MapScaleBarLayer;
-import org.oscim.scalebar.MetricUnitAdapter;
 import org.oscim.test.JeoTest;
 import org.oscim.theme.ExternalRenderTheme;
 import org.oscim.theme.ThemeUtils;
@@ -161,6 +155,9 @@ public class CatEyeMainFragment extends BaseFragment {
     private LayerManagerAdapter layerManagerAdapter;//图层管理对应的adapter
     private List<MapSourceFromNet.DataBean> multiTimeLayerList;//记录拥有多个时序图层的list，如果存在，则需要提供切换时序的控件
 
+    //航区规划相关控件
+    private ImageView img_airplan_draw,img_airplan_param;
+
     @Override
     public int getFragmentLayoutId() {
         return R.layout.fragment_main_cateye;
@@ -168,7 +165,7 @@ public class CatEyeMainFragment extends BaseFragment {
 
     @Override
     public void initView(View rootView) {
-        mapView = (MapView) rootView.findViewById(R.id.mapView);
+        mapView = ((MainActivity)getActivity()).mapView;
 
         mMap = mapView.map();
 
@@ -191,7 +188,6 @@ public class CatEyeMainFragment extends BaseFragment {
         img_location = (ImageView) rootView.findViewById(R.id.img_location);
 
         initData();
-        initScaleBar();
         if (!EventBus.getDefault().isRegistered(this)) {
             EventBus.getDefault().register(this);
         }
@@ -257,6 +253,13 @@ public class CatEyeMainFragment extends BaseFragment {
                 colorPickerDialog.show();
             }
         });
+
+        //绘制航区相关按钮
+        img_airplan_draw=rootView.findViewById(R.id.img_chk_airplan_draw);
+        img_airplan_param=rootView.findViewById(R.id.img_chk_airplan_param);
+
+        img_airplan_draw.setOnClickListener(mainFragmentClickListener);
+        img_airplan_param.setOnClickListener(mainFragmentClickListener);
     }
 
     @Override
@@ -408,6 +411,16 @@ public class CatEyeMainFragment extends BaseFragment {
                         loadRootFragment(R.id.layer_main_cateye_bottom, com.cateye.vtm.fragment.DrawPointLinePolygonFragment.newInstance(lineBundle));
                     }
                 });
+            }else if (view.getId()==R.id.img_chk_airplan_draw){//绘制航区
+                if (!view.isSelected()){
+                    view.setSelected(true);
+                    //开始规划航区-绘制
+                }else {
+                    view.setSelected(false);
+                    //结束规划航区-结束
+                }
+            }else if (view.getId()==R.id.img_chk_airplan_param){//设置航线参数
+
             }
         }
     };
@@ -593,21 +606,6 @@ public class CatEyeMainFragment extends BaseFragment {
                 }
             }
         }
-    }
-
-    private void initScaleBar() {
-        //scale的图层到操作分组中
-        CatEyeMapScaleBar mMapScaleBar = new CatEyeMapScaleBar(mMap);
-        mMapScaleBar.setScaleBarMode(CatEyeMapScaleBar.ScaleBarMode.BOTH);
-        mMapScaleBar.setDistanceUnitAdapter(MetricUnitAdapter.INSTANCE);
-        mMapScaleBar.setSecondaryDistanceUnitAdapter(ImperialUnitAdapter.INSTANCE);
-        mMapScaleBar.setScaleBarPosition(MapScaleBar.ScaleBarPosition.BOTTOM_LEFT);
-
-        MapScaleBarLayer mapScaleBarLayer = new MapScaleBarLayer(mMap, mMapScaleBar);
-        BitmapRenderer renderer = mapScaleBarLayer.getRenderer();
-        renderer.setPosition(GLViewport.Position.BOTTOM_LEFT);
-        renderer.setOffset(5 * CanvasAdapter.getScale(), 0);
-        mMap.layers().add(mapScaleBarLayer, LAYER_GROUP_ENUM.OPERTOR_GROUP.orderIndex);
     }
 
     @Override

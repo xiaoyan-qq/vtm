@@ -36,10 +36,20 @@ import com.yanzhenjie.permission.Rationale;
 import com.yanzhenjie.permission.RequestExecutor;
 
 import org.greenrobot.eventbus.EventBus;
+import org.oscim.android.MapView;
 import org.oscim.android.filepicker.FilePicker;
 import org.oscim.android.filepicker.FilterByFileExtension;
 import org.oscim.android.filepicker.ValidMapFile;
 import org.oscim.android.filepicker.ValidRenderTheme;
+import org.oscim.backend.CanvasAdapter;
+import org.oscim.map.Map;
+import org.oscim.renderer.BitmapRenderer;
+import org.oscim.renderer.GLViewport;
+import org.oscim.scalebar.CatEyeMapScaleBar;
+import org.oscim.scalebar.ImperialUnitAdapter;
+import org.oscim.scalebar.MapScaleBar;
+import org.oscim.scalebar.MapScaleBarLayer;
+import org.oscim.scalebar.MetricUnitAdapter;
 
 import java.util.List;
 
@@ -54,6 +64,9 @@ import me.yokeyword.fragmentation.SupportActivity;
 public class MainActivity extends SupportActivity implements TencentLocationListener {
     private TencentLocation currentLocation;
     private CatEyeMainFragment mainFragment;
+
+    public MapView mapView;//地图控件
+    public Map mMap;//地图
 
     //地图layer的分组
     public enum LAYER_GROUP_ENUM {
@@ -84,6 +97,12 @@ public class MainActivity extends SupportActivity implements TencentLocationList
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        mapView = (MapView) findViewById(R.id.mapView);
+
+        mMap = mapView.map();
+        initScaleBar();
+
 
         //启动fragment，显示地图界面
 //        Rigger.getRigger(this).startFragment(CatEyeMainFragment.newInstance(new Bundle()));
@@ -319,5 +338,20 @@ public class MainActivity extends SupportActivity implements TencentLocationList
                 }
             }
         });
+    }
+
+    private void initScaleBar() {
+        //scale的图层到操作分组中
+        CatEyeMapScaleBar mMapScaleBar = new CatEyeMapScaleBar(mMap);
+        mMapScaleBar.setScaleBarMode(CatEyeMapScaleBar.ScaleBarMode.BOTH);
+        mMapScaleBar.setDistanceUnitAdapter(MetricUnitAdapter.INSTANCE);
+        mMapScaleBar.setSecondaryDistanceUnitAdapter(ImperialUnitAdapter.INSTANCE);
+        mMapScaleBar.setScaleBarPosition(MapScaleBar.ScaleBarPosition.BOTTOM_LEFT);
+
+        MapScaleBarLayer mapScaleBarLayer = new MapScaleBarLayer(mMap, mMapScaleBar);
+        BitmapRenderer renderer = mapScaleBarLayer.getRenderer();
+        renderer.setPosition(GLViewport.Position.BOTTOM_LEFT);
+        renderer.setOffset(5 * CanvasAdapter.getScale(), 0);
+        mMap.layers().add(mapScaleBarLayer, LAYER_GROUP_ENUM.OPERTOR_GROUP.orderIndex);
     }
 }
