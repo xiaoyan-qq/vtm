@@ -391,13 +391,13 @@ public class ContourMPChartFragment extends BaseDrawFragment {
             CatEyeMapManager.getInstance(getActivity()).getCatEyeMap().layers().remove(currentChartLine);
         }
         clearMapOverlayer();
-        //通知主界面隐藏部分重新显示
-        setMainFragmentAreaVisible(CatEyeMainFragment.BUTTON_AREA.ALL, true);
     }
 
     @Override
     public void onDetach() {
         super.onDetach();
+        //通知主界面隐藏部分重新显示
+        setMainFragmentAreaVisible(CatEyeMainFragment.BUTTON_AREA.ALL, true);
     }
 
     private class MapEventsReceiver extends Layer implements GestureListener {

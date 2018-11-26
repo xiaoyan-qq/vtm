@@ -200,15 +200,19 @@ public class MainActivity extends SupportActivity implements TencentLocationList
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if (keyCode == KeyEvent.KEYCODE_BACK && event.getAction() == KeyEvent.ACTION_DOWN) {
-            if (System.currentTimeMillis() - firstTime > 2000) {
-                RxToast.info("再按一次退出程序");
-                firstTime = System.currentTimeMillis();
-            } else {
-                finish();
-                System.exit(0);
+        System.out.print(((CatEyeMainFragment) getTopFragment()).getTopFragment().getClass());
+        System.out.print(((CatEyeMainFragment) getTopFragment()).getTopChildFragment());
+        if (getTopFragment() != null && getTopFragment() instanceof CatEyeMainFragment&&((CatEyeMainFragment) getTopFragment()).getTopChildFragment() == null) {//如果当前主界面是最后一个主Fragment，则调用双击退出程序的方法
+            if (keyCode == KeyEvent.KEYCODE_BACK && event.getAction() == KeyEvent.ACTION_DOWN) {
+                if (System.currentTimeMillis() - firstTime > 2000) {
+                    RxToast.info("再按一次退出程序");
+                    firstTime = System.currentTimeMillis();
+                } else {
+                    finish();
+                    System.exit(0);
+                }
+                return true;
             }
-            return true;
         }
         return super.onKeyDown(keyCode, event);
     }

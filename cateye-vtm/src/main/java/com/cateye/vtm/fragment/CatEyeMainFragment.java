@@ -148,6 +148,7 @@ public class CatEyeMainFragment extends BaseFragment {
     private ImageView img_contour_selector;//加载等高线数据的按钮
     private ImageView img_change_contour_color;//修改等高线地图显示颜色的按钮
     private ImageView img_select_project;//选择当前项目的按钮
+    private ImageView img_chk_draw_airplan/*绘制航区*/, img_chk_set_airplan/*设置航区*/;
     private List<ImageView> chkDrawPointLinePolygonList;
     private FrameLayout layer_fragment;//用来显示fragment的布局文件
 //    private java.util.Map<String, MapSourceFromNet.DataBean> netDataSourceMap;//用来记录用户勾选了哪些网络数据显示
@@ -177,6 +178,10 @@ public class CatEyeMainFragment extends BaseFragment {
         chk_draw_point = (ImageView) rootView.findViewById(R.id.chk_draw_vector_point);
         chk_draw_line = (ImageView) rootView.findViewById(R.id.chk_draw_vector_line);
         chk_draw_polygon = (ImageView) rootView.findViewById(R.id.chk_draw_vector_polygon);
+
+        img_chk_draw_airplan = rootView.findViewById(R.id.chk_draw_airplan);
+        img_chk_set_airplan = rootView.findViewById(R.id.chk_set_airplan);
+
         img_select_project = rootView.findViewById(R.id.img_project);
         chkDrawPointLinePolygonList = new ArrayList<>();
         chkDrawPointLinePolygonList.add(chk_draw_point);
@@ -289,6 +294,9 @@ public class CatEyeMainFragment extends BaseFragment {
         chk_draw_point.setOnClickListener(mainFragmentClickListener);
         chk_draw_line.setOnClickListener(mainFragmentClickListener);
         chk_draw_polygon.setOnClickListener(mainFragmentClickListener);
+
+        img_chk_draw_airplan.setOnClickListener(mainFragmentClickListener);
+        img_chk_set_airplan.setOnClickListener(mainFragmentClickListener);
 
         img_map_source_selector.setOnClickListener(mainFragmentClickListener);
         img_contour_selector.setOnClickListener(mainFragmentClickListener);//选择等高线文件并显示
@@ -408,6 +416,14 @@ public class CatEyeMainFragment extends BaseFragment {
                         loadRootFragment(R.id.layer_main_cateye_bottom, com.cateye.vtm.fragment.DrawPointLinePolygonFragment.newInstance(lineBundle));
                     }
                 });
+            }else if (view.getId()==R.id.chk_draw_airplan){//绘制航区
+                if (view.isSelected()) {
+                    view.setSelected(false);//设置为未选中状态
+                } else {
+                    view.setSelected(true);//设置为选中状态，启动绘制fragment，右侧面板显示开始、上一笔、结束按钮
+                }
+            }else if (view.getId()==R.id.chk_set_airplan){//设置航区参数
+
             }
         }
     };
@@ -1079,23 +1095,36 @@ public class CatEyeMainFragment extends BaseFragment {
     private void hideOrShowButtonArea(boolean isVisible, BUTTON_AREA button_area) {
         switch (button_area) {
             case ALL:
-                rootView.findViewById(R.id.layer_main_fragment_right).setVisibility(isVisible ? View.VISIBLE : View.GONE);
+                rootView.findViewById(R.id.layer_main_fragment_bottom).setVisibility(isVisible ? View.VISIBLE : View.GONE);
                 rootView.findViewById(R.id.img_location).setVisibility(isVisible ? View.VISIBLE : View.GONE);
                 break;
             case LOCATION:
                 rootView.findViewById(R.id.img_location).setVisibility(isVisible ? View.VISIBLE : View.GONE);
                 break;
-            case BOTTOM_LEFT:
-                rootView.findViewById(R.id.img_location).setVisibility(isVisible ? View.VISIBLE : View.GONE);
+            case LEFT:
+                rootView.findViewById(R.id.layer_main_fragment_left).setVisibility(isVisible ? View.VISIBLE : View.GONE);
                 break;
-            case BOTTOM_RIGHT:
+            case LEFT_BOTTOM:
+                rootView.findViewById(R.id.layer_main_fragment_left_bottom).setVisibility(isVisible ? View.VISIBLE : View.GONE);
+                break;
+            case BOTTOM:
+                rootView.findViewById(R.id.layer_main_fragment_bottom).setVisibility(isVisible ? View.VISIBLE : View.GONE);
+                break;
+            case BOTTOM_CENTER:
+                rootView.findViewById(R.id.layer_main_fragment_center_bottom).setVisibility(isVisible ? View.VISIBLE : View.GONE);
+                break;
+            case RIGHT:
+                rootView.findViewById(R.id.layer_main_fragment_right).setVisibility(isVisible ? View.VISIBLE : View.GONE);
+                break;
+            case RIGHT_BOTTOM:
                 rootView.findViewById(R.id.layer_main_fragment_right_bottom).setVisibility(isVisible ? View.VISIBLE : View.GONE);
                 break;
+
         }
     }
 
     public enum BUTTON_AREA {
-        ALL/*所有按钮*/, LOCATION/*定位按钮*/, BOTTOM_LEFT/*左下角*/, BOTTOM_RIGHT/*右下角*/
+        ALL/*所有按钮*/, LOCATION/*定位按钮*/, LEFT/*左部*/, LEFT_BOTTOM/*左下角*/, BOTTOM/*底部*/, BOTTOM_CENTER/*底部居中*/, RIGHT/*右部*/, RIGHT_BOTTOM/*右下部*/
     }
 
     @Override

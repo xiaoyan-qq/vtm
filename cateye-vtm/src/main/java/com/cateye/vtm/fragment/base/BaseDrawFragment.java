@@ -14,6 +14,10 @@ import com.vtm.library.layers.PolygonLayer;
 import org.oscim.backend.canvas.Bitmap;
 import org.oscim.backend.canvas.Color;
 import org.oscim.core.GeoPoint;
+import org.oscim.event.Gesture;
+import org.oscim.event.GestureListener;
+import org.oscim.event.MotionEvent;
+import org.oscim.layers.Layer;
 import org.oscim.layers.marker.ItemizedLayer;
 import org.oscim.layers.marker.MarkerItem;
 import org.oscim.layers.marker.MarkerSymbol;
@@ -211,6 +215,38 @@ public class BaseDrawFragment extends BaseFragment {
         }
         if (map != null) {
             markerLayer.map().updateMap(true);
+        }
+    }
+
+    public class MapEventsReceiver extends Layer implements GestureListener {
+
+        public MapEventsReceiver(Map map) {
+            super(map);
+        }
+
+        @Override
+        public boolean onGesture(Gesture g, MotionEvent e) {
+            if (g instanceof Gesture.Tap) {
+                GeoPoint p = mMap.viewport().fromScreenPoint(e.getX(), e.getY());
+                DRAW_STATE currentState = getCurrentDrawState();
+
+                if (currentState != DRAW_STATE.DRAW_NONE) {//如果当前是绘制模式，则自动添加marker
+                    markerLayer.addItem(new MarkerItem("", "", p));
+                    markerLayer.update();
+                    //如果当前是绘制线模式，则增加pathLayer
+                    if (currentState == DRAW_STATE.DRAW_LINE) {
+                        polylineOverlay.addPoint(p);
+                        redrawPolyline(polylineOverlay);
+                    }
+                    if (currentState == DRAW_STATE.DRAW_POLYGON) {
+                        polygonOverlay.addPoint(p);
+                        redrawPolygon(polygonOverlay);
+                    }
+                    markerLayer.map().updateMap(true);
+                    return true;
+                }
+            }
+            return false;
         }
     }
 }
