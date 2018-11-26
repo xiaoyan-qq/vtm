@@ -416,13 +416,25 @@ public class CatEyeMainFragment extends BaseFragment {
                         loadRootFragment(R.id.layer_main_cateye_bottom, com.cateye.vtm.fragment.DrawPointLinePolygonFragment.newInstance(lineBundle));
                     }
                 });
-            }else if (view.getId()==R.id.chk_draw_airplan){//绘制航区
-                if (view.isSelected()) {
-                    view.setSelected(false);//设置为未选中状态
-                } else {
+            } else if (view.getId() == R.id.chk_draw_airplan) {//绘制航区
+                if (!view.isSelected()) {
                     view.setSelected(true);//设置为选中状态，启动绘制fragment，右侧面板显示开始、上一笔、结束按钮
+                    //自动弹出绘制点线面的fragment
+                    AirPlanDrawFragment fragment = findFragment(AirPlanDrawFragment.class);
+                    //自动弹出绘制点线面的fragment
+                    Bundle polygonBundle = new Bundle();
+                    polygonBundle.putSerializable(com.cateye.vtm.fragment.DrawPointLinePolygonFragment.DRAW_STATE.class.getSimpleName(), com.cateye.vtm.fragment.DrawPointLinePolygonFragment.DRAW_STATE.DRAW_POLYGON);
+                    if (fragment != null) {
+                        fragment.setArguments(polygonBundle);
+                        start(fragment);
+                    } else {
+                        loadRootFragment(R.id.layer_main_fragment_right_bottom, AirPlanDrawFragment.newInstance(polygonBundle));
+                    }
+                } else {
+                    view.setSelected(false);//设置为未选中状态
+                    popChild();//弹出绘制界面
                 }
-            }else if (view.getId()==R.id.chk_set_airplan){//设置航区参数
+            } else if (view.getId() == R.id.chk_set_airplan) {//设置航区参数
 
             }
         }
