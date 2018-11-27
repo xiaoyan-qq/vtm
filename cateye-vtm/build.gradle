@@ -81,12 +81,7 @@ dependencies {
     //动态获取权限的三方库
     implementation 'com.yanzhenjie:permission:2.0.0-rc3'
 
-    //常用工具箱 https://github.com/l123456789jy/Lazy
-    compile 'com.github.lazylibrary:lazylibrary:1.0.2'
-
-
     //okhttp-OkGo
-
     // https://github.com/jeasonlzy/okhttp-OkGo/wiki
     compile 'com.lzy.net:okgo:3.0.4'
 

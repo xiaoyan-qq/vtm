@@ -30,6 +30,7 @@ public abstract class Layer {
     private boolean mEnabled = true;
     private EnableHandler mHandler;
     protected final Map mMap;
+    protected String mName;
 
     protected LayerRenderer mRenderer;
 
@@ -70,5 +71,13 @@ public abstract class Layer {
 
     public interface EnableHandler {
         void changed(boolean enabled);
+    }
+
+    public String getName() {
+        return mName;
+    }
+
+    public void setName(String name) {
+        this.mName = name;
     }
 }

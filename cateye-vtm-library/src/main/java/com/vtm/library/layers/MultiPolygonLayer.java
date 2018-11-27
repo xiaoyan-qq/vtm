@@ -1,12 +1,16 @@
 package com.vtm.library.layers;
 
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.Polygon;
+import com.vtm.library.tools.GeometryTools;
+
 import org.oscim.core.GeoPoint;
 import org.oscim.layers.vector.PathLayer;
 import org.oscim.layers.vector.geometries.PolygonDrawable;
 import org.oscim.layers.vector.geometries.Style;
 import org.oscim.map.Map;
-import org.oscim.utils.geom.GeometryUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -19,18 +23,24 @@ public class MultiPolygonLayer extends PathLayer {
     public MultiPolygonLayer(Map map, Style style) {
         super(map, style);
         mStyle = style;
+        polygonDrawableList=new ArrayList<>();
     }
 
-    public MultiPolygonLayer(Map map, int lineColor, float lineWidth) {
+    public MultiPolygonLayer(Map map, Style style, String name) {
+        this(map, style);
+        this.mName = name;
+    }
+
+    public MultiPolygonLayer(Map map, int lineColor, float lineWidth, int fillColor, float fillAlpha) {
         this(map, Style.builder()
                 .fixed(true)
                 .strokeColor(lineColor)
-                .strokeWidth(lineWidth)
+                .strokeWidth(lineWidth).fillColor(fillColor).fillAlpha(fillAlpha)
                 .build());
     }
 
-    public MultiPolygonLayer(Map map, int lineColor) {
-        this(map, lineColor, 2);
+    public MultiPolygonLayer(Map map, int lineColor, int fillColor, int fillAlpha) {
+        this(map, lineColor, 0.5f, fillColor, fillAlpha);
     }
 
     /**
@@ -65,12 +75,77 @@ public class MultiPolygonLayer extends PathLayer {
         }
     }
 
-    public void removePolygonDrawable(List<GeoPoint> geoPointList){
+    public void removePolygonDrawable(List<GeoPoint> geoPointList) {
+        Polygon polygon = GeometryTools.createPolygon(geoPointList);
+        removePolygonDrawable(polygon);
+    }
+
+    public void removePolygonDrawable(String polygonStr) {
+        Polygon polygon = (Polygon) GeometryTools.createGeometry(polygonStr);
+        removePolygonDrawable(polygon);
+    }
+
+    public void removePolygonDrawable(Geometry polygon) {
         if (polygonDrawableList != null && !polygonDrawableList.isEmpty()) {
-            GeometryUtils.
-            for (PolygonDrawable polygonDrawable:polygonDrawableList){
-                re
+            for (PolygonDrawable polygonDrawable : polygonDrawableList) {
+                if (polygonDrawable.getGeometry().equals(polygon)) {
+                    remove(polygonDrawable);
+                }
             }
         }
     }
+
+    public void addPolygonDrawable(List<GeoPoint> pointList) {
+        if (polygonDrawableList != null) {
+            if (pointList == null || pointList.size() < 3) {
+                return;
+            }
+            if (pointList != null && pointList.get(0) != pointList.get(pointList.size() - 1)) {
+                pointList.add(pointList.get(0));
+            }
+            synchronized (this) {
+                PolygonDrawable polygonDrawable = new PolygonDrawable(pointList, mStyle);
+                add(polygonDrawable);
+                polygonDrawableList.add(polygonDrawable);
+            }
+            mWorker.submit(0);
+        }
+    }
+
+    public void addPolygonDrawable(Polygon polygon){
+        List<GeoPoint> geoPointList=GeometryTools.getGeoPoints(polygon.toString());
+        addPolygonDrawable(geoPointList);
+    }
+
+    public List<Polygon> getAllPolygonList() {
+        if (polygonDrawableList != null && !polygonDrawableList.isEmpty()) {
+            List<Polygon> polygonList = new ArrayList<>();
+            for (PolygonDrawable polygonDrawable : polygonDrawableList) {
+                polygonList.add((Polygon) GeometryTools.createGeometry(polygonDrawable.getGeometry().toString()));
+            }
+            return polygonList;
+        }
+        return null;
+    }
+
+    public List<List<GeoPoint>> getAllPolygonGeoPointList() {
+        List<Polygon> polygonList = getAllPolygonList();
+        if (polygonList != null) {
+            List<List<GeoPoint>> geopointList = new ArrayList<>();
+            for (Polygon polygon : polygonList) {
+                geopointList.add(GeometryTools.getGeoPoints(polygon.toString()));
+            }
+            return geopointList;
+        }
+        return null;
+    }
+
+    public List<PolygonDrawable> getPolygonDrawableList() {
+        return polygonDrawableList;
+    }
+
+    public void setPolygonDrawableList(List<PolygonDrawable> polygonDrawableList) {
+        this.polygonDrawableList = polygonDrawableList;
+    }
+
 }

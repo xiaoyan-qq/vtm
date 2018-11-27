@@ -135,28 +135,6 @@
                     android:text="@null"
                     android:visibility="gone" />
 
-                <!--绘制航区形状的开关-->
-                <ImageView
-                    android:id="@+id/img_chk_airplan_draw"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginLeft="@dimen/button_padding_default"
-                    android:background="@drawable/selector_bg_blue_frame_white_bg_4_radius"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:padding="@dimen/button_padding_default"
-                    android:src="@drawable/selector_vector_polyline" />
-                <!--航区参数设置按钮的开关-->
-                <ImageView
-                    android:id="@+id/img_chk_airplan_param"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginLeft="@dimen/button_padding_default"
-                    android:background="@drawable/selector_bg_blue_frame_white_bg_4_radius"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:padding="@dimen/button_padding_default"
-                    android:src="@drawable/selector_vector_polyline" />
             </LinearLayout>
         </RelativeLayout>
 
@@ -228,12 +206,9 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_above="@id/img_save_airplan"
+                android:paddingBottom="@dimen/button_padding_default"
                 android:orientation="vertical">
 
-
-                <View
-                    android:layout_width="0dp"
-                    android:layout_height="@dimen/activity_vertical_margin"></View>
             </LinearLayout>
 
 

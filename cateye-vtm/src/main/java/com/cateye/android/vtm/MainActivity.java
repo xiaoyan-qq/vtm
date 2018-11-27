@@ -36,6 +36,7 @@ import com.yanzhenjie.permission.Rationale;
 import com.yanzhenjie.permission.RequestExecutor;
 
 import org.greenrobot.eventbus.EventBus;
+import org.oscim.android.MapView;
 import org.oscim.android.filepicker.FilePicker;
 import org.oscim.android.filepicker.FilterByFileExtension;
 import org.oscim.android.filepicker.ValidMapFile;
@@ -54,6 +55,7 @@ import me.yokeyword.fragmentation.SupportActivity;
 public class MainActivity extends SupportActivity implements TencentLocationListener {
     private TencentLocation currentLocation;
     private CatEyeMainFragment mainFragment;
+    private MapView mapView;
 
     //地图layer的分组
     public enum LAYER_GROUP_ENUM {
@@ -84,6 +86,8 @@ public class MainActivity extends SupportActivity implements TencentLocationList
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        mapView = (MapView)findViewById(R.id.mapView);
 
         //启动fragment，显示地图界面
 //        Rigger.getRigger(this).startFragment(CatEyeMainFragment.newInstance(new Bundle()));
@@ -323,5 +327,9 @@ public class MainActivity extends SupportActivity implements TencentLocationList
                 }
             }
         });
+    }
+
+    public MapView getMapView() {
+        return mapView;
     }
 }

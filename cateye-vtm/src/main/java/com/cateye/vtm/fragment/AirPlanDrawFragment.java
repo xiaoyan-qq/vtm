@@ -10,19 +10,29 @@ import com.cateye.android.vtm.R;
 import com.cateye.vtm.fragment.base.BaseDrawFragment;
 import com.cateye.vtm.fragment.base.BaseFragment;
 import com.cateye.vtm.util.CatEyeMapManager;
+import com.cateye.vtm.util.SystemConstant;
+import com.vondear.rxtool.view.RxToast;
+import com.vtm.library.layers.MultiPolygonLayer;
+import com.vtm.library.tools.OverlayerManager;
+
+import org.oscim.backend.canvas.Color;
+import org.oscim.map.Map;
 
 /**
  * Created by xiaoxiao on 2018/8/31.
  */
 
 public class AirPlanDrawFragment extends BaseDrawFragment {
+    private Map mMap;
+
     private ImageView img_airplan_draw/*绘制按钮*/, img_airplan_previous/*上一笔*/, img_airplan_clear/*清空*/;
     protected MapEventsReceiver mapEventsReceiver;//用户操作的回调
+    private MultiPolygonLayer multiPolygonLayer;//用于展示用户绘制的polygon
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        this.mMap = CatEyeMapManager.getMapView().map();
     }
 
     public static BaseFragment newInstance(Bundle bundle) {
@@ -50,10 +60,21 @@ public class AirPlanDrawFragment extends BaseDrawFragment {
                     view.setSelected(true);
                     currentDrawState = DRAW_STATE.DRAW_POLYGON;
                 } else {
-                    //结束绘制
-                    view.setSelected(false);
-                    currentDrawState = DRAW_STATE.DRAW_NONE;
-                    //绘制结束，将绘制的数据添加到airplan的图层内
+                    if (polygonOverlay.getPoints()==null||polygonOverlay.getPoints().isEmpty()){
+                        view.setSelected(false);
+                        RxToast.warning("没有绘制任何内容！");
+                        return;
+                    }
+                    if (polygonOverlay.getPoints()==null||polygonOverlay.getPoints().size()>=3){
+                        //结束绘制
+                        view.setSelected(false);
+                        currentDrawState = DRAW_STATE.DRAW_NONE;
+                        //绘制结束，将绘制的数据添加到airplan的图层内
+                        multiPolygonLayer.addPolygonDrawable(polygonOverlay.getPoints());
+                    }else {
+                        RxToast.warning("绘制的点无法组成面！");
+                        return;
+                    }
                 }
             }
         });
@@ -61,5 +82,22 @@ public class AirPlanDrawFragment extends BaseDrawFragment {
         //添加一个操作图层，监听用户在地图上的点击事件
         mapEventsReceiver = new MapEventsReceiver(CatEyeMapManager.getInstance(getActivity()).getCatEyeMap());
         CatEyeMapManager.getInstance(getActivity()).getCatEyeMap().layers().add(mapEventsReceiver, MainActivity.LAYER_GROUP_ENUM.OPERTOR_GROUP.orderIndex);
+
+        //如果当前地图不存在multiPolygon的图层，则自动生成添加到地图上
+        if (OverlayerManager.getInstance(mMap).getLayerByName(SystemConstant.AIR_PLAN_MULTI_POLYGON_NAME) == null) {
+            //向主界面添加polygon显示的overlayer
+            int c = Color.GREEN;
+            org.oscim.layers.vector.geometries.Style polygonStyle = org.oscim.layers.vector.geometries.Style.builder()
+                    .stippleColor(c)
+                    .stipple(24)
+                    .stippleWidth(1)
+                    .strokeWidth(1)
+                    .strokeColor(c).fillColor(c).fillAlpha(0.35f)
+                    .fixed(true)
+                    .randomOffset(false)
+                    .build();
+            multiPolygonLayer = new MultiPolygonLayer(mMap, polygonStyle, SystemConstant.AIR_PLAN_MULTI_POLYGON_NAME);
+            mMap.layers().add(multiPolygonLayer);
+        }
     }
 }

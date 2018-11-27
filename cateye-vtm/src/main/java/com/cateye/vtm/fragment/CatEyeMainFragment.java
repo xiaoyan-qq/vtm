@@ -169,8 +169,7 @@ public class CatEyeMainFragment extends BaseFragment {
 
     @Override
     public void initView(View rootView) {
-        mapView = (MapView) rootView.findViewById(R.id.mapView);
-
+        this.mapView = ((MainActivity) getActivity()).getMapView();
         mMap = mapView.map();
 
         layer_fragment = (FrameLayout) rootView.findViewById(R.id.layer_main_cateye_bottom);
