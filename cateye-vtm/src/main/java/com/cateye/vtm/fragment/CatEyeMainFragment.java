@@ -38,12 +38,14 @@ import com.lzy.okgo.convert.StringConvert;
 import com.lzy.okgo.model.Response;
 import com.lzy.okrx2.adapter.ObservableResponse;
 import com.tencent.map.geolocation.TencentLocation;
+import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vondear.rxtool.RxLogTool;
 import com.vondear.rxtool.view.RxToast;
 import com.vondear.rxui.view.dialog.RxDialog;
 import com.vondear.rxui.view.dialog.RxDialogLoading;
 import com.vtm.library.layers.MultiPolygonLayer;
+import com.vtm.library.tools.GeometryTools;
 import com.vtm.library.tools.OverlayerManager;
 
 import org.greenrobot.eventbus.EventBus;
@@ -440,30 +442,30 @@ public class CatEyeMainFragment extends BaseFragment {
                     popChild();//弹出绘制界面
                 }
             } else if (view.getId() == R.id.chk_set_airplan) {//设置航区参数
-                if (!view.isSelected()){
+                if (!view.isSelected()) {
                     //首先判断当前图层列表中是否存在航区显示的图层
                     MultiPolygonLayer airplanDrawOverlayer = (MultiPolygonLayer) OverlayerManager.getInstance(mMap).getLayerByName(SystemConstant.AIR_PLAN_MULTI_POLYGON_DRAW);
-                    if (airplanDrawOverlayer==null){
+                    if (airplanDrawOverlayer == null) {
                         RxToast.warning("当前没有需要编辑参数的航区面");
                         return;
                     }
 
                     view.setSelected(true);
                     if (airplanDrawOverlayer != null) {
-                        if (OverlayerManager.getInstance(mMap).getLayerByName(SystemConstant.AIR_PLAN_MULTI_POLYGON_PARAM)==null){
+                        if (OverlayerManager.getInstance(mMap).getLayerByName(SystemConstant.AIR_PLAN_MULTI_POLYGON_PARAM) == null) {
                             //开始编辑参数，增加编辑参数layer，和用户点击layer
                             mMap.layers().add(new MultiPolygonLayer(mMap, Color.MAGENTA, Color.MAGENTA, Color.MAGENTA, SystemConstant.AIR_PLAN_MULTI_POLYGON_PARAM));
-                            mMap.layers().add(new MapEventsReceiver(mMap,SystemConstant.AIR_PLAN_MULTI_POLYGON_PARAM_EVENT));
+                            mMap.layers().add(new MapEventsReceiver(mMap, SystemConstant.AIR_PLAN_MULTI_POLYGON_PARAM_EVENT));
                         }
                     }
-                }else {
+                } else {
                     view.setSelected(false);
                     //判断当前参数设置图层是否有polygon，如果存在，则弹出对话框提示用户设置参数
-                    MultiPolygonLayer airplanParamOverlayer= (MultiPolygonLayer) OverlayerManager.getInstance(mMap).getLayerByName(SystemConstant.AIR_PLAN_MULTI_POLYGON_PARAM);
-                    if (airplanParamOverlayer==null||airplanParamOverlayer.getAllPolygonList()==null||airplanParamOverlayer.getAllPolygonList().isEmpty()){
+                    MultiPolygonLayer airplanParamOverlayer = (MultiPolygonLayer) OverlayerManager.getInstance(mMap).getLayerByName(SystemConstant.AIR_PLAN_MULTI_POLYGON_PARAM);
+                    if (airplanParamOverlayer == null || airplanParamOverlayer.getAllPolygonList() == null || airplanParamOverlayer.getAllPolygonList().isEmpty()) {
                         RxToast.warning("没有需要设置参数的");
-                    }else {
-                        List<Polygon> polygonList=airplanParamOverlayer.getAllPolygonList();
+                    } else {
+                        List<Polygon> polygonList = airplanParamOverlayer.getAllPolygonList();
                         //弹出参数设置对话框
                     }
                 }
@@ -1219,15 +1221,51 @@ public class CatEyeMainFragment extends BaseFragment {
 
         @Override
         public boolean onGesture(Gesture g, MotionEvent e) {
-            if (img_chk_set_airplan.isSelected()&&g instanceof Gesture.Tap) {
+            if (img_chk_set_airplan.isSelected() && g instanceof Gesture.Tap) {
                 GeoPoint p = mMap.viewport().fromScreenPoint(e.getX(), e.getY());
-
+                Point geometryPoint = (Point) GeometryTools.createGeometry(p);
                 //获取当前绘制layer的所有polygon，检查是否与当前点击点位交叉
-                MultiPolygonLayer drawPolygonLayer= (MultiPolygonLayer) OverlayerManager.getInstance(mMap).getLayerByName(SystemConstant.AIR_PLAN_MULTI_POLYGON_DRAW);
-                List<Polygon> drawPolygonList=drawPolygonLayer.getAllPolygonList();
-                if (drawPolygonList!=null&&!drawPolygonList.isEmpty()){
-                    List<Polygon> tapPolygonList=new ArrayList<>();
-                    for (Polygon polygon:drawPolygonList){
+                MultiPolygonLayer drawPolygonLayer = (MultiPolygonLayer) OverlayerManager.getInstance(mMap).getLayerByName(SystemConstant.AIR_PLAN_MULTI_POLYGON_DRAW);
+                List<Polygon> drawPolygonList = drawPolygonLayer.getAllPolygonList();
+                if (drawPolygonList != null && !drawPolygonList.isEmpty()) {
+                    List<Polygon> tapPolygonList = new ArrayList<>();
+                    for (Polygon polygon : drawPolygonList) {
+                        if (polygon.contains(geometryPoint)) {//如果点击的点位在polygon的位置上，则认为需要操作当前polygon
+                            tapPolygonList.add(polygon);
+                        }
+                    }
+
+                    if (tapPolygonList != null && !tapPolygonList.isEmpty()) {
+                        MultiPolygonLayer paramPolygonLayer = (MultiPolygonLayer) OverlayerManager.getInstance(mMap).getLayerByName(SystemConstant.AIR_PLAN_MULTI_POLYGON_PARAM);
+                        List<Polygon> paramPolygonList = paramPolygonLayer.getAllPolygonList();
+                        if (paramPolygonList != null && !paramPolygonList.isEmpty()) {
+                            //第一遍遍历-添加polygon：用户有选中的polygon，遍历此列表，如果没有被绘制到参数设置图层，则添加到该图层，如果存在，则从该图层删除
+                            a:
+                            for (Polygon tapPolygon : tapPolygonList) {
+                                for (Polygon paramPolygon : paramPolygonList) {
+                                    //如果已经存在点击对应的polygon，则存在此polygon，跳到下一个polygon判断
+                                    if (paramPolygonLayer.equals(tapPolygon)) {
+                                        continue a;
+                                    }
+                                }
+                                //如果穷举完所有的参数设置中的polygon
+                                paramPolygonLayer.addPolygonDrawable(tapPolygon);
+                                return true;
+                            }
+                            //第二遍遍历-移除polygon
+                            for (Polygon tapPolygon : tapPolygonList) {
+                                for (Polygon paramPolygon : paramPolygonList) {
+                                    //如果已经存在点击对应的polygon，则存在此polygon，跳到下一个polygon判断
+                                    if (paramPolygonLayer.equals(tapPolygon)) {
+                                        paramPolygonLayer.removePolygonDrawable(paramPolygon);
+                                        return true;
+                                    }
+                                }
+                            }
+                        } else {//不存在参数设置polygon，则直接添加第一个点击的polygon到参数设置layer上
+                            paramPolygonLayer.addPolygonDrawable(tapPolygonList.get(0));
+                        }
+
                     }
                 }
 

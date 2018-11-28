@@ -47,14 +47,21 @@ dependencies {
     implementation 'com.android.support:support-v4:27.1.1'
     testImplementation 'junit:junit:4.12'
 
-    //android分包工具
-    compile 'com.android.support:multidex:1.0.2'
+    //    androidTestImplementation 'com.android.support.test:runner:1.0.1'
 
-    //androidTestImplementation 'com.android.support.test:runner:1.0.1'
-
-    //androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
+    //    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
 
     //各种通用工具类
+
+    // //https://github.com/yanzhenjie/NoFragment======fragment管理第三方框架
+
+    //compile 'com.yanzhenjie:fragment:1.0.1'//Fragment的第三方管理框架
+
+    //https://github.com/JustKiddingBaby/FragmentRigger/wiki/%E9%A6%96%E9%A1%B5
+
+    //    compile 'com.justkiddingbaby:fragment-rigger:1.2.1'
+
+    //Fragment的第三方管理框架
 
     //https://github.com/vondear/RxTools
     //基础工具库
@@ -71,14 +78,8 @@ dependencies {
     implementation 'io.reactivex.rxjava2:rxjava:2.x.x'
 
     //https://github.com/yanzhenjie/AndPermission
-
     //动态获取权限的三方库
     implementation 'com.yanzhenjie:permission:2.0.0-rc3'
-
-    //https://github.com/l123456789jy/Lazy
-
-    // 常用工具箱
-    compile 'com.github.lazylibrary:lazylibrary:1.0.2'
 
     //okhttp-OkGo
     // https://github.com/jeasonlzy/okhttp-OkGo/wiki
@@ -129,9 +130,6 @@ dependencies {
     compile 'com.umeng.sdk:common:1.5.0'
     compile 'com.umeng.sdk:analytics:7.5.0'
 
-    //记录日志到本地的工具https://github.com/JiongBull/jlog/blob/master/README_ZH.md
-    compile 'com.github.JiongBull:jlog:0.1.0'
-    implementation files('libs/android-common.jar')
     //可滑动的listview https://github.com/yydcdut/SlideAndDragListView
     compile 'com.yydcdut:sdlv:0.7.5'
     //颜色选择器https://github.com/LarsWerkman/HoloColorPicker
