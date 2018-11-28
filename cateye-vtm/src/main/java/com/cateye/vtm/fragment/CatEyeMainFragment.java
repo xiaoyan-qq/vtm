@@ -1,14 +1,17 @@
 package com.cateye.vtm.fragment;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Message;
+import android.support.v7.app.AlertDialog;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.Button;
+import android.widget.ExpandableListView;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.alibaba.fastjson.JSON;
@@ -16,24 +19,32 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONReader;
 import com.canyinghao.candialog.CanDialog;
 import com.canyinghao.candialog.CanDialogInterface;
+import com.cateye.android.entity.ContourFromNet;
 import com.cateye.android.entity.ContourMPData;
 import com.cateye.android.entity.MapSourceFromNet;
 import com.cateye.android.vtm.MainActivity;
 import com.cateye.android.vtm.MainActivity.LAYER_GROUP_ENUM;
 import com.cateye.android.vtm.R;
+import com.cateye.vtm.adapter.LayerManagerAdapter;
 import com.cateye.vtm.fragment.base.BaseFragment;
 import com.cateye.vtm.util.CatEyeMapManager;
 import com.cateye.vtm.util.SystemConstant;
+import com.github.lazylibrary.util.StringUtils;
+import com.larswerkman.holocolorpicker.ColorPicker;
+import com.larswerkman.holocolorpicker.OpacityBar;
+import com.larswerkman.holocolorpicker.SVBar;
 import com.lzy.okgo.OkGo;
 import com.lzy.okgo.convert.StringConvert;
 import com.lzy.okgo.model.Response;
 import com.lzy.okrx2.adapter.ObservableResponse;
-import com.ta.utdid2.android.utils.StringUtils;
 import com.tencent.map.geolocation.TencentLocation;
-import com.vondear.rxtools.RxLogTool;
-import com.vondear.rxtools.view.RxToast;
-import com.vondear.rxtools.view.dialog.RxDialog;
-import com.vondear.rxtools.view.dialog.RxDialogLoading;
+import com.vividsolutions.jts.geom.Polygon;
+import com.vondear.rxtool.RxLogTool;
+import com.vondear.rxtool.view.RxToast;
+import com.vondear.rxui.view.dialog.RxDialog;
+import com.vondear.rxui.view.dialog.RxDialogLoading;
+import com.vtm.library.layers.MultiPolygonLayer;
+import com.vtm.library.tools.OverlayerManager;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -52,11 +63,17 @@ import org.oscim.core.MapElement;
 import org.oscim.core.MapPosition;
 import org.oscim.core.Tag;
 import org.oscim.core.Tile;
+import org.oscim.event.Gesture;
+import org.oscim.event.GestureListener;
+import org.oscim.event.MotionEvent;
 import org.oscim.layers.ContourLineLayer;
 import org.oscim.layers.Layer;
 import org.oscim.layers.LocationLayer;
+import org.oscim.layers.MapEventLayer;
+import org.oscim.layers.MapEventLayer2;
 import org.oscim.layers.tile.MapTile;
 import org.oscim.layers.tile.bitmap.BitmapTileLayer;
+import org.oscim.layers.tile.buildings.BuildingLayer;
 import org.oscim.layers.tile.vector.OsmTileLayer;
 import org.oscim.layers.tile.vector.VectorTileLayer;
 import org.oscim.layers.tile.vector.labeling.LabelLayer;
@@ -77,9 +94,9 @@ import org.oscim.theme.XmlRenderThemeMenuCallback;
 import org.oscim.theme.XmlRenderThemeStyleLayer;
 import org.oscim.theme.XmlRenderThemeStyleMenu;
 import org.oscim.theme.styles.AreaStyle;
+import org.oscim.theme.styles.LineStyle;
 import org.oscim.theme.styles.RenderStyle;
 import org.oscim.theme.styles.TextStyle;
-import org.oscim.tiling.TileSource;
 import org.oscim.tiling.source.bitmap.BitmapTileSource;
 import org.oscim.tiling.source.geojson.ContourGeojsonTileSource;
 import org.oscim.tiling.source.geojson.GeojsonTileSource;
@@ -96,7 +113,6 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 
@@ -105,10 +121,9 @@ import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Consumer;
-import io.reactivex.functions.Function;
-import io.reactivex.functions.Predicate;
 import io.reactivex.schedulers.Schedulers;
 
+import static com.cateye.vtm.util.SystemConstant.URL_CONTOUR_CALCULATE;
 import static com.cateye.vtm.util.SystemConstant.URL_MAP_SOURCE_NET;
 
 /**
@@ -130,25 +145,28 @@ public class CatEyeMainFragment extends BaseFragment {
     private static final Tag SEA_TAG = new Tag("natural", "sea");
     private static final Tag CONTOUR_TAG = new Tag("contour", "1000");//等高线
 
-    private List<TileSource> mTileSourceList;//当前正在显示的tileSource的集合
+//    private List<TileSource> mTileSourceList;//当前正在显示的tileSource的集合
 
-    //控件
-    private Button btn_select_local_map_file;//选择需要显示的本地map文件
-    private Button btn_select_net_map_file;//选择需要显示的在线map文件
-    private Button btn_select_geoJson_file;//选择需要显示的geoJson文件
-    private Button btn_draw_plp;//绘制点线面
 
     private ImageView chk_draw_point, chk_draw_line, chk_draw_polygon;//绘制点线面
     private ImageView img_location;//获取当前位置的按钮
     private ImageView img_map_source_selector;
     private ImageView img_contour_selector;//加载等高线数据的按钮
+    private ImageView img_change_contour_color;//修改等高线地图显示颜色的按钮
+    private ImageView img_select_project;//选择当前项目的按钮
+    private ImageView img_chk_draw_airplan/*绘制航区*/, img_chk_set_airplan/*设置航区*/;
     private List<ImageView> chkDrawPointLinePolygonList;
     private FrameLayout layer_fragment;//用来显示fragment的布局文件
-    private java.util.Map<String, MapSourceFromNet.DataBean> netDataSourceMap;//用来记录用户勾选了哪些网络数据显示
+//    private java.util.Map<String, MapSourceFromNet.DataBean> netDataSourceMap;//用来记录用户勾选了哪些网络数据显示
 
     private LocationLayer locationLayer;//显示当前位置的图层
     private final MapPosition mapPosition = new MapPosition();//更新地图位置
     private boolean isMapCenterFollowLocation = true;//地图中心是否需要跟随当前定位位置
+
+    private List<MapSourceFromNet.DataBean> layerDataBeanList;//记录图层管理中的图层信息
+    private View layerManagerRootView;//图层管理对话框的根视图
+    private LayerManagerAdapter layerManagerAdapter;//图层管理对应的adapter
+    private List<MapSourceFromNet.DataBean> multiTimeLayerList;//记录拥有多个时序图层的list，如果存在，则需要提供切换时序的控件
 
     @Override
     public int getFragmentLayoutId() {
@@ -157,47 +175,98 @@ public class CatEyeMainFragment extends BaseFragment {
 
     @Override
     public void initView(View rootView) {
-        mapView = rootView.findViewById(R.id.mapView);
-
+        mapView = (MapView) findViewById(R.id.mapView);
         mMap = mapView.map();
 
-        //选择底图map文件
-        btn_select_local_map_file = rootView.findViewById(R.id.btn_select_local_map_file);
+        layer_fragment = (FrameLayout) rootView.findViewById(R.id.layer_main_cateye_bottom);
 
-        //开始绘制点线面
-        btn_draw_plp = rootView.findViewById(R.id.btn_draw_plp);
-        btn_draw_plp.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-//                //自动弹出绘制点线面的fragment
-//                Rigger.getRigger(CatEyeMainFragment.this).showFragment(DrawPointLinePolygonFragment.newInstance(new Bundle()), R.id.layer_main_cateye_bottom);
-            }
-        });
-        //选择网络地图显示
-        btn_select_net_map_file = rootView.findViewById(R.id.btn_select_net_map_file);
-        //选择显示GeoJson文件
-        btn_select_geoJson_file = rootView.findViewById(R.id.btn_select_geoJson);
+        chk_draw_point = (ImageView) rootView.findViewById(R.id.chk_draw_vector_point);
+        chk_draw_line = (ImageView) rootView.findViewById(R.id.chk_draw_vector_line);
+        chk_draw_polygon = (ImageView) rootView.findViewById(R.id.chk_draw_vector_polygon);
 
-        layer_fragment = rootView.findViewById(R.id.layer_main_cateye_bottom);
+        img_chk_draw_airplan = rootView.findViewById(R.id.chk_draw_airplan);
+        img_chk_set_airplan = rootView.findViewById(R.id.chk_set_airplan);
 
-        chk_draw_point = rootView.findViewById(R.id.chk_draw_vector_point);
-        chk_draw_line = rootView.findViewById(R.id.chk_draw_vector_line);
-        chk_draw_polygon = rootView.findViewById(R.id.chk_draw_vector_polygon);
+        img_select_project = rootView.findViewById(R.id.img_project);
         chkDrawPointLinePolygonList = new ArrayList<>();
         chkDrawPointLinePolygonList.add(chk_draw_point);
         chkDrawPointLinePolygonList.add(chk_draw_line);
         chkDrawPointLinePolygonList.add(chk_draw_polygon);
+        multiTimeLayerList = new ArrayList<>();
 
         //选择地图资源
-        img_map_source_selector = rootView.findViewById(R.id.img_map_source_select);
-        img_contour_selector = rootView.findViewById(R.id.img_contour_select);
-        img_location = rootView.findViewById(R.id.img_location);
+        img_map_source_selector = (ImageView) rootView.findViewById(R.id.img_map_source_select);
+        img_contour_selector = (ImageView) rootView.findViewById(R.id.img_contour_select);
+        img_change_contour_color = (ImageView) rootView.findViewById(R.id.img_change_contour_color);
+        img_location = (ImageView) rootView.findViewById(R.id.img_location);
 
         initData();
         initScaleBar();
         if (!EventBus.getDefault().isRegistered(this)) {
             EventBus.getDefault().register(this);
         }
+
+        //选择当前操作项目的按钮
+        img_select_project.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                ((MainActivity) getActivity()).setCurrentProject();//弹出选择当前项目的对话框
+            }
+        });
+
+        img_change_contour_color.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                AlertDialog.Builder colorDialogBuilder = new AlertDialog.Builder(
+                        getActivity());
+                LayoutInflater inflater = LayoutInflater.from(getActivity());
+                View dialogview = inflater.inflate(R.layout.color_picker, null);
+                final ColorPicker picker = (ColorPicker) dialogview.findViewById(R.id.color_picker);
+                SVBar svBar = (SVBar) dialogview.findViewById(R.id.color_svbar);
+                OpacityBar opacityBar = (OpacityBar) dialogview.findViewById(R.id.color_opacitybar);
+                picker.addSVBar(svBar);
+                picker.addOpacityBar(opacityBar);
+                colorDialogBuilder.setTitle("选择等高线的显示颜色");
+                colorDialogBuilder.setView(dialogview);
+                colorDialogBuilder.setPositiveButton(R.string.confirmStr,
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                //设置等高线的显示颜色
+                                if (mMap.layers() != null && !mMap.layers().isEmpty()) {
+                                    for (Layer layer : mMap.layers()) {
+                                        if (layer.isEnabled() && layer instanceof VectorTileLayer)
+                                            ((VectorTileLayer) layer).addHook(new VectorTileLayer.TileLoaderThemeHook() {
+                                                @Override
+                                                public boolean process(MapTile tile, RenderBuckets buckets, MapElement element, RenderStyle style, int level) {
+                                                    if (element.tags.containsKey("contour") || element.tags.containsKey("CONTOUR")) {
+                                                        if (style instanceof LineStyle) {
+//                                                            ((LineStyle)style).color=
+                                                        }
+                                                    }
+                                                    return false;
+                                                }
+
+                                                @Override
+                                                public void complete(MapTile tile, boolean success) {
+                                                }
+                                            });
+                                    }
+                                }
+                            }
+                        });
+                colorDialogBuilder.setNegativeButton(R.string.cancelStr,
+                        new DialogInterface.OnClickListener() {
+
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.cancel();
+                            }
+                        });
+                AlertDialog colorPickerDialog = colorDialogBuilder.create();
+                colorPickerDialog.show();
+            }
+        });
     }
 
     @Override
@@ -216,47 +285,23 @@ public class CatEyeMainFragment extends BaseFragment {
 
     //初始化数据
     private void initData() {
-        netDataSourceMap = new LinkedHashMap<String, MapSourceFromNet.DataBean>();
+//        netDataSourceMap = new LinkedHashMap<String, MapSourceFromNet.DataBean>();
         //初始化MapManager，方便全局使用map对象
         CatEyeMapManager.getInstance(getActivity()).init(mapView);
         mPrefs = new MapPreferences(this.getTag(), getActivity());
-        mTileSourceList = new ArrayList<>();
+//        mTileSourceList = new ArrayList<>();
 
-        btn_select_local_map_file.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivityForResult(new Intent(getActivity(), MainActivity.MapFilePicker.class),
-                        SELECT_MAP_FILE);
-            }
-        });
         //向地图中添加地图图层分组
         for (LAYER_GROUP_ENUM group_enum : LAYER_GROUP_ENUM.values()) {
-            mMap.layers().addGroup(group_enum.ordinal());
+            mMap.layers().addGroup(group_enum.orderIndex);
         }
-
-        btn_select_net_map_file.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                //首先请求服务器，获取最新的服务列表
-
-                BitmapTileSource mTileSource = BitmapTileSource.builder()
-                        .url("http://39.107.104.63:8080/tms/1.0.0/world_satellite_raster@EPSG:900913@jpeg").tilePath("/{Z}/{X}/{Y}.png")
-                        .zoomMax(18).build();
-//                BitmapTileSource mTileSource= DefaultSources.OPENSTREETMAP.build();
-                createBitmapTileLayer(getActivity(), mTileSource, true);
-            }
-        });
-        btn_select_geoJson_file.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivityForResult(new Intent(getActivity(), MainActivity.GeoJsonFilePicker.class),
-                        SELECT_GEOJSON_FILE);
-            }
-        });
 
         chk_draw_point.setOnClickListener(mainFragmentClickListener);
         chk_draw_line.setOnClickListener(mainFragmentClickListener);
         chk_draw_polygon.setOnClickListener(mainFragmentClickListener);
+
+        img_chk_draw_airplan.setOnClickListener(mainFragmentClickListener);
+        img_chk_set_airplan.setOnClickListener(mainFragmentClickListener);
 
         img_map_source_selector.setOnClickListener(mainFragmentClickListener);
         img_contour_selector.setOnClickListener(mainFragmentClickListener);//选择等高线文件并显示
@@ -264,7 +309,7 @@ public class CatEyeMainFragment extends BaseFragment {
         locationLayer = new LocationLayer(mMap);
         locationLayer.locationRenderer.setShader("location_1_reverse");
         locationLayer.setEnabled(false);
-        mMap.layers().add(locationLayer, LAYER_GROUP_ENUM.GROUP_LOCATION.ordinal());
+        mMap.layers().add(locationLayer, LAYER_GROUP_ENUM.LOCATION_GROUP.orderIndex);
 
         img_location.setOnClickListener(new View.OnClickListener() {//定位到当前位置
             @Override
@@ -289,15 +334,16 @@ public class CatEyeMainFragment extends BaseFragment {
                 //判断是否被添加进Reggier
                 setDrawPointLinePolygonButtonState(view, chkDrawPointLinePolygonList);
                 if (view.isSelected()) {//选中
-//                    DrawPointLinePolygonFragment drawPointLinePolygonFragment = (DrawPointLinePolygonFragment) DrawPointLinePolygonFragment.newInstance(new Bundle());
                     //自动弹出绘制点线面的fragment
+                    DrawPointLinePolygonFragment fragment = findFragment(DrawPointLinePolygonFragment.class);
                     Bundle pointBundle = new Bundle();
                     pointBundle.putSerializable(com.cateye.vtm.fragment.DrawPointLinePolygonFragment.DRAW_STATE.class.getSimpleName(), com.cateye.vtm.fragment.DrawPointLinePolygonFragment.DRAW_STATE.DRAW_POINT);
-//                    drawPointLinePolygonFragment.setArguments(pointBundle);
-//                    Rigger.getRigger(CatEyeMainFragment.this).startFragment(drawPointLinePolygonFragment);
-//                    DrawPointLinePolygonFragment drawPointLinePolygonFragment=fragment(DrawPointLinePolygonFragment.class,pointBundle);
-//                    startFragment(drawPointLinePolygonFragment);
-                    loadRootFragment(R.id.layer_main_cateye_bottom, com.cateye.vtm.fragment.DrawPointLinePolygonFragment.newInstance(pointBundle));
+                    if (fragment != null) {
+                        fragment.setArguments(pointBundle);
+                        start(fragment);
+                    } else {
+                        loadRootFragment(R.id.layer_main_cateye_bottom, com.cateye.vtm.fragment.DrawPointLinePolygonFragment.newInstance(pointBundle));
+                    }
                 } else {//不选中
                     popChild();
                 }
@@ -305,13 +351,17 @@ public class CatEyeMainFragment extends BaseFragment {
                 //判断是否被添加进Reggier
                 setDrawPointLinePolygonButtonState(view, chkDrawPointLinePolygonList);
                 if (view.isSelected()) {//选中
-//                    DrawPointLinePolygonFragment drawPointLinePolygonFragment = (DrawPointLinePolygonFragment) DrawPointLinePolygonFragment.newInstance(new Bundle());
+                    //自动弹出绘制点线面的fragment
+                    DrawPointLinePolygonFragment fragment = findFragment(DrawPointLinePolygonFragment.class);
                     //自动弹出绘制点线面的fragment
                     Bundle lineBundle = new Bundle();
                     lineBundle.putSerializable(com.cateye.vtm.fragment.DrawPointLinePolygonFragment.DRAW_STATE.class.getSimpleName(), com.cateye.vtm.fragment.DrawPointLinePolygonFragment.DRAW_STATE.DRAW_LINE);
-//                    drawPointLinePolygonFragment.setArguments(pointBundle);
-//                    Rigger.getRigger(CatEyeMainFragment.this).startFragment(drawPointLinePolygonFragment);
-                    loadRootFragment(R.id.layer_main_cateye_bottom, com.cateye.vtm.fragment.DrawPointLinePolygonFragment.newInstance(lineBundle));
+                    if (fragment != null) {
+                        fragment.setArguments(lineBundle);
+                        start(fragment);
+                    } else {
+                        loadRootFragment(R.id.layer_main_cateye_bottom, com.cateye.vtm.fragment.DrawPointLinePolygonFragment.newInstance(lineBundle));
+                    }
                 } else {//不选中
                     popChild();
                 }
@@ -319,42 +369,104 @@ public class CatEyeMainFragment extends BaseFragment {
                 //判断是否被添加进Reggier
                 setDrawPointLinePolygonButtonState(view, chkDrawPointLinePolygonList);
                 if (view.isSelected()) {//选中
-//                    DrawPointLinePolygonFragment drawPointLinePolygonFragment = (DrawPointLinePolygonFragment) DrawPointLinePolygonFragment.newInstance(new Bundle());
+                    //自动弹出绘制点线面的fragment
+                    DrawPointLinePolygonFragment fragment = findFragment(DrawPointLinePolygonFragment.class);
                     //自动弹出绘制点线面的fragment
                     Bundle polygonBundle = new Bundle();
                     polygonBundle.putSerializable(com.cateye.vtm.fragment.DrawPointLinePolygonFragment.DRAW_STATE.class.getSimpleName(), com.cateye.vtm.fragment.DrawPointLinePolygonFragment.DRAW_STATE.DRAW_POLYGON);
-//                    drawPointLinePolygonFragment.setArguments(pointBundle);
-//                    Rigger.getRigger(CatEyeMainFragment.this).startFragment(drawPointLinePolygonFragment);
-                    loadRootFragment(R.id.layer_main_cateye_bottom, com.cateye.vtm.fragment.DrawPointLinePolygonFragment.newInstance(polygonBundle));
+                    if (fragment != null) {
+                        fragment.setArguments(polygonBundle);
+                        start(fragment);
+                    } else {
+                        loadRootFragment(R.id.layer_main_cateye_bottom, com.cateye.vtm.fragment.DrawPointLinePolygonFragment.newInstance(polygonBundle));
+                    }
                 } else {//不选中
                     popChild();
                 }
             } else if (view.getId() == R.id.img_map_source_select) {//选择地图资源
+                if (layerDataBeanList != null && !layerDataBeanList.isEmpty()) {
+                    showLayerManagerDialog(layerDataBeanList);
+                } else {
+                    if (SystemConstant.CURRENT_PROJECTS_ID < 0) {//没有获取到当前作业的项目ID，提示用户
+                        RxToast.info("无法获取当前作业项目，请检查您的网络设置");
+                    } else {
+                        getMapDataSourceFromNet();
+                    }
+                }
+            } else if (view.getId() == R.id.img_contour_select) {//选择等高线文件
                 final RxDialog dialog = new RxDialog(getContext());
-                View layer_select_map_source = LayoutInflater.from(getContext()).inflate(R.layout.layer_select_map_source, null);
+                View layer_select_map_source = LayoutInflater.from(getContext()).inflate(R.layout.layer_select_contour_source, null);
                 dialog.setContentView(layer_select_map_source);
                 dialog.setCancelable(true);
                 dialog.show();
-                //本地地图资源
-                layer_select_map_source.findViewById(R.id.tv_map_source_local).setOnClickListener(new View.OnClickListener() {
+                //本地等高线资源
+                layer_select_map_source.findViewById(R.id.tv_map_contour_local).setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        startActivityForResult(new Intent(getActivity(), MainActivity.MapFilePicker.class),
-                                SELECT_MAP_FILE);
+                        startActivityForResult(new Intent(getActivity(), MainActivity.ContourFilePicker.class),
+                                SELECT_CONTOUR_FILE);
                         dialog.dismiss();
                     }
                 });
-                //网络地图资源
-                layer_select_map_source.findViewById(R.id.tv_map_source_net).setOnClickListener(new View.OnClickListener() {
+                //手动绘制等高线
+                layer_select_map_source.findViewById(R.id.tv_map_contour_draw).setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         dialog.dismiss();
-                        getMapDataSourceFromNet();
+                        //进入绘制线界面，绘制完成后获取到绘制到的线的点位集合
+                        //自动弹出绘制点线面的fragment
+                        Bundle lineBundle = new Bundle();
+                        lineBundle.putSerializable(com.cateye.vtm.fragment.DrawPointLinePolygonFragment.DRAW_STATE.class.getSimpleName(), com.cateye.vtm.fragment.DrawPointLinePolygonFragment.DRAW_STATE.DRAW_LINE);
+                        lineBundle.putInt(SystemConstant.DRAW_USAGE, SystemConstant.DRAW_CONTOUR_LINE);
+                        loadRootFragment(R.id.layer_main_cateye_bottom, com.cateye.vtm.fragment.DrawPointLinePolygonFragment.newInstance(lineBundle));
                     }
                 });
-            } else if (view.getId() == R.id.img_contour_select) {//选择等高线文件
-                startActivityForResult(new Intent(getActivity(), MainActivity.ContourFilePicker.class),
-                        SELECT_CONTOUR_FILE);
+            } else if (view.getId() == R.id.chk_draw_airplan) {//绘制航区
+                if (!view.isSelected()) {
+                    view.setSelected(true);//设置为选中状态，启动绘制fragment，右侧面板显示开始、上一笔、结束按钮
+                    //自动弹出绘制点线面的fragment
+                    AirPlanDrawFragment fragment = findFragment(AirPlanDrawFragment.class);
+                    //自动弹出绘制点线面的fragment
+                    Bundle polygonBundle = new Bundle();
+                    polygonBundle.putSerializable(com.cateye.vtm.fragment.DrawPointLinePolygonFragment.DRAW_STATE.class.getSimpleName(), com.cateye.vtm.fragment.DrawPointLinePolygonFragment.DRAW_STATE.DRAW_POLYGON);
+                    if (fragment != null) {
+                        fragment.setArguments(polygonBundle);
+                        start(fragment);
+                    } else {
+                        loadRootFragment(R.id.layer_main_fragment_right_bottom, AirPlanDrawFragment.newInstance(polygonBundle));
+                    }
+                } else {
+                    view.setSelected(false);//设置为未选中状态
+                    popChild();//弹出绘制界面
+                }
+            } else if (view.getId() == R.id.chk_set_airplan) {//设置航区参数
+                if (!view.isSelected()){
+                    //首先判断当前图层列表中是否存在航区显示的图层
+                    MultiPolygonLayer airplanDrawOverlayer = (MultiPolygonLayer) OverlayerManager.getInstance(mMap).getLayerByName(SystemConstant.AIR_PLAN_MULTI_POLYGON_DRAW);
+                    if (airplanDrawOverlayer==null){
+                        RxToast.warning("当前没有需要编辑参数的航区面");
+                        return;
+                    }
+
+                    view.setSelected(true);
+                    if (airplanDrawOverlayer != null) {
+                        if (OverlayerManager.getInstance(mMap).getLayerByName(SystemConstant.AIR_PLAN_MULTI_POLYGON_PARAM)==null){
+                            //开始编辑参数，增加编辑参数layer，和用户点击layer
+                            mMap.layers().add(new MultiPolygonLayer(mMap, Color.MAGENTA, Color.MAGENTA, Color.MAGENTA, SystemConstant.AIR_PLAN_MULTI_POLYGON_PARAM));
+                            mMap.layers().add(new MapEventsReceiver(mMap,SystemConstant.AIR_PLAN_MULTI_POLYGON_PARAM_EVENT));
+                        }
+                    }
+                }else {
+                    view.setSelected(false);
+                    //判断当前参数设置图层是否有polygon，如果存在，则弹出对话框提示用户设置参数
+                    MultiPolygonLayer airplanParamOverlayer= (MultiPolygonLayer) OverlayerManager.getInstance(mMap).getLayerByName(SystemConstant.AIR_PLAN_MULTI_POLYGON_PARAM);
+                    if (airplanParamOverlayer==null||airplanParamOverlayer.getAllPolygonList()==null||airplanParamOverlayer.getAllPolygonList().isEmpty()){
+                        RxToast.warning("没有需要设置参数的");
+                    }else {
+                        List<Polygon> polygonList=airplanParamOverlayer.getAllPolygonList();
+                        //弹出参数设置对话框
+                    }
+                }
             }
         }
     };
@@ -364,7 +476,7 @@ public class CatEyeMainFragment extends BaseFragment {
      */
     private void getMapDataSourceFromNet() {
         final RxDialogLoading rxDialogLoading = new RxDialogLoading(getContext());
-        OkGo.<String>get(URL_MAP_SOURCE_NET).tag(this).converter(new StringConvert()).adapt(new ObservableResponse<String>()).subscribeOn(Schedulers.io()).doOnSubscribe(new Consumer<Disposable>() {
+        OkGo.<String>get(URL_MAP_SOURCE_NET.replace(SystemConstant.USER_ID, SystemConstant.CURRENT_PROJECTS_ID + "")).tag(this).converter(new StringConvert()).adapt(new ObservableResponse<String>()).subscribeOn(Schedulers.io()).doOnSubscribe(new Consumer<Disposable>() {
             @Override
             public void accept(Disposable disposable) throws Exception {
                 rxDialogLoading.show();
@@ -382,7 +494,7 @@ public class CatEyeMainFragment extends BaseFragment {
                 if (mapSourceFromNet != null) {
                     List<MapSourceFromNet.DataBean> dataBeanList = mapSourceFromNet.getData();
                     if (dataBeanList != null && !dataBeanList.isEmpty()) {
-                        Observable.fromIterable(dataBeanList).subscribeOn(Schedulers.computation()).filter(new Predicate<MapSourceFromNet.DataBean>() {
+                        Observable.fromIterable(dataBeanList).subscribeOn(Schedulers.computation())/*.filter(new Predicate<MapSourceFromNet.DataBean>() {
                             @Override
                             public boolean test(MapSourceFromNet.DataBean dataBean) throws Exception {
                                 if (dataBean != null && dataBean.getExtension() != null && (dataBean.getExtension().contains("png") || dataBean.getExtension().contains("json") || dataBean.getExtension().contains("jpg") || dataBean.getExtension().contains("jpeg")) && dataBean.getHref() != null && dataBean.getHref().contains("/xyz/")) {
@@ -390,97 +502,19 @@ public class CatEyeMainFragment extends BaseFragment {
                                 }
                                 return false;
                             }
-                        }).map(new Function<MapSourceFromNet.DataBean, MapSourceFromNet.DataBean>() {
+                        })*/.toList().observeOn(AndroidSchedulers.mainThread()).subscribe(new Consumer<List<MapSourceFromNet.DataBean>>() {
                             @Override
-                            public MapSourceFromNet.DataBean apply(MapSourceFromNet.DataBean dataBean) throws Exception {
-                                if (netDataSourceMap != null && netDataSourceMap.containsKey(dataBean.getHref())) {
-                                    dataBean.setShow(netDataSourceMap.get(dataBean.getHref()).isShow());
+                            public void accept(List<MapSourceFromNet.DataBean> dataBeanList) throws Exception {
+                                if (dataBeanList != null) {
+                                    layerDataBeanList = dataBeanList;
+                                    showLayerManagerDialog(dataBeanList);
+                                } else {
+                                    RxToast.warning("当前项目没有可作业的图层，请联系系统管理员确认！");
                                 }
-                                return dataBean;
-                            }
-                        }).toMap(new Function<MapSourceFromNet.DataBean, String>() {
-                            @Override
-                            public String apply(MapSourceFromNet.DataBean dataBean) throws Exception {
-                                return dataBean.getHref();
-                            }
-                        }).observeOn(AndroidSchedulers.mainThread()).subscribe(new Consumer<java.util.Map<String, MapSourceFromNet.DataBean>>() {
-                            @Override
-                            public void accept(final java.util.Map<String, MapSourceFromNet.DataBean> stringDataBeanMap) throws Exception {
-                                Set<String> keySet = stringDataBeanMap.keySet();
-                                final List<String> multiCheckTextList = new ArrayList<>();
-                                final List<Boolean> multiCheckStateList = new ArrayList<>();
-                                final List<String> keyList = new ArrayList<>();
-                                for (String key : keySet) {
-                                    if (stringDataBeanMap.get(key) != null) {
-                                        multiCheckTextList.add(stringDataBeanMap.get(key).getAbstractX() + "(" + stringDataBeanMap.get(key).getHref() + ")");
-                                        multiCheckStateList.add(stringDataBeanMap.get(key).isShow());
-                                        keyList.add(key);
-                                    }
-                                }
-                                final String[] multiCheckTexts = new String[multiCheckTextList.size()];
-                                final boolean[] multiCheckStates = new boolean[multiCheckStateList.size()];
-                                //转换
-                                for (int i = 0; i < multiCheckTextList.size(); i++) {
-                                    multiCheckTexts[i] = multiCheckTextList.get(i);
-                                }
-                                //转换
-                                for (int i = 0; i < multiCheckStateList.size(); i++) {
-                                    multiCheckStates[i] = multiCheckStateList.get(i);
-                                }
-                                CanDialog canDialog = new CanDialog.Builder(getActivity()).setTitle("地图服务资源").setMultiChoiceItems(multiCheckTexts, multiCheckStates, null).setNegativeButton("取消", true, null).setPositiveButton("确定", true, new CanDialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(CanDialog dialog, int checkItem, CharSequence text, boolean[] checkItems) {
-                                        RxLogTool.i(checkItems);
-                                        for (int i = 0; i < checkItems.length; i++) {
-                                            if (checkItems[i]) {
-                                                stringDataBeanMap.get(keyList.get(i)).setShow(true);
-                                            } else {
-                                                stringDataBeanMap.get(keyList.get(i)).setShow(false);
-                                            }
-                                            netDataSourceMap.put(keyList.get(i), stringDataBeanMap.get(keyList.get(i)));
-                                        }
-                                        //根据当前的网络资源选择，显示对应的图层
-                                        Set<String> keySet = stringDataBeanMap.keySet();
-                                        for (String key : keySet) {
-                                            boolean isShow = stringDataBeanMap.get(key).isShow();
-                                            boolean isHasThisLayer = false;//标识当前是否存在指定的layer
-                                            Iterator<Layer> layerIterator = mMap.layers().iterator();
-                                            b:
-                                            while (layerIterator.hasNext()) {
-                                                Layer layer = layerIterator.next();
-                                                if (layer instanceof BitmapTileLayer && ((BitmapTileLayer) layer).getmTileSource() != null && ((BitmapTileLayer) layer).getmTileSource().getDataSource() != null && ((BitmapTileLayer) layer).getmTileSource() instanceof BitmapTileSource) {
-                                                    String url = ((BitmapTileSource) ((BitmapTileLayer) layer).getmTileSource()).getUrl().toString();
-                                                    if (url.contains(key)) {
-                                                        isHasThisLayer = true;
-                                                        if (isShow) {
-                                                            break b;
-                                                        } else {
-                                                            layerIterator.remove();
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                            if (!isHasThisLayer && isShow) {
-                                                if (stringDataBeanMap.get(key).getExtension().contains("json")) {
-                                                    ContourGeojsonTileSource mTileSource = ContourGeojsonTileSource.builder()
-                                                            .url(stringDataBeanMap.get(key).getHref()).tilePath("/{X}/{Y}/{Z}.json" /*+ stringDataBeanMap.get(key).getExtension()*/)
-//                                                        .url("http://39.107.104.63:8080/tms/1.0.0/world_satellite_raster@EPSG:900913@jpeg").tilePath("/{Z}/{X}/{Y}.png")
-                                                            .zoomMax(18).build();
-                                                    createGeoJsonTileLayer(getActivity(), mTileSource, true);
-                                                } else {
-                                                    BitmapTileSource mTileSource = BitmapTileSource.builder()
-                                                            .url(stringDataBeanMap.get(key).getHref()).tilePath("/{X}/{Y}/{Z}." + stringDataBeanMap.get(key).getExtension())
-//                                                        .url("http://39.107.104.63:8080/tms/1.0.0/world_satellite_raster@EPSG:900913@jpeg").tilePath("/{Z}/{X}/{Y}.png")
-                                                            .zoomMax(18).build();
-                                                    createBitmapTileLayer(getActivity(), mTileSource, true);
-                                                }
-                                            }
-                                        }
-                                        mMap.updateMap(true);
-                                    }
-                                }).show();
                             }
                         });
+                    } else {
+                        RxToast.warning("当前项目没有可作业的图层，请联系系统管理员确认！");
                     }
                 }
             }
@@ -489,13 +523,108 @@ public class CatEyeMainFragment extends BaseFragment {
             public void onError(Throwable e) {
                 RxToast.info("请求失败，请检查网络!", Toast.LENGTH_SHORT);
                 RxLogTool.saveLogFile(e.toString());
+                if (rxDialogLoading != null && rxDialogLoading.isShowing()) {
+                    rxDialogLoading.dismiss();
+                }
             }
 
             @Override
             public void onComplete() {
-                rxDialogLoading.dismiss();
+                if (rxDialogLoading != null && rxDialogLoading.isShowing()) {
+                    rxDialogLoading.dismiss();
+                }
             }
         });
+    }
+
+    /**
+     * @param :
+     * @return :
+     * @method : showLayerManagerDialog
+     * @Author : xiaoxiao
+     * @Describe : 显示图层管理的对话框
+     * @Date : 2018/6/27
+     */
+    private MapSourceFromNet.DataBean mDraggedEntity;
+    private int dragBeginPosition = -1;
+
+    private void showLayerManagerDialog(final List<MapSourceFromNet.DataBean> dataBeanList) {
+        //使用ExpandableListView展示二级列表
+        layerManagerRootView = LayoutInflater.from(getActivity()).inflate(R.layout.fragment_layer_manager, null);
+        ExpandableListView expandableListView = (ExpandableListView) layerManagerRootView.findViewById(R.id.sadLv_layerlist);
+
+        layerManagerAdapter = new LayerManagerAdapter(getActivity(), dataBeanList);
+        expandableListView.setAdapter(layerManagerAdapter);
+
+        //增加按钮
+        TextView tv_add = (TextView) layerManagerRootView.findViewById(R.id.tv_layerlist_add);
+        tv_add.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startActivityForResult(new Intent(getActivity(), MainActivity.MapFilePicker.class),
+                        SELECT_MAP_FILE);
+            }
+        });
+        new CanDialog.Builder(getActivity()).setView(layerManagerRootView).setNegativeButton("取消", true, null).setPositiveButton("确定", true, new CanDialogInterface.OnClickListener() {
+            @Override
+            public void onClick(CanDialog dialog, int checkItem, CharSequence text, boolean[] checkItems) {
+                clearAllMapLayers();
+                //清空多图层列表list数据，重新筛选获取
+                multiTimeLayerList.clear();
+                //根据当前的资源选择，显示对应的图层
+                for (MapSourceFromNet.DataBean dataBean : dataBeanList) {
+                    boolean isShow = dataBean.isShow();
+                    if (isShow) {//设置为选中可显示状态
+                        if (dataBean.getMaps().get(0).getExtension().contains("json")) {
+                            ContourGeojsonTileSource mTileSource = ContourGeojsonTileSource.builder()
+                                    .url(dataBean.getMaps().get(0).getHref()).tilePath("/{X}/{Y}/{Z}.json" /*+ stringDataBeanMap.get(key).getExtension()*/)
+                                    .zoomMax(18).build();
+                            mTileSource.setOption(SystemConstant.LAYER_KEY_ID, dataBean.getId() + "");
+                            createGeoJsonTileLayer(getActivity(), mTileSource, true, dataBean.getGroup());
+                        } else if (dataBean.getMaps().get(0).getExtension().contains(".map")) {
+                            addLocalMapFileLayer(dataBean.getMaps().get(0).getHref());
+                        } else {
+                            BitmapTileSource mTileSource = BitmapTileSource.builder()
+                                    .url(dataBean.getMaps().get(0).getHref()).tilePath("/{X}/{Y}/{Z}." + dataBean.getMaps().get(0).getExtension())
+                                    .zoomMax(18).build();
+                            createBitmapTileLayer(getActivity(), mTileSource, true, dataBean.getGroup());
+                            mTileSource.setOption(SystemConstant.LAYER_KEY_ID, dataBean.getId() + "");
+                        }
+
+                        if (dataBean.getMaps() != null && dataBean.getMaps().size() > 1) {
+                            multiTimeLayerList.add(dataBean);
+                        }
+                    }
+                }
+                showMultiTimeLayerSelectFragment(multiTimeLayerList);
+                mMap.clearMap();
+            }
+        }).show();
+    }
+
+    /**
+     * @param : multiTimeLayerList - 多时序显示数据
+     * @return :
+     * @method : showMultiTimeLayerSelectFragment
+     * @Author : xiaoxiao
+     * @Describe : 显示时序选择控件
+     * @Date : 2018/8/31
+     */
+    private void showMultiTimeLayerSelectFragment(List<MapSourceFromNet.DataBean> multiTimeLayerList) {
+        if (multiTimeLayerList != null && !multiTimeLayerList.isEmpty()) {
+            MultiTimeLayerSelectFragment fragment = findFragment(MultiTimeLayerSelectFragment.class);
+            //自动弹出绘制点线面的fragment
+            Bundle bundle = new Bundle();
+            bundle.putSerializable(SystemConstant.BUNDLE_MULTI_TIME_SELECTOR_DATA, (ArrayList) multiTimeLayerList);
+            if (fragment != null) {
+                fragment.setArguments(bundle);
+                start(fragment);
+            } else {
+                loadRootFragment(R.id.layer_main_cateye_top, MultiTimeLayerSelectFragment.newInstance(bundle));
+            }
+        } else {
+            popToChild(MultiTimeLayerSelectFragment.class, true);
+        }
     }
 
     /**
@@ -537,7 +666,7 @@ public class CatEyeMainFragment extends BaseFragment {
         BitmapRenderer renderer = mapScaleBarLayer.getRenderer();
         renderer.setPosition(GLViewport.Position.BOTTOM_LEFT);
         renderer.setOffset(5 * CanvasAdapter.getScale(), 0);
-        mMap.layers().add(mapScaleBarLayer, LAYER_GROUP_ENUM.GROUP_OPERTOR.ordinal());
+        mMap.layers().add(mapScaleBarLayer, LAYER_GROUP_ENUM.OPERTOR_GROUP.orderIndex);
     }
 
     @Override
@@ -549,40 +678,47 @@ public class CatEyeMainFragment extends BaseFragment {
                 return;
             }
 
-            MapFileTileSource mTileSource = new MapFileTileSource();
-            mTileSource.setPreferredLanguage("zh");
             String file = intent.getStringExtra(FilePicker.SELECTED_FILE);
-            //过滤判断选中的文件是否已经在显示中了
-            if (mTileSourceList != null && !mTileSourceList.isEmpty()) {
-                for (TileSource tileSource : mTileSourceList) {
-                    if (tileSource instanceof MapFileTileSource && ((MapFileTileSource) tileSource).getOption("file").equals(file)) {
-                        RxToast.error(getActivity().getResources().getString(R.string.the_local_map_file_exists));
-                        return;
+
+            //增加本地layer的dataBean到dataBeanList中
+            if (file != null) {
+                //判断当前图层中是否已经存在选择的文件，如果存在，则不再添加
+                if (layerDataBeanList != null && !layerDataBeanList.isEmpty()) {
+                    for (MapSourceFromNet.DataBean dataBean : layerDataBeanList) {
+                        if (dataBean.getMaps() != null) {
+                            for (MapSourceFromNet.DataBean.MapsBean mapsBean : dataBean.getMaps()) {
+                                if (file.equals(mapsBean.getHref())) {
+                                    RxToast.info("已经添加过相同的图层！无法再次添加！");
+                                    return;
+                                }
+                            }
+                        }
                     }
                 }
-            }
+                File mapFile = new File(file);
+                if (mapFile.exists()) {
+                    MapSourceFromNet.DataBean.MapsBean mapFileDataBean = new MapSourceFromNet.DataBean.MapsBean();
+                    mapFileDataBean.setAbstractX(mapFile.getName());
+                    mapFileDataBean.setHref(file);
+                    mapFileDataBean.setGroup(LAYER_GROUP_ENUM.BASE_VECTOR_GROUP.name);
+                    mapFileDataBean.setExtension(".map");
 
-            if (mTileSource.setMapFile(file)) {
-                //设置当前的文件选择的layer为地图的基础图层(第一层)==此处去掉此设置
-                //VectorTileLayer mTileLayer = mMap.setBaseMap(mTileSource);
-                VectorTileLayer mTileLayer = new OsmTileLayer(mMap);
-                mTileLayer.setTileSource(mTileSource);
-                mMap.layers().add(mTileLayer, LAYER_GROUP_ENUM.GROUP_VECTOR.ordinal());
-
-//                if (mS3db)
-//                    mMap.layers().add(new S3DBLayer(mMap, mTileLayer), LAYER_GROUP_ENUM.GROUP_3D_OBJECTS.ordinal());
-//                else
-//                mMap.layers().add(new BuildingLayer(mMap, mTileLayer), LAYER_GROUP_ENUM.GROUP_BUILDING.ordinal());
-                mMap.layers().add(new LabelLayer(mMap, mTileLayer), LAYER_GROUP_ENUM.GROUP_LABELS.ordinal());
-
-                MapInfo info = mTileSource.getMapInfo();
-                MapPosition pos = new MapPosition();
-                pos.setByBoundingBox(info.boundingBox, Tile.SIZE * 4, Tile.SIZE * 4);
-                mMap.animator().animateTo(pos);
-                loadTheme(null, true);
-
-                mPrefs.clear();
-                mTileSourceList.add(mTileSource);
+                    MapSourceFromNet.DataBean localDataBean = new MapSourceFromNet.DataBean();
+                    localDataBean.setGroup(LAYER_GROUP_ENUM.BASE_VECTOR_GROUP.name);
+                    localDataBean.setMemo(mapFile.getName());
+//                    localDataBean.setKind(-1);
+//                    localDataBean.setId(-1);
+//                    localDataBean.setType(-1);
+                    localDataBean.setMaps(new ArrayList<MapSourceFromNet.DataBean.MapsBean>());
+                    localDataBean.getMaps().add(mapFileDataBean);
+                    if (layerDataBeanList != null) {
+                        layerDataBeanList.add(localDataBean);
+                        if (layerManagerAdapter != null) {
+                            layerManagerAdapter.sortListDataAndGroup(layerDataBeanList);
+                            layerManagerAdapter.notifyDataSetChanged();
+                        }
+                    }
+                }
             }
         } else if (requestCode == SELECT_THEME_FILE) {//选择本地style文件显示
             if (resultCode != getActivity().RESULT_OK || intent == null || intent.getStringExtra(FilePicker.SELECTED_FILE) == null) {
@@ -649,7 +785,7 @@ public class CatEyeMainFragment extends BaseFragment {
                         JSONArray jsonArray = (JSONArray) reader.readObject();
                         if (jsonArray != null) {
                             ContourMPData contourMPData = new ContourMPData();
-                            contourMPData.setGeoPoint(new GeoPoint(((BigDecimal) jsonArray.get(1)).doubleValue(),((BigDecimal) jsonArray.get(0)).doubleValue()));
+                            contourMPData.setGeoPoint(new GeoPoint(((BigDecimal) jsonArray.get(1)).doubleValue(), ((BigDecimal) jsonArray.get(0)).doubleValue()));
                             contourMPData.setmHeight(((BigDecimal) jsonArray.get(2)).floatValue());
                             xyzList.add(contourMPData);
                         }
@@ -666,6 +802,33 @@ public class CatEyeMainFragment extends BaseFragment {
             } catch (Exception e) {
                 RxToast.error("您选择的文件不符合等高线文件读取标准");
             }
+        }
+    }
+
+    /**
+     * 增加本地地图layer
+     */
+    private void addLocalMapFileLayer(String localMapFilePath) {
+        MapFileTileSource mTileSource = new MapFileTileSource();
+        mTileSource.setPreferredLanguage("zh");
+
+        if (mTileSource.setMapFile(localMapFilePath)) {
+            //设置当前的文件选择的layer为地图的基础图层(第一层)==此处去掉此设置
+            VectorTileLayer mTileLayer = new OsmTileLayer(mMap);
+            mTileLayer.setTileSource(mTileSource);
+            mMap.layers().add(mTileLayer, LAYER_GROUP_ENUM.BASE_VECTOR_GROUP.orderIndex);
+//            LabelLayer labelLayer = new LabelLayer(mMap, mTileLayer);
+            mMap.layers().add(new LabelLayer(mMap, mTileLayer), LAYER_GROUP_ENUM.OTHER_GROUP.orderIndex);
+            mMap.layers().add(new BuildingLayer(mMap, mTileLayer), LAYER_GROUP_ENUM.OTHER_GROUP.orderIndex);
+
+            MapInfo info = mTileSource.getMapInfo();
+            MapPosition pos = new MapPosition();
+            pos.setByBoundingBox(info.boundingBox, Tile.SIZE * 4, Tile.SIZE * 4);
+            mMap.animator().animateTo(pos);
+            loadTheme(null, true);
+
+            mPrefs.clear();
+//            mTileSourceList.add(mTileSource);
         }
     }
 
@@ -706,7 +869,7 @@ public class CatEyeMainFragment extends BaseFragment {
         }
     }
 
-    private void createBitmapTileLayer(Context mContext, BitmapTileSource mTileSource, boolean USE_CACHE) {
+    private void createBitmapTileLayer(Context mContext, BitmapTileSource mTileSource, boolean USE_CACHE, String layerGroup) {
         if (mTileSource == null)
             return;
 
@@ -723,11 +886,15 @@ public class CatEyeMainFragment extends BaseFragment {
         }
 
         BitmapTileLayer mBitmapLayer = new BitmapTileLayer(mMap, mTileSource);
-        mMap.layers().add(mBitmapLayer, LAYER_GROUP_ENUM.GROUP_VECTOR.ordinal());
+        mMap.layers().add(mBitmapLayer, LAYER_GROUP_ENUM.getGroupByName(layerGroup).orderIndex);
         mMap.updateMap(true);
+
+        MapPosition mapPosition = mMap.getMapPosition();
+        mapPosition.setPosition(mapPosition.getLatitude(), mapPosition.getLongitude() + 0.0000001);
+        mMap.setMapPosition(mapPosition);
     }
 
-    private void createGeoJsonTileLayer(Context mContext, GeojsonTileSource mTileSource, boolean USE_CACHE) {
+    private void createGeoJsonTileLayer(Context mContext, GeojsonTileSource mTileSource, boolean USE_CACHE, String layerGroup) {
         if (mTileSource == null)
             return;
 
@@ -744,8 +911,8 @@ public class CatEyeMainFragment extends BaseFragment {
         }
 
         VectorTileLayer mVectorTileLayer = new VectorTileLayer(mMap, mTileSource);
-        mMap.layers().add(mVectorTileLayer, LAYER_GROUP_ENUM.GROUP_VECTOR.ordinal());
-        mMap.layers().add(new LabelLayer(mMap, mVectorTileLayer), LAYER_GROUP_ENUM.GROUP_VECTOR.ordinal());
+        mMap.layers().add(mVectorTileLayer, LAYER_GROUP_ENUM.getGroupByName(layerGroup).orderIndex);
+        mMap.layers().add(new LabelLayer(mMap, mVectorTileLayer), LAYER_GROUP_ENUM.OTHER_GROUP.orderIndex);
         loadTheme(null, true);
         mMap.updateMap(true);
     }
@@ -785,7 +952,7 @@ public class CatEyeMainFragment extends BaseFragment {
                 .strokeWidth(2.2f * CanvasAdapter.getScale()).strokeColor(Color.WHITE)
                 .build();
         ContourLineLayer contourLineLayer = new ContourLineLayer(mMap, data, style, textStyle);
-        mMap.layers().add(contourLineLayer, LAYER_GROUP_ENUM.GROUP_OPERTOR.ordinal());
+        mMap.layers().add(contourLineLayer, LAYER_GROUP_ENUM.OTHER_GROUP.orderIndex);
 
         RxToast.info("data ready");
         mMap.updateMap(true);
@@ -834,6 +1001,129 @@ public class CatEyeMainFragment extends BaseFragment {
                     hideOrShowButtonArea(isHiden, button_area);
                 }
                 break;
+            case SystemConstant.MSG_WHAT_DRAW_RESULT://获取到绘制的点集合
+                if (msg.arg1 == SystemConstant.DRAW_CONTOUR_LINE) {
+                    List<GeoPoint> geoPointList = (List<GeoPoint>) msg.obj;
+                    if (geoPointList != null && geoPointList.size() > 1) {
+                        StringBuilder contourParam = new StringBuilder();
+                        String layerName = null;
+                        double gujiaoLatMin = 36.1688086262;
+                        double gujiaoLonMin = 110.8021029688;
+                        double gujiaoLatMax = 39.3333699398;
+                        double gujiaoLonMax = 113.1415834394;
+
+                        double jingzhuangLatMin = 33.0335361398;
+                        double jingzhuangLonMin = 103.8403611975;
+                        double jingzhuangLatMax = 36.0227737918;
+                        double jingzhuangLonMax = 107.0461587400;
+                        for (GeoPoint geoPoint : geoPointList) {
+                            contourParam.append(geoPoint.getLongitude()).append(",").append(geoPoint.getLatitude()).append(";");
+                        }
+
+                        if (geoPointList.get(0).getLongitude() < gujiaoLonMax && geoPointList.get(0).getLongitude() > gujiaoLonMin && geoPointList.get(0).getLatitude() < gujiaoLatMax && geoPointList.get(0).getLatitude() > gujiaoLatMin) {
+                            layerName = "gujiao";
+                        }
+                        if (geoPointList.get(0).getLongitude() < jingzhuangLonMax && geoPointList.get(0).getLongitude() > jingzhuangLonMin && geoPointList.get(0).getLatitude() < jingzhuangLatMax && geoPointList.get(0).getLatitude() > jingzhuangLatMin) {
+                            layerName = "jingzhuang";
+                        }
+                        if (layerName == null) {
+                            RxToast.info("绘制的线不在指定区域内！");
+                            return;
+                        }
+
+                        final RxDialogLoading rxDialogLoading = new RxDialogLoading(getContext());
+                        OkGo.<String>get(URL_CONTOUR_CALCULATE).params("xys", contourParam.toString()).tag(this).params("layerName", layerName).converter(new StringConvert()).adapt(new ObservableResponse<String>()).subscribeOn(Schedulers.io()).doOnSubscribe(new Consumer<Disposable>() {
+                            @Override
+                            public void accept(Disposable disposable) throws Exception {
+                                rxDialogLoading.show();
+                            }
+                        }).observeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<Response<String>>() {
+                            @Override
+                            public void onSubscribe(Disposable d) {
+
+                            }
+
+                            @Override
+                            public void onNext(Response<String> stringResponse) {
+                                String resultStr = stringResponse.body();
+                                ContourFromNet contourFromNet = JSON.parseObject(resultStr, ContourFromNet.class);
+                                if (contourFromNet.isSuccess()) {
+                                    if (contourFromNet != null) {
+                                        List<ContourFromNet.Contour> contourList = contourFromNet.getData();
+                                        if (contourList != null && !contourList.isEmpty()) {
+                                            List<ContourMPData> contourMPDataList = new ArrayList<>();
+                                            for (ContourFromNet.Contour contour : contourList) {
+                                                ContourMPData contourMPData = new ContourMPData();
+                                                contourMPData.setGeoPoint(new GeoPoint(contour.getLatitude(), contour.getLongitude()));
+                                                contourMPData.setmHeight(contour.getHeight());
+                                                contourMPDataList.add(contourMPData);
+                                            }
+                                            //自动弹出绘制高度折线的fragment
+                                            Bundle pointBundle = new Bundle();
+                                            pointBundle.putSerializable(SystemConstant.DATA_CONTOUR_CHART, (Serializable) contourMPDataList);
+                                            loadRootFragment(R.id.layer_main_cateye_bottom, ContourMPChartFragment.newInstance(pointBundle));
+                                        } else {
+                                            RxToast.error("绘制的区域无法获取到高度信息!");
+                                        }
+                                    }
+                                } else {
+                                    RxToast.error("计算等高线失败");
+                                }
+
+                            }
+
+                            @Override
+                            public void onError(Throwable e) {
+                                RxToast.info("请求失败，请检查网络!", Toast.LENGTH_SHORT);
+                                RxLogTool.saveLogFile(e.toString());
+                            }
+
+                            @Override
+                            public void onComplete() {
+                                rxDialogLoading.dismiss();
+                            }
+                        });
+                    } else {
+                        RxToast.error("绘制的线至少需要包含两个点");
+                    }
+                }
+                break;
+            case SystemConstant.MSG_WHAT_DRAW_LAYER_TIME_SELECT:
+                int dataBeanId = msg.arg1;
+                int mapLayerIndex = msg.arg2;
+                replaceMultiLayerIndex(dataBeanId, mapLayerIndex);
+                break;
+        }
+    }
+
+    private void replaceMultiLayerIndex(int dataBeanId, int layerIndex) {
+        //首先遍历所有的图层数据，找出指定id的图层数据
+        MapSourceFromNet.DataBean replaceDataBean = null;
+        if (layerDataBeanList != null && !layerDataBeanList.isEmpty()) {
+            for (MapSourceFromNet.DataBean dataBean : layerDataBeanList) {
+                if (dataBeanId == dataBean.getId()) {
+                    replaceDataBean = dataBean;
+                    break;
+                }
+            }
+            //如果能找到指定的数据，则遍历图层列表,将原有的该资源对应的layer移除
+            if (replaceDataBean != null) {
+                Iterator iterator = mMap.layers().iterator();
+                while (iterator.hasNext()) {
+                    Layer layer = (Layer) iterator.next();
+                    if (layer instanceof BitmapTileLayer) {
+                        String id = ((BitmapTileLayer) layer).getTileSource().getOption(SystemConstant.LAYER_KEY_ID);
+                        if (id != null && id.equals(dataBeanId + "")) {
+                            iterator.remove();
+                        }
+                    }
+                }
+                BitmapTileSource mTileSource = BitmapTileSource.builder()
+                        .url(replaceDataBean.getMaps().get(layerIndex).getHref()).tilePath("/{X}/{Y}/{Z}." + replaceDataBean.getMaps().get(layerIndex).getExtension())
+                        .zoomMax(18).build();
+                createBitmapTileLayer(getActivity(), mTileSource, true, replaceDataBean.getGroup());
+                mTileSource.setOption(SystemConstant.LAYER_KEY_ID, replaceDataBean.getId() + "");
+            }
         }
     }
 
@@ -848,22 +1138,110 @@ public class CatEyeMainFragment extends BaseFragment {
     private void hideOrShowButtonArea(boolean isVisible, BUTTON_AREA button_area) {
         switch (button_area) {
             case ALL:
-                rootView.findViewById(R.id.layer_main_fragment_right).setVisibility(isVisible ? View.VISIBLE : View.GONE);
+                rootView.findViewById(R.id.layer_main_fragment_bottom).setVisibility(isVisible ? View.VISIBLE : View.GONE);
                 rootView.findViewById(R.id.img_location).setVisibility(isVisible ? View.VISIBLE : View.GONE);
                 break;
             case LOCATION:
                 rootView.findViewById(R.id.img_location).setVisibility(isVisible ? View.VISIBLE : View.GONE);
                 break;
-            case BOTTOM_LEFT:
-                rootView.findViewById(R.id.img_location).setVisibility(isVisible ? View.VISIBLE : View.GONE);
+            case LEFT:
+                rootView.findViewById(R.id.layer_main_fragment_left).setVisibility(isVisible ? View.VISIBLE : View.GONE);
                 break;
-            case BOTTOM_RIGHT:
+            case LEFT_BOTTOM:
+                rootView.findViewById(R.id.layer_main_fragment_left_bottom).setVisibility(isVisible ? View.VISIBLE : View.GONE);
+                break;
+            case BOTTOM:
+                rootView.findViewById(R.id.layer_main_fragment_bottom).setVisibility(isVisible ? View.VISIBLE : View.GONE);
+                break;
+            case BOTTOM_CENTER:
+                rootView.findViewById(R.id.layer_main_fragment_center_bottom).setVisibility(isVisible ? View.VISIBLE : View.GONE);
+                break;
+            case RIGHT:
+                rootView.findViewById(R.id.layer_main_fragment_right).setVisibility(isVisible ? View.VISIBLE : View.GONE);
+                break;
+            case RIGHT_BOTTOM:
                 rootView.findViewById(R.id.layer_main_fragment_right_bottom).setVisibility(isVisible ? View.VISIBLE : View.GONE);
                 break;
+
         }
     }
 
     public enum BUTTON_AREA {
-        ALL/*所有按钮*/, LOCATION/*定位按钮*/, BOTTOM_LEFT/*左下角*/, BOTTOM_RIGHT/*右下角*/
+        ALL/*所有按钮*/, LOCATION/*定位按钮*/, LEFT/*左部*/, LEFT_BOTTOM/*左下角*/, BOTTOM/*底部*/, BOTTOM_CENTER/*底部居中*/, RIGHT/*右部*/, RIGHT_BOTTOM/*右下部*/
+    }
+
+    @Override
+    public void onFragmentResult(int requestCode, int resultCode, Bundle data) {
+        super.onFragmentResult(requestCode, resultCode, data);
+        switch (requestCode) {
+            case 1:
+                break;
+        }
+    }
+
+    /**
+     * @param :
+     * @return :
+     * @method : clearAllLayers
+     * @Author : xiaoxiao
+     * @Describe : 清空地图上所有图层
+     * @Date : 2018/9/21
+     */
+    public void clearAllMapLayers() {
+        if (mMap != null && mMap.layers() != null) {
+            Iterator mapLayerIterator = mMap.layers().iterator();
+            while (mapLayerIterator.hasNext()) {
+                Layer layer = (Layer) mapLayerIterator.next();
+                if (!(layer instanceof MapEventLayer) && !(layer instanceof MapEventLayer2) && !(layer instanceof LocationLayer) && !(layer instanceof MapScaleBarLayer)) {
+                    mapLayerIterator.remove();
+                }
+            }
+        }
+    }
+
+    /**
+     * @author : xiaoxiao
+     * @version V1.0
+     * @ClassName : CatEyeMainFragment
+     * @Date : 2018/11/28
+     * @Description:
+     */
+    private class MapEventsReceiver extends Layer implements GestureListener {
+
+        public MapEventsReceiver(Map map) {
+            super(map);
+        }
+
+        public MapEventsReceiver(Map map, String name) {
+            this(map);
+            setName(name);
+        }
+
+        @Override
+        public boolean onGesture(Gesture g, MotionEvent e) {
+            if (img_chk_set_airplan.isSelected()&&g instanceof Gesture.Tap) {
+                GeoPoint p = mMap.viewport().fromScreenPoint(e.getX(), e.getY());
+
+                //获取当前绘制layer的所有polygon，检查是否与当前点击点位交叉
+                MultiPolygonLayer drawPolygonLayer= (MultiPolygonLayer) OverlayerManager.getInstance(mMap).getLayerByName(SystemConstant.AIR_PLAN_MULTI_POLYGON_DRAW);
+                List<Polygon> drawPolygonList=drawPolygonLayer.getAllPolygonList();
+                if (drawPolygonList!=null&&!drawPolygonList.isEmpty()){
+                    List<Polygon> tapPolygonList=new ArrayList<>();
+                    for (Polygon polygon:drawPolygonList){
+                    }
+                }
+
+                return true;
+            }
+            return false;
+        }
+    }
+
+    public List<MapSourceFromNet.DataBean> getLayerDataBeanList() {
+        return layerDataBeanList;
+    }
+
+    public List<MapSourceFromNet.DataBean> getMultiTimeLayerList() {
+        return multiTimeLayerList;
     }
 }

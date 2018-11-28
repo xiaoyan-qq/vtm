@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <ExpandableListView
+        android:id="@+id/sadLv_layerlist"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+    </ExpandableListView>
+
+    <TextView
+        android:id="@+id/tv_layerlist_add"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:padding="@dimen/button_padding_default"
+        android:text="添加本地图层" />
+
+
+</LinearLayout>

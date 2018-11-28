@@ -41,7 +41,7 @@
         stroke-width="2.0" />
 
     <!--等高线文字-->
-    <style-text caption="true" dy="0" fill="#2d51bc" font-family="medium" id="contour"
+    <style-text caption="true" dy="0" fill="#ff0000" font-family="medium" id="contour"
         k="contour" size="14" stroke="#ffffff" stroke-width="2.0" />
 
     <!--###### AREA styles ######-->
@@ -98,7 +98,8 @@
     <!--water-->
     <!--<style-area id="water" fill="#97b7e5" afc5e3 /> -->
     <!-- src="assets:textures/water.png" -->
-    <style-area fade="-1" fill="#99badf" id="water" mesh="true" />
+    <!--<style-area fade="-2" fill="#2298f5ff" id="water" mesh="true" />-->
+    <style-area fade="-2" fill="#00000000" id="water" mesh="true" />
 
     <!--###### LINE styles ######-->
 
@@ -122,7 +123,7 @@
     <style-line id="construction" stroke="#e0e0e0" width="1.2" />
     <style-line id="highway-service" use="residential" width="-0.6" />
     <!--等高线显示-->
-    <style-line id="contour" use="residential" width="-0.6" stroke="#4B0082" fade="0" outline="0"/>
+    <style-line id="contour" use="residential" width="-0.6" stroke="#ff0000" fade="0" outline="0"/>
 
     <!-- track|footway|path|cycleway -->
     <style-line cap="butt" fix="true" id="footway" stipple="2" stipple-stroke="#d35c48"
@@ -166,7 +167,7 @@
     </m>
 
     <m e="way" k="natural" v="nosea">
-        <area fill="#f8f8f8" mesh="true" />
+        <area fill="#11ffffff" mesh="true" fade="-1"/>
     </m>
 
     <m k="contour">

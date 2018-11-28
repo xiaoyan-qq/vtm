@@ -4,11 +4,7 @@ import android.app.Application;
 import android.content.Context;
 import android.support.multidex.MultiDex;
 
-import com.cateye.vtm.util.SystemConstant;
-import com.jiongbull.jlog.Logger;
-import com.jiongbull.jlog.constant.LogLevel;
-import com.jiongbull.jlog.constant.LogSegment;
-import com.jiongbull.jlog.util.TimeUtils;
+import com.beardedhen.androidbootstrap.TypefaceProvider;
 import com.lzy.okgo.OkGo;
 import com.lzy.okgo.cache.CacheEntity;
 import com.lzy.okgo.cache.CacheMode;
@@ -16,7 +12,7 @@ import com.lzy.okgo.cookie.CookieJarImpl;
 import com.lzy.okgo.cookie.store.MemoryCookieStore;
 import com.lzy.okgo.interceptor.HttpLoggingInterceptor;
 import com.umeng.commonsdk.UMConfigure;
-import com.vondear.rxtools.RxTool;
+import com.vondear.rxtool.RxTool;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -97,5 +93,8 @@ public class MainApplication extends Application {
 
         //友盟初始化
         UMConfigure.init(this, null, null, UMConfigure.DEVICE_TYPE_PHONE, null);
+
+        //为Bootstrap注册默认图标集
+        TypefaceProvider.registerDefaultIconSets();
     }
 }

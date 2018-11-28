@@ -25,8 +25,8 @@ import com.github.mikephil.charting.highlight.Highlight;
 import com.github.mikephil.charting.listener.ChartTouchListener;
 import com.github.mikephil.charting.listener.OnChartGestureListener;
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
-import com.vondear.rxtools.RxDeviceTool;
-import com.vondear.rxtools.view.dialog.RxDialogLoading;
+import com.vondear.rxtool.RxDeviceTool;
+import com.vondear.rxui.view.dialog.RxDialogLoading;
 
 import org.oscim.backend.canvas.Bitmap;
 import org.oscim.core.GeoPoint;
@@ -108,9 +108,10 @@ public class ContourMPChartFragment extends BaseDrawFragment {
     @Override
     public void initView(View rootView) {
         rxDialogLoading = new RxDialogLoading(getActivity());
+        rxDialogLoading.setTitle("捕捉界面区域");
         currentMapPosition = new MapPosition();
-        contourChart = rootView.findViewById(R.id.contour_chart);
-        img_close = rootView.findViewById(R.id.img_contour_chart_close);
+        contourChart = (LineChart) rootView.findViewById(R.id.contour_chart);
+        img_close = (ImageView) rootView.findViewById(R.id.img_contour_chart_close);
         contourChart.setMinimumHeight(((int) (RxDeviceTool.getScreenHeight(getActivity()) * 0.3)));
         //设置折线图的x轴显示在底部
         contourChart.getXAxis().setPosition(XAxis.XAxisPosition.TOP);
@@ -128,7 +129,7 @@ public class ContourMPChartFragment extends BaseDrawFragment {
 
         //添加一个操作图层，监听用户在地图上的点击事件
         mapEventsReceiver = new MapEventsReceiver(CatEyeMapManager.getInstance(getActivity()).getCatEyeMap());
-        CatEyeMapManager.getInstance(getActivity()).getCatEyeMap().layers().add(mapEventsReceiver, MainActivity.LAYER_GROUP_ENUM.GROUP_OPERTOR.ordinal());
+        CatEyeMapManager.getInstance(getActivity()).getCatEyeMap().layers().add(mapEventsReceiver, MainActivity.LAYER_GROUP_ENUM.OPERTOR_GROUP.orderIndex);
 
         //绘制所有数据
         if (mpChartDataList != null && polylineOverlay != null && currentChartLine != null) {
@@ -200,7 +201,7 @@ public class ContourMPChartFragment extends BaseDrawFragment {
      */
     private void initCurrentPolylineOverlayer() {
         //自动添加pathLayer
-        int c = getResources().getColor(R.color.violet);
+        int c = getResources().getColor(R.color.tomato);
         Style lineStyle = Style.builder()
                 .stippleColor(c)
                 .stipple(24)
@@ -211,7 +212,7 @@ public class ContourMPChartFragment extends BaseDrawFragment {
                 .randomOffset(false)
                 .build();
         currentChartLine = new PathLayer(CatEyeMapManager.getInstance(getActivity()).getCatEyeMap(), lineStyle);
-        CatEyeMapManager.getInstance(getActivity()).getCatEyeMap().layers().add(currentChartLine, MainActivity.LAYER_GROUP_ENUM.GROUP_BUILDING.ordinal());
+        CatEyeMapManager.getInstance(getActivity()).getCatEyeMap().layers().add(currentChartLine, MainActivity.LAYER_GROUP_ENUM.OPERTOR_GROUP.orderIndex);
     }
 
     /**
@@ -292,7 +293,7 @@ public class ContourMPChartFragment extends BaseDrawFragment {
 
                 @Override
                 public void onChartGestureEnd(android.view.MotionEvent me, ChartTouchListener.ChartGesture lastPerformedGesture) {
-                    if (isMoveOrScaleChart){
+                    if (isMoveOrScaleChart) {
                         Observable.create(new ObservableOnSubscribe<PathLayer>() {
                             @Override
                             public void subscribe(ObservableEmitter<PathLayer> emitter) throws Exception {
@@ -332,7 +333,7 @@ public class ContourMPChartFragment extends BaseDrawFragment {
                             public void onComplete() {
                                 if (rxDialogLoading.isShowing()) {
                                     rxDialogLoading.dismiss();
-                                    isMoveOrScaleChart=false;
+                                    isMoveOrScaleChart = false;
                                 }
                             }
                         });
@@ -380,8 +381,8 @@ public class ContourMPChartFragment extends BaseDrawFragment {
     }
 
     @Override
-    public void onDetach() {
-        super.onDetach();
+    public void onStop() {
+        super.onStop();
         //当前界面被返回时，自动移除所有的overlayer
         if (mapEventsReceiver != null) {
             CatEyeMapManager.getInstance(getActivity()).getCatEyeMap().layers().remove(mapEventsReceiver);
@@ -390,6 +391,11 @@ public class ContourMPChartFragment extends BaseDrawFragment {
             CatEyeMapManager.getInstance(getActivity()).getCatEyeMap().layers().remove(currentChartLine);
         }
         clearMapOverlayer();
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
         //通知主界面隐藏部分重新显示
         setMainFragmentAreaVisible(CatEyeMainFragment.BUTTON_AREA.ALL, true);
     }

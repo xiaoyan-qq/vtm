@@ -4,7 +4,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.1.3'
+        classpath 'com.android.tools.build:gradle:3.0.1'
         classpath 'com.github.dcendents:android-maven-gradle-plugin:2.0'
         classpath 'com.hujiang.aspectjx:gradle-android-plugin-aspectjx:1.1.0'
         classpath 'org.aspectj:aspectjtools:1.8.13'
@@ -38,12 +38,12 @@ allprojects {
     }
 }
 
-static def androidCompileSdk() { return 25 }
+static def androidCompileSdk() { return 27 }
 
 // Minimum API Level by Support Library
 static def androidMinSdk() { return 14 }
 
-static def androidTargetSdk() { return 22 }
+static def androidTargetSdk() { return 26 }
 
 static def versionCode() { return 1 }
 
