@@ -28,5 +28,7 @@ public class SystemConstant {
 
     public static final String BUNDLE_MULTI_TIME_SELECTOR_DATA = "BUNDLE_MULTI_TIME_SELECTOR_DATA";//多时序选择所需要的数据
     public static final String LAYER_KEY_ID = "LAYER_KEY_ID";//记录图层id
-    public static final String AIR_PLAN_MULTI_POLYGON_NAME = "AIR_PLAN";//航区规划对应的多面overlayer的名称，用于判断该图层是否已经添加到map上
+    public static final String AIR_PLAN_MULTI_POLYGON_DRAW = "AIR_PLAN_MULTI_POLYGON_DRAW";//航区规划对应的多面overlayer的名称，用于判断该图层是否已经添加到map上
+    public static final String AIR_PLAN_MULTI_POLYGON_PARAM = "AIR_PLAN_MULTI_POLYGON_PARAM";//航区规划参数设计对应的多面overlayer的名称
+    public static final String AIR_PLAN_MULTI_POLYGON_PARAM_EVENT = "AIR_PLAN_MULTI_POLYGON_PARAM_EVENT";//航区规划参数设计对应的操作overlayer的名称
 }

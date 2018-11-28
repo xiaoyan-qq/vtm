@@ -23,8 +23,6 @@
         android:layout_gravity="bottom|right"
         android:layout_marginBottom="@dimen/button_padding_default"
         android:background="@drawable/selector_bg_blue_frame_white_bg_4_radius"
-        android:clickable="true"
-        android:focusable="true"
         android:padding="@dimen/button_padding_default"
         android:src="@drawable/selector_previous" />
 
@@ -35,8 +33,6 @@
         android:layout_gravity="bottom|right"
         android:layout_marginBottom="@dimen/button_padding_default"
         android:background="@drawable/selector_bg_blue_frame_white_bg_4_radius"
-        android:clickable="true"
-        android:focusable="true"
         android:padding="@dimen/button_padding_default"
         android:src="@drawable/selector_clear" />
 

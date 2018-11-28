@@ -38,10 +38,13 @@ import com.lzy.okgo.convert.StringConvert;
 import com.lzy.okgo.model.Response;
 import com.lzy.okrx2.adapter.ObservableResponse;
 import com.tencent.map.geolocation.TencentLocation;
+import com.vividsolutions.jts.geom.Polygon;
 import com.vondear.rxtool.RxLogTool;
 import com.vondear.rxtool.view.RxToast;
 import com.vondear.rxui.view.dialog.RxDialog;
 import com.vondear.rxui.view.dialog.RxDialogLoading;
+import com.vtm.library.layers.MultiPolygonLayer;
+import com.vtm.library.tools.OverlayerManager;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -60,6 +63,9 @@ import org.oscim.core.MapElement;
 import org.oscim.core.MapPosition;
 import org.oscim.core.Tag;
 import org.oscim.core.Tile;
+import org.oscim.event.Gesture;
+import org.oscim.event.GestureListener;
+import org.oscim.event.MotionEvent;
 import org.oscim.layers.ContourLineLayer;
 import org.oscim.layers.Layer;
 import org.oscim.layers.LocationLayer;
@@ -169,7 +175,7 @@ public class CatEyeMainFragment extends BaseFragment {
 
     @Override
     public void initView(View rootView) {
-        this.mapView = ((MainActivity) getActivity()).getMapView();
+        mapView = (MapView) findViewById(R.id.mapView);
         mMap = mapView.map();
 
         layer_fragment = (FrameLayout) rootView.findViewById(R.id.layer_main_cateye_bottom);
@@ -434,7 +440,33 @@ public class CatEyeMainFragment extends BaseFragment {
                     popChild();//弹出绘制界面
                 }
             } else if (view.getId() == R.id.chk_set_airplan) {//设置航区参数
+                if (!view.isSelected()){
+                    //首先判断当前图层列表中是否存在航区显示的图层
+                    MultiPolygonLayer airplanDrawOverlayer = (MultiPolygonLayer) OverlayerManager.getInstance(mMap).getLayerByName(SystemConstant.AIR_PLAN_MULTI_POLYGON_DRAW);
+                    if (airplanDrawOverlayer==null){
+                        RxToast.warning("当前没有需要编辑参数的航区面");
+                        return;
+                    }
 
+                    view.setSelected(true);
+                    if (airplanDrawOverlayer != null) {
+                        if (OverlayerManager.getInstance(mMap).getLayerByName(SystemConstant.AIR_PLAN_MULTI_POLYGON_PARAM)==null){
+                            //开始编辑参数，增加编辑参数layer，和用户点击layer
+                            mMap.layers().add(new MultiPolygonLayer(mMap, Color.MAGENTA, Color.MAGENTA, Color.MAGENTA, SystemConstant.AIR_PLAN_MULTI_POLYGON_PARAM));
+                            mMap.layers().add(new MapEventsReceiver(mMap,SystemConstant.AIR_PLAN_MULTI_POLYGON_PARAM_EVENT));
+                        }
+                    }
+                }else {
+                    view.setSelected(false);
+                    //判断当前参数设置图层是否有polygon，如果存在，则弹出对话框提示用户设置参数
+                    MultiPolygonLayer airplanParamOverlayer= (MultiPolygonLayer) OverlayerManager.getInstance(mMap).getLayerByName(SystemConstant.AIR_PLAN_MULTI_POLYGON_PARAM);
+                    if (airplanParamOverlayer==null||airplanParamOverlayer.getAllPolygonList()==null||airplanParamOverlayer.getAllPolygonList().isEmpty()){
+                        RxToast.warning("没有需要设置参数的");
+                    }else {
+                        List<Polygon> polygonList=airplanParamOverlayer.getAllPolygonList();
+                        //弹出参数设置对话框
+                    }
+                }
             }
         }
     };
@@ -1164,6 +1196,45 @@ public class CatEyeMainFragment extends BaseFragment {
                     mapLayerIterator.remove();
                 }
             }
+        }
+    }
+
+    /**
+     * @author : xiaoxiao
+     * @version V1.0
+     * @ClassName : CatEyeMainFragment
+     * @Date : 2018/11/28
+     * @Description:
+     */
+    private class MapEventsReceiver extends Layer implements GestureListener {
+
+        public MapEventsReceiver(Map map) {
+            super(map);
+        }
+
+        public MapEventsReceiver(Map map, String name) {
+            this(map);
+            setName(name);
+        }
+
+        @Override
+        public boolean onGesture(Gesture g, MotionEvent e) {
+            if (img_chk_set_airplan.isSelected()&&g instanceof Gesture.Tap) {
+                GeoPoint p = mMap.viewport().fromScreenPoint(e.getX(), e.getY());
+
+                //获取当前绘制layer的所有polygon，检查是否与当前点击点位交叉
+                MultiPolygonLayer drawPolygonLayer= (MultiPolygonLayer) OverlayerManager.getInstance(mMap).getLayerByName(SystemConstant.AIR_PLAN_MULTI_POLYGON_DRAW);
+                List<Polygon> drawPolygonList=drawPolygonLayer.getAllPolygonList();
+                if (drawPolygonList!=null&&!drawPolygonList.isEmpty()){
+                    List<Polygon> tapPolygonList=new ArrayList<>();
+                    for (Polygon polygon:drawPolygonList){
+                        if (polygon.)
+                    }
+                }
+
+                return true;
+            }
+            return false;
         }
     }
 

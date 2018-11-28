@@ -23,7 +23,7 @@ public class MultiPolygonLayer extends PathLayer {
     public MultiPolygonLayer(Map map, Style style) {
         super(map, style);
         mStyle = style;
-        polygonDrawableList=new ArrayList<>();
+        polygonDrawableList = new ArrayList<>();
     }
 
     public MultiPolygonLayer(Map map, Style style, String name) {
@@ -31,16 +31,16 @@ public class MultiPolygonLayer extends PathLayer {
         this.mName = name;
     }
 
-    public MultiPolygonLayer(Map map, int lineColor, float lineWidth, int fillColor, float fillAlpha) {
+    public MultiPolygonLayer(Map map, int lineColor, float lineWidth, int fillColor, float fillAlpha, String name) {
         this(map, Style.builder()
                 .fixed(true)
                 .strokeColor(lineColor)
                 .strokeWidth(lineWidth).fillColor(fillColor).fillAlpha(fillAlpha)
-                .build());
+                .build(),name);
     }
 
-    public MultiPolygonLayer(Map map, int lineColor, int fillColor, int fillAlpha) {
-        this(map, lineColor, 0.5f, fillColor, fillAlpha);
+    public MultiPolygonLayer(Map map, int lineColor, int fillColor, int fillAlpha, String name) {
+        this(map, lineColor, 0.5f, fillColor, fillAlpha, name);
     }
 
     /**
@@ -112,8 +112,8 @@ public class MultiPolygonLayer extends PathLayer {
         }
     }
 
-    public void addPolygonDrawable(Polygon polygon){
-        List<GeoPoint> geoPointList=GeometryTools.getGeoPoints(polygon.toString());
+    public void addPolygonDrawable(Polygon polygon) {
+        List<GeoPoint> geoPointList = GeometryTools.getGeoPoints(polygon.toString());
         addPolygonDrawable(geoPointList);
     }
 

@@ -3,6 +3,11 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <org.oscim.android.MapView
+        android:id="@+id/mapView"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent" />
+
     <!--用来显示fragment的布局文件,底部-->
     <FrameLayout
         android:id="@+id/layer_main_cateye_bottom"

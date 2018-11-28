@@ -38,12 +38,15 @@ import static org.oscim.android.canvas.AndroidGraphics.drawableToBitmap;
 public class BaseDrawFragment extends BaseFragment {
 
     protected DRAW_STATE currentDrawState = DRAW_STATE.DRAW_NONE;
+    protected Map mMap;
 
     //overLayer图层
     protected ItemizedLayer<MarkerItem> markerLayer;
     protected PathLayer polylineOverlay;
     protected PolygonLayer polygonOverlay;
     protected MarkerSymbol defaultMarkerSymbol;
+
+    protected Style lineStyle, polygonStyle;
 
     @Override
     public int getFragmentLayoutId() {
@@ -53,38 +56,72 @@ public class BaseDrawFragment extends BaseFragment {
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        //打开该fragment，则自动向地图中添加marker的overlay
-        Bitmap bitmapPoi = drawableToBitmap(getResources().getDrawable(R.drawable.marker_poi));
-        defaultMarkerSymbol = new MarkerSymbol(bitmapPoi, MarkerSymbol.HotspotPlace.CENTER);
-        markerLayer = new ItemizedLayer<MarkerItem>(CatEyeMapManager.getInstance(getActivity()).getCatEyeMap(), defaultMarkerSymbol);
-        CatEyeMapManager.getInstance(getActivity()).getCatEyeMap().layers().add(markerLayer, MainActivity.LAYER_GROUP_ENUM.OPERTOR_GROUP.orderIndex);
+        mMap = CatEyeMapManager.getInstance(getActivity()).getCatEyeMap();
 
-        //自动添加pathLayer
-        int c = Color.RED;
-        Style lineStyle = Style.builder()
-                .stippleColor(c)
-                .stipple(24)
-                .stippleWidth(1)
-                .strokeWidth(2)
-                .strokeColor(c)
-                .fixed(true)
-                .randomOffset(false)
-                .build();
-        polylineOverlay = new PathLayer(CatEyeMapManager.getInstance(getActivity()).getCatEyeMap(), lineStyle);
-        CatEyeMapManager.getInstance(getActivity()).getCatEyeMap().layers().add(polylineOverlay, MainActivity.LAYER_GROUP_ENUM.OPERTOR_GROUP.orderIndex);
-
-        Style polygonStyle = Style.builder()
-                .stippleColor(c)
-                .stipple(24)
-                .stippleWidth(1)
-                .strokeWidth(2)
-                .strokeColor(c).fillColor(c).fillAlpha(0.5f)
-                .fixed(true)
-                .randomOffset(false)
-                .build();
-        polygonOverlay = new PolygonLayer(CatEyeMapManager.getInstance(getActivity()).getCatEyeMap(), polygonStyle);
-        CatEyeMapManager.getInstance(getActivity()).getCatEyeMap().layers().add(polygonOverlay, MainActivity.LAYER_GROUP_ENUM.OPERTOR_GROUP.orderIndex);
+        initDrawLayers();
         return super.onCreateView(inflater, container, savedInstanceState);
+    }
+
+    /**
+     * 添加绘制所需要的图层
+     */
+    public void initDrawLayers() {
+        if (markerLayer == null) {
+            //打开该fragment，则自动向地图中添加marker的overlay
+            Bitmap bitmapPoi = drawableToBitmap(getResources().getDrawable(R.drawable.marker_poi));
+            defaultMarkerSymbol = new MarkerSymbol(bitmapPoi, MarkerSymbol.HotspotPlace.CENTER);
+            markerLayer = new ItemizedLayer<MarkerItem>(mMap, defaultMarkerSymbol);
+            mMap.layers().add(markerLayer, MainActivity.LAYER_GROUP_ENUM.OPERTOR_GROUP.orderIndex);
+        }
+
+        if (polylineOverlay == null) {
+            //自动添加pathLayer
+            lineStyle = Style.builder()
+                    .stippleColor(Color.RED)
+                    .stipple(24)
+                    .stippleWidth(1)
+                    .strokeWidth(2)
+                    .strokeColor(Color.RED)
+                    .fixed(true)
+                    .randomOffset(false)
+                    .build();
+            polylineOverlay = new PathLayer(CatEyeMapManager.getInstance(getActivity()).getCatEyeMap(), lineStyle);
+            mMap.layers().add(polylineOverlay, MainActivity.LAYER_GROUP_ENUM.OPERTOR_GROUP.orderIndex);
+        }
+
+        if (polygonOverlay == null) {
+            polygonStyle = Style.builder()
+                    .stippleColor(Color.RED)
+                    .stipple(24)
+                    .stippleWidth(1)
+                    .strokeWidth(2)
+                    .strokeColor(Color.RED).fillColor(Color.RED).fillAlpha(0.5f)
+                    .fixed(true)
+                    .randomOffset(false)
+                    .build();
+            polygonOverlay = new PolygonLayer(CatEyeMapManager.getInstance(getActivity()).getCatEyeMap(), polygonStyle);
+            mMap.layers().add(polygonOverlay, MainActivity.LAYER_GROUP_ENUM.OPERTOR_GROUP.orderIndex);
+        }
+    }
+
+    /**
+     * 清空绘制图层
+     */
+    public void clearDrawLayers() {
+        if (markerLayer != null) {
+            mMap.layers().remove(markerLayer);
+        }
+        if (polylineOverlay != null) {
+            mMap.layers().remove(polylineOverlay);
+        }
+        if (polygonOverlay != null) {
+            mMap.layers().remove(polygonOverlay);
+        }
+        mMap.updateMap(true);
+
+        markerLayer = null;
+        polylineOverlay = null;
+        polygonOverlay = null;
     }
 
     @Override
