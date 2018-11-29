@@ -172,7 +172,7 @@ public class AirPlanDrawFragment extends BaseDrawFragment {
                     .randomOffset(false)
                     .build();
             multiPolygonLayer = new MultiPolygonLayer(mMap, polygonStyle, SystemConstant.AIR_PLAN_MULTI_POLYGON_DRAW);
-            mMap.layers().add(multiPolygonLayer);
+            mMap.layers().add(multiPolygonLayer, MainActivity.LAYER_GROUP_ENUM.OPERTOR_GROUP.orderIndex);
         }
     }
 }

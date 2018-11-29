@@ -334,20 +334,20 @@ public class GeometryTools {
                 com.vividsolutions.jts.geom.Point point = geometrys
                         .getInteriorPoint();
 
-                GeoPoint geoInteriorPoint = new GeoPoint(point.getX(), point.getY());
+                GeoPoint geoInteriorPoint = new GeoPoint(point.getY(), point.getX());
 
                 if (geometrys.getGeometryType().equalsIgnoreCase("Point")) {
 
                     Coordinate coordinate = geometrys.getCoordinate();
 
-                    GeoPoint geo = new GeoPoint(coordinate.x, coordinate.y);
+                    GeoPoint geo = new GeoPoint(coordinate.y, coordinate.x);
 
                     return geo;
 
                 } else if (geometrys.getGeometryType().equalsIgnoreCase("LineString") || geometrys.getGeometryType().equalsIgnoreCase("MultiLineString")) {
                     Coordinate[] coordinates = geometrys.getCoordinates();
                     if (coordinates != null && coordinates.length > 0) {
-                        GeoPoint geo = new GeoPoint(coordinates[0].x, coordinates[0].y);
+                        GeoPoint geo = new GeoPoint(coordinates[0].y, coordinates[0].x);
                         return geo;
                     } else {
                         return geoInteriorPoint;
@@ -399,7 +399,7 @@ public class GeometryTools {
                 double y1 = points.get(0).getLatitude();
                 double x2 = points.get(1).getLongitude();
                 double y2 = points.get(1).getLatitude();
-                GeoPoint newPoint = new GeoPoint((x1 + x2) / 2, (y1 + y2) / 2);
+                GeoPoint newPoint = new GeoPoint((y1 + y2) / 2, (x1 + x2) / 2);
                 return newPoint;
             } else {
                 double total = 0;
@@ -441,7 +441,7 @@ public class GeometryTools {
                             y = (point2.getLatitude() - point1.getLatitude()) * dx;
                             y = point2.getLatitude() - y;
                         }
-                        GeoPoint geoPoint = new GeoPoint(x, y);
+                        GeoPoint geoPoint = new GeoPoint(y, x);
                         return geoPoint;
                     } else {
                         if (total - a < 4) {
@@ -461,7 +461,7 @@ public class GeometryTools {
                 double y1 = points.get(0).getLatitude();
                 double x2 = points.get(1).getLongitude();
                 double y2 = points.get(1).getLatitude();
-                GeoPoint newPoint = new GeoPoint((x1 + x2) / 2, (y1 + y2) / 2);
+                GeoPoint newPoint = new GeoPoint((y1 + y2) / 2, (x1 + x2) / 2);
                 if (index != null && index.length > 1) {
                     index[0] = 0;
                     index[1] = 1;
@@ -511,7 +511,7 @@ public class GeometryTools {
                             y = (point2.getLatitude() - point1.getLatitude()) * dx;
                             y = point2.getLatitude() - y;
                         }
-                        GeoPoint geoPoint = new GeoPoint(x, y);
+                        GeoPoint geoPoint = new GeoPoint(y, x);
                         if (index != null && index.length > 1) {
                             index[0] = i;
                             index[1] = i + 1;
@@ -549,7 +549,7 @@ public class GeometryTools {
             if (coordinates != null && coordinates.length > 0) {
                 list = new ArrayList<GeoPoint>();
                 for (Coordinate coor : coordinates) {
-                    list.add(new GeoPoint(coor.x, coor.y));
+                    list.add(new GeoPoint(coor.y, coor.x));
                 }
             }
         }
@@ -720,8 +720,8 @@ public class GeometryTools {
                     for (int i = 0; i < points.length; i++) {
                         String point[] = points[i].trim().split(" ");
                         if (point.length == 2) {
-                            list.add(new GeoPoint(Double.parseDouble(point[0].trim()),
-                                    Double.parseDouble(point[1].trim())));
+                            list.add(new GeoPoint(Double.parseDouble(point[1].trim()),
+                                    Double.parseDouble(point[0].trim())));
                         }
                     }
                     if (list != null && !list.isEmpty()) {
@@ -1040,7 +1040,7 @@ public class GeometryTools {
                             Geometry geometry = line1.intersection(line2);
                             if (geometry != null && !geometry.isEmpty() && geometry.getGeometryType().equalsIgnoreCase("Point")) {
                                 if (!line2.getStartPoint().equals(geometry) && !line2.getEndPoint().equals(geometry)) {
-                                    listGeoPoint.add(new GeoPoint(geometry.getCoordinate().x, geometry.getCoordinate().y));
+                                    listGeoPoint.add(new GeoPoint(geometry.getCoordinate().y, geometry.getCoordinate().x));
                                 }
                             }
                         }
@@ -1240,7 +1240,7 @@ public class GeometryTools {
         double x = lonLat.getLongitude() * 20037508.34 / 180;
         double y = Math.log(Math.tan((90 + lonLat.getLatitude()) * Math.PI / 360)) / (Math.PI / 180);
         y = y * 20037508.34 / 180;
-        GeoPoint mercator = new GeoPoint(x, y);
+        GeoPoint mercator = new GeoPoint(y, x);
         return mercator;
     }
 
@@ -1250,7 +1250,7 @@ public class GeometryTools {
         double x = mercator.getLongitude() / 20037508.34 * 180;
         double y = mercator.getLatitude() / 20037508.34 * 180;
         y = 180 / Math.PI * (2 * Math.atan(Math.exp(y * Math.PI / 180)) - Math.PI / 2);
-        GeoPoint lonLat = new GeoPoint(x, y);
+        GeoPoint lonLat = new GeoPoint(y, x);
         return lonLat;
     }
 

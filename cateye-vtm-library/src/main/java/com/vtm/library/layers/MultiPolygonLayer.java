@@ -11,6 +11,7 @@ import org.oscim.layers.vector.geometries.Style;
 import org.oscim.map.Map;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -33,13 +34,17 @@ public class MultiPolygonLayer extends PathLayer {
 
     public MultiPolygonLayer(Map map, int lineColor, float lineWidth, int fillColor, float fillAlpha, String name) {
         this(map, Style.builder()
+                .stippleColor(lineColor)
+                .stipple(24)
+                .stippleWidth(lineWidth)
+                .strokeWidth(lineWidth)
+                .strokeColor(lineColor).fillColor(fillColor).fillAlpha(fillAlpha)
                 .fixed(true)
-                .strokeColor(lineColor)
-                .strokeWidth(lineWidth).fillColor(fillColor).fillAlpha(fillAlpha)
-                .build(),name);
+                .randomOffset(false)
+                .build(), name);
     }
 
-    public MultiPolygonLayer(Map map, int lineColor, int fillColor, int fillAlpha, String name) {
+    public MultiPolygonLayer(Map map, int lineColor, int fillColor, float fillAlpha, String name) {
         this(map, lineColor, 0.5f, fillColor, fillAlpha, name);
     }
 
@@ -54,7 +59,7 @@ public class MultiPolygonLayer extends PathLayer {
             if (pointList == null || pointList.size() < 3) {
                 return;
             }
-            if (isClose && pointList != null && pointList.get(0) != pointList.get(pointList.size() - 1)) {
+            if (isClose && pointList != null && !GeometryTools.createGeometry(pointList.get(0)).equals(GeometryTools.createGeometry(pointList.get(pointList.size() - 1)))) {
                 pointList.add(pointList.get(0));
             }
             synchronized (this) {
@@ -63,6 +68,7 @@ public class MultiPolygonLayer extends PathLayer {
                 polygonDrawableList.add(polygonDrawable);
             }
             mWorker.submit(0);
+            update();
         }
     }
 
@@ -72,6 +78,7 @@ public class MultiPolygonLayer extends PathLayer {
     public void removePolygonDrawable(int i) {
         if (polygonDrawableList != null && polygonDrawableList.size() > i) {
             remove(polygonDrawableList.get(i));
+            update();
         }
     }
 
@@ -87,11 +94,16 @@ public class MultiPolygonLayer extends PathLayer {
 
     public void removePolygonDrawable(Geometry polygon) {
         if (polygonDrawableList != null && !polygonDrawableList.isEmpty()) {
-            for (PolygonDrawable polygonDrawable : polygonDrawableList) {
-                if (polygonDrawable.getGeometry().equals(polygon)) {
+            Iterator iterator = polygonDrawableList.iterator();
+            while (iterator.hasNext()) {
+                PolygonDrawable polygonDrawable = (PolygonDrawable) iterator.next();
+                if (GeometryTools.createGeometry(polygonDrawable.getGeometry().toString()).equals(polygon)) {
                     remove(polygonDrawable);
+                    iterator.remove();
+                    break;
                 }
             }
+            update();
         }
     }
 
@@ -100,7 +112,7 @@ public class MultiPolygonLayer extends PathLayer {
             if (pointList == null || pointList.size() < 3) {
                 return;
             }
-            if (pointList != null && pointList.get(0) != pointList.get(pointList.size() - 1)) {
+            if (pointList != null && !GeometryTools.createGeometry(pointList.get(0)).equals(GeometryTools.createGeometry(pointList.get(pointList.size() - 1)))) {
                 pointList.add(pointList.get(0));
             }
             synchronized (this) {
@@ -110,6 +122,7 @@ public class MultiPolygonLayer extends PathLayer {
             }
             mWorker.submit(0);
         }
+        update();
     }
 
     public void addPolygonDrawable(Polygon polygon) {

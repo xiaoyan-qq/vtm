@@ -1,5 +1,7 @@
 package com.vtm.library.layers;
 
+import com.vtm.library.tools.GeometryTools;
+
 import org.oscim.core.GeoPoint;
 import org.oscim.layers.vector.PathLayer;
 import org.oscim.layers.vector.geometries.PolygonDrawable;
@@ -39,7 +41,7 @@ public class PolygonLayer extends PathLayer {
         if (pointList == null || pointList.size() < 3) {
             return;
         }
-        if (isClose && pointList != null && pointList.get(0) != pointList.get(pointList.size() - 1)) {
+        if (isClose && pointList != null && !GeometryTools.createGeometry(pointList.get(0)).equals(GeometryTools.createGeometry(pointList.get(pointList.size() - 1)))) {
             pointList.add(pointList.get(0));
         }
         synchronized (this) {
