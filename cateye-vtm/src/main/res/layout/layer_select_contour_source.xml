@@ -6,13 +6,13 @@
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
         android:layout_centerInParent="true"
         android:gravity="center"
+        android:orientation="vertical"
         android:padding="@dimen/button_padding_default">
 
         <TextView
-            android:id="@+id/tv_map_source_local"
+            android:id="@+id/tv_map_contour_local"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="@drawable/selector_bg_blue_frame_white_bg_4_radius"
@@ -20,14 +20,14 @@
             android:focusable="true"
             android:padding="@dimen/button_padding_default"
             android:src="@drawable/selector_map_add"
-            android:text="@string/local_map_source" />
+            android:text="@string/local_contour_source" />
 
         <View
             android:layout_width="0dp"
             android:layout_height="@dimen/activity_vertical_margin"></View>
 
         <TextView
-            android:id="@+id/tv_map_source_net"
+            android:id="@+id/tv_map_contour_draw"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="@drawable/selector_bg_blue_frame_white_bg_4_radius"
@@ -35,6 +35,6 @@
             android:focusable="true"
             android:padding="@dimen/button_padding_default"
             android:src="@drawable/selector_vector_point"
-            android:text="@string/net_map_source" />
+            android:text="@string/draw_contour_source" />
     </LinearLayout>
 </RelativeLayout>

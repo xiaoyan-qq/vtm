@@ -6,7 +6,7 @@ android {
 
 
     defaultConfig {
-        minSdkVersion 15
+        minSdkVersion 16
         targetSdkVersion 26
         versionCode 1
         versionName "1.0"
@@ -43,7 +43,7 @@ android {
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-    implementation 'com.android.support:appcompat-v7:26.1.0'
+    implementation 'com.android.support:appcompat-v7:26.0.0'
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.1'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
@@ -62,4 +62,7 @@ dependencies {
     api 'org.mapsforge:spatialite-android:master-SNAPSHOT:natives-armeabi'
     api 'org.mapsforge:spatialite-android:master-SNAPSHOT:natives-armeabi-v7a'
     api 'org.mapsforge:spatialite-android:master-SNAPSHOT:natives-x86'
+
+    //常用工具箱 https://github.com/l123456789jy/Lazy
+    compile 'com.github.lazylibrary:lazylibrary:1.0.2'
 }

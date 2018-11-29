@@ -18,7 +18,6 @@ package org.oscim.tiling.source.geojson;
 import org.oscim.core.MapElement;
 import org.oscim.core.Tag;
 import org.oscim.map.Viewport;
-import org.oscim.tiling.TileSource;
 import org.oscim.tiling.source.UrlTileSource;
 import org.oscim.utils.FastMath;
 
@@ -34,7 +33,7 @@ public class ContourGeojsonTileSource extends GeojsonTileSource {
         private String locale = "";
 
         public Builder() {
-            super(DEFAULT_URL, DEFAULT_PATH, Viewport.MIN_ZOOM_LEVEL, TileSource.MAX_ZOOM);
+            super(DEFAULT_URL, DEFAULT_PATH, Viewport.MIN_ZOOM_LEVEL, Viewport.MAX_ZOOM_LEVEL);
             keyName("api_key");
             overZoom(16);
         }
