@@ -172,50 +172,35 @@ public class DrawPointLinePolygonFragment extends BaseDrawFragment {
         setMainFragmentAreaVisible(CatEyeMainFragment.BUTTON_AREA.ALL, false);
     }
 
-    @Override
-    public void onStop() {
-        super.onStop();
-
-        //当前界面被返回时，移除绘制的图层
-        if (mapEventsReceiver != null) {
-            CatEyeMapManager.getInstance(getActivity()).getCatEyeMap().layers().remove(mapEventsReceiver);
-        }
-        //如果点位的layer没有数据，则移除
-        if (markerLayer != null && markerLayer.size() <= 0) {
-            CatEyeMapManager.getInstance(getActivity()).getCatEyeMap().layers().remove(markerLayer);
-        }
-        //如果线的layer没有数据，则移除
-        if (polylineOverlay != null && polylineOverlay.getPoints() != null && polylineOverlay.getPoints().size()<2) {
-            CatEyeMapManager.getInstance(getActivity()).getCatEyeMap().layers().remove(polylineOverlay);
-            if (currentDrawState==DRAW_STATE.DRAW_LINE){
-                CatEyeMapManager.getInstance(getActivity()).getCatEyeMap().layers().remove(markerLayer);
-            }
-        }
-        //如果面的layer没有数据，则移除
-        if (polygonOverlay != null && polygonOverlay.getPoints() != null && polygonOverlay.getPoints().size() < 3) {
-            CatEyeMapManager.getInstance(getActivity()).getCatEyeMap().layers().remove(polygonOverlay);
-            if (currentDrawState==DRAW_STATE.DRAW_POLYGON){
-                CatEyeMapManager.getInstance(getActivity()).getCatEyeMap().layers().remove(markerLayer);
-            }
-        }
-        //判断绘制的用途，某些用途下，绘制结束后就不需要再显示，也需要移除掉layer
-        if (drawUsage == SystemConstant.DRAW_CONTOUR_LINE) {
-            CatEyeMapManager.getInstance(getActivity()).getCatEyeMap().layers().remove(markerLayer);
-            CatEyeMapManager.getInstance(getActivity()).getCatEyeMap().layers().remove(polylineOverlay);
-            CatEyeMapManager.getInstance(getActivity()).getCatEyeMap().layers().remove(polygonOverlay);
-        }
-        CatEyeMapManager.getInstance(getActivity()).getCatEyeMap().updateMap(true);
-
-        //通知主界面绘制点线面结束
-        Message msg = new Message();
-        msg.what = SystemConstant.MSG_WHAT_DRAW_POINT_LINE_POLYGON_DESTROY;
-        EventBus.getDefault().post(msg);
-
-    }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
+        //判断绘制的用途，某些用途下，绘制结束后就不需要再显示，也需要移除掉layer
+        if (drawUsage == SystemConstant.DRAW_CONTOUR_LINE) {
+            if (markerLayer!=null){
+                CatEyeMapManager.getInstance(getActivity()).getCatEyeMap().layers().remove(markerLayer);
+                markerLayer=null;
+            }
+            if (polylineOverlay!=null){
+                CatEyeMapManager.getInstance(getActivity()).getCatEyeMap().layers().remove(polylineOverlay);
+                polylineOverlay=null;
+            }
+            if (polygonOverlay!=null){
+                CatEyeMapManager.getInstance(getActivity()).getCatEyeMap().layers().remove(polygonOverlay);
+                polygonOverlay=null;
+            }
+        }
+
+        //当前界面被返回时，移除绘制的图层
+        if (mapEventsReceiver != null) {
+            CatEyeMapManager.getInstance(getActivity()).getCatEyeMap().layers().remove(mapEventsReceiver);
+            mapEventsReceiver = null;
+        }
+        //通知主界面绘制点线面结束
+        Message msg = new Message();
+        msg.what = SystemConstant.MSG_WHAT_DRAW_POINT_LINE_POLYGON_DESTROY;
+        EventBus.getDefault().post(msg);
     }
 
     @Override

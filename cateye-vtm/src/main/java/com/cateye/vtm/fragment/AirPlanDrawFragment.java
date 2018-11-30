@@ -77,7 +77,7 @@ public class AirPlanDrawFragment extends BaseDrawFragment {
         img_airplan_previous.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (polygonOverlay==null){
+                if (polygonOverlay == null) {
                     RxToast.warning("绘制状态下才可以操作上一笔");
                 }
                 if (currentDrawState != DRAW_STATE.DRAW_NONE) {
@@ -108,7 +108,7 @@ public class AirPlanDrawFragment extends BaseDrawFragment {
         img_airplan_clear.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (polygonOverlay==null){
+                if (polygonOverlay == null) {
                     RxToast.warning("绘制状态下才可以操作清空");
                 }
                 if (markerLayer.getItemList() == null || markerLayer.getItemList().isEmpty()) {
@@ -134,7 +134,8 @@ public class AirPlanDrawFragment extends BaseDrawFragment {
         CatEyeMapManager.getInstance(getActivity()).getCatEyeMap().layers().add(mapEventsReceiver, MainActivity.LAYER_GROUP_ENUM.OPERTOR_GROUP.orderIndex);
 
         //如果当前地图不存在multiPolygon的图层，则自动生成添加到地图上
-        if (OverlayerManager.getInstance(mMap).getLayerByName(SystemConstant.AIR_PLAN_MULTI_POLYGON_DRAW) == null) {
+        multiPolygonLayer = (MultiPolygonLayer) OverlayerManager.getInstance(mMap).getLayerByName(SystemConstant.AIR_PLAN_MULTI_POLYGON_DRAW);
+        if (multiPolygonLayer == null) {
             //向主界面添加polygon显示的overlayer
             int c = Color.GREEN;
             org.oscim.layers.vector.geometries.Style polygonStyle = org.oscim.layers.vector.geometries.Style.builder()
@@ -151,22 +152,30 @@ public class AirPlanDrawFragment extends BaseDrawFragment {
         }
     }
 
-    public void completeDrawAirPlan(){
-        if (img_airplan_draw!=null){
+    public void completeDrawAirPlan() {
+        if (img_airplan_draw != null) {
             img_airplan_draw.setSelected(false);
         }
         currentDrawState = DRAW_STATE.DRAW_NONE;
-        if (polygonOverlay!=null){
-            if (polygonOverlay.getPoints()==null||polygonOverlay.getPoints().isEmpty()){
+        if (polygonOverlay != null) {
+            if (polygonOverlay.getPoints() == null || polygonOverlay.getPoints().isEmpty()) {
                 RxToast.warning("没有绘制任何内容！");
-            }else if (polygonOverlay.getPoints().size()>=3){
+            } else if (polygonOverlay.getPoints().size() >= 3) {
                 //绘制结束，将绘制的数据添加到airplan的图层内
                 multiPolygonLayer.addPolygonDrawable(polygonOverlay.getPoints());
-            }else {
+            } else {
                 RxToast.warning("绘制的点无法组成面！");
             }
         }
         //复制点位到展示图层，则清除绘制面的所有数据
         clearDrawLayers();
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if (mapEventsReceiver != null) {
+            mMap.layers().remove(mapEventsReceiver);
+        }
     }
 }
