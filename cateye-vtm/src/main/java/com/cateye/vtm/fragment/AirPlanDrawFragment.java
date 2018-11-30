@@ -67,33 +67,8 @@ public class AirPlanDrawFragment extends BaseDrawFragment {
                     //初始化绘制图层
                     initDrawLayers();
 
-                    img_airplan_clear.setEnabled(true);
-                    img_airplan_previous.setEnabled(true);
                 } else {
-                    if (polygonOverlay.getPoints()==null||polygonOverlay.getPoints().isEmpty()){
-                        view.setSelected(false);
-                        img_airplan_clear.setEnabled(true);
-                        img_airplan_previous.setEnabled(true);
-
-                        RxToast.warning("没有绘制任何内容！");
-                        return;
-                    }
-                    if (polygonOverlay.getPoints()==null||polygonOverlay.getPoints().size()>=3){
-                        //结束绘制
-                        view.setSelected(false);
-                        img_airplan_clear.setEnabled(true);
-                        img_airplan_previous.setEnabled(true);
-
-                        currentDrawState = DRAW_STATE.DRAW_NONE;
-                        //绘制结束，将绘制的数据添加到airplan的图层内
-                        multiPolygonLayer.addPolygonDrawable(polygonOverlay.getPoints());
-
-                        //复制点位到展示图层，则清除绘制面的所有数据
-                        clearDrawLayers();
-                    }else {
-                        RxToast.warning("绘制的点无法组成面！");
-                        return;
-                    }
+                    completeDrawAirPlan();
                 }
             }
         });
@@ -174,5 +149,24 @@ public class AirPlanDrawFragment extends BaseDrawFragment {
             multiPolygonLayer = new MultiPolygonLayer(mMap, polygonStyle, SystemConstant.AIR_PLAN_MULTI_POLYGON_DRAW);
             mMap.layers().add(multiPolygonLayer, MainActivity.LAYER_GROUP_ENUM.OPERTOR_GROUP.orderIndex);
         }
+    }
+
+    public void completeDrawAirPlan(){
+        if (img_airplan_draw!=null){
+            img_airplan_draw.setSelected(false);
+        }
+        currentDrawState = DRAW_STATE.DRAW_NONE;
+        if (polygonOverlay!=null){
+            if (polygonOverlay.getPoints()==null||polygonOverlay.getPoints().isEmpty()){
+                RxToast.warning("没有绘制任何内容！");
+            }else if (polygonOverlay.getPoints().size()>=3){
+                //绘制结束，将绘制的数据添加到airplan的图层内
+                multiPolygonLayer.addPolygonDrawable(polygonOverlay.getPoints());
+            }else {
+                RxToast.warning("绘制的点无法组成面！");
+            }
+        }
+        //复制点位到展示图层，则清除绘制面的所有数据
+        clearDrawLayers();
     }
 }

@@ -439,6 +439,11 @@ public class CatEyeMainFragment extends BaseFragment {
                         loadRootFragment(R.id.layer_main_fragment_right_bottom, AirPlanDrawFragment.newInstance(polygonBundle));
                     }
                 } else {
+                    AirPlanDrawFragment airPlanDrawFragment=findChildFragment(AirPlanDrawFragment.class);
+                    if (airPlanDrawFragment!=null){
+                        airPlanDrawFragment.completeDrawAirPlan();
+                    }
+
                     view.setSelected(false);//设置为未选中状态
                     popChild();//弹出绘制界面
                 }
@@ -461,12 +466,12 @@ public class CatEyeMainFragment extends BaseFragment {
                                     .stipple(24)
                                     .stippleWidth(1)
                                     .strokeWidth(1)
-                                    .strokeColor(c).fillColor(c).fillAlpha(0.35f)
+                                    .strokeColor(Color.BLACK).fillColor(c).fillAlpha(0.35f)
                                     .fixed(true)
                                     .randomOffset(false)
                                     .build();
-                            mMap.layers().add(new MultiPolygonLayer(mMap, polygonStyle, SystemConstant.AIR_PLAN_MULTI_POLYGON_PARAM),LAYER_GROUP_ENUM.OPERTOR_GROUP.orderIndex);
-                            mMap.layers().add(new MapEventsReceiver(mMap, SystemConstant.AIR_PLAN_MULTI_POLYGON_PARAM_EVENT),LAYER_GROUP_ENUM.OPERTOR_GROUP.orderIndex);
+                            mMap.layers().add(new MultiPolygonLayer(mMap, polygonStyle, SystemConstant.AIR_PLAN_MULTI_POLYGON_PARAM), LAYER_GROUP_ENUM.OPERTOR_GROUP.orderIndex);
+                            mMap.layers().add(new MapEventsReceiver(mMap, SystemConstant.AIR_PLAN_MULTI_POLYGON_PARAM_EVENT), LAYER_GROUP_ENUM.OPERTOR_GROUP.orderIndex);
                         }
                     }
                 } else {
@@ -476,8 +481,11 @@ public class CatEyeMainFragment extends BaseFragment {
                     if (airplanParamOverlayer == null || airplanParamOverlayer.getAllPolygonList() == null || airplanParamOverlayer.getAllPolygonList().isEmpty()) {
                         RxToast.warning("没有需要设置参数的航区");
                     } else {
-                        List<Polygon> polygonList = airplanParamOverlayer.getAllPolygonList();
+                        //需要设置参数的polygon集合
+                        final List<Polygon> polygonList = airplanParamOverlayer.getAllPolygonList();
                         //弹出参数设置对话框
+//                        final View airPlanRootView=LayoutInflater.from(getActivity()).inflate(R.layout.dialog_air_plan_set_param,null);
+//                        new CanDialog.Builder(getActivity()).setView(airPlanRootView).show();
                     }
                 }
             }
@@ -1251,19 +1259,28 @@ public class CatEyeMainFragment extends BaseFragment {
                         List<Polygon> paramPolygonList = paramPolygonLayer.getAllPolygonList();
                         if (paramPolygonList != null && !paramPolygonList.isEmpty()) {
                             //第一遍遍历-添加polygon：用户有选中的polygon，遍历此列表，如果没有被绘制到参数设置图层，则添加到该图层，如果存在，则从该图层删除
+                            Polygon addPolygon = null;
                             a:
                             for (Polygon tapPolygon : tapPolygonList) {
                                 for (Polygon paramPolygon : paramPolygonList) {
                                     //如果已经存在点击对应的polygon，则存在此polygon，跳到下一个polygon判断
                                     if (paramPolygon.equals(tapPolygon)) {
+                                        addPolygon = null;
                                         continue a;
                                     }
                                 }
                                 //如果穷举完所有的参数设置中的polygon
-                                paramPolygonLayer.addPolygonDrawable(tapPolygon);
+                                if (addPolygon==null){
+                                    addPolygon = tapPolygon;
+                                }
+                            }
+
+                            if (addPolygon != null) {
+                                paramPolygonLayer.addPolygonDrawable(addPolygon);
                                 mMap.updateMap(true);
                                 return true;
                             }
+
                             //第二遍遍历-移除polygon
                             for (Polygon tapPolygon : tapPolygonList) {
                                 for (Polygon paramPolygon : paramPolygonList) {
@@ -1299,7 +1316,7 @@ public class CatEyeMainFragment extends BaseFragment {
 
     @Override
     public void onResume() {
-        if (mapView!=null){
+        if (mapView != null) {
             mapView.onResume();
         }
         super.onResume();
@@ -1307,7 +1324,7 @@ public class CatEyeMainFragment extends BaseFragment {
 
     @Override
     public void onPause() {
-        if (mapView!=null){
+        if (mapView != null) {
             mapView.onPause();
         }
         super.onPause();
@@ -1315,10 +1332,10 @@ public class CatEyeMainFragment extends BaseFragment {
 
     @Override
     public void onDestroyView() {
-        if (mMapScaleBar!= null){
+        if (mMapScaleBar != null) {
             mMapScaleBar.destroy();
         }
-        if (mapView!=null){
+        if (mapView != null) {
             mapView.onDestroy();
         }
         super.onDestroyView();
