@@ -1,6 +1,13 @@
 package com.cateye.vtm.util;
 
+import com.litesuits.common.utils.SdCardUtil;
+
+import java.io.File;
+
 public class SystemConstant {
+    public static final String APP_ROOT_DATA_PATH= SdCardUtil.getSDCardPath()+ File.pathSeparator+"CatEye";
+    public static final String AIR_PLAN_PATH= APP_ROOT_DATA_PATH+ File.pathSeparator+"AirPlan";
+
     public static final int MSG_WHAT_DRAW_POINT_LINE_POLYGON_DESTROY = 0x1001;//绘制点线面
     public static final int MSG_WHAT_LOCATION_UPDATE = 0x1002;//位置更新
     public static final int MSG_WHAT_MAIN_AREA_HIDEN_VISIBLE = 0x1003;//显示隐藏主界面上的某些元素
@@ -31,4 +38,5 @@ public class SystemConstant {
     public static final String AIR_PLAN_MULTI_POLYGON_DRAW = "AIR_PLAN_MULTI_POLYGON_DRAW";//航区规划对应的多面overlayer的名称，用于判断该图层是否已经添加到map上
     public static final String AIR_PLAN_MULTI_POLYGON_PARAM = "AIR_PLAN_MULTI_POLYGON_PARAM";//航区规划参数设计对应的多面overlayer的名称
     public static final String AIR_PLAN_MULTI_POLYGON_PARAM_EVENT = "AIR_PLAN_MULTI_POLYGON_PARAM_EVENT";//航区规划参数设计对应的操作overlayer的名称
+
 }

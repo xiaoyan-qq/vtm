@@ -16,9 +16,14 @@ import android.widget.Toast;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.JSONReader;
+import com.beardedhen.androidbootstrap.BootstrapEditText;
 import com.canyinghao.candialog.CanDialog;
 import com.canyinghao.candialog.CanDialogInterface;
+import com.cateye.android.entity.AirPlanEntity;
+import com.cateye.android.entity.AirPlanFeature;
+import com.cateye.android.entity.AirPlanProperties;
 import com.cateye.android.entity.ContourFromNet;
 import com.cateye.android.entity.ContourMPData;
 import com.cateye.android.entity.MapSourceFromNet;
@@ -29,6 +34,9 @@ import com.cateye.vtm.adapter.LayerManagerAdapter;
 import com.cateye.vtm.fragment.base.BaseFragment;
 import com.cateye.vtm.util.CatEyeMapManager;
 import com.cateye.vtm.util.SystemConstant;
+import com.github.lazylibrary.util.DateUtil;
+import com.github.lazylibrary.util.FileUtils;
+import com.github.lazylibrary.util.IOUtils;
 import com.github.lazylibrary.util.StringUtils;
 import com.larswerkman.holocolorpicker.ColorPicker;
 import com.larswerkman.holocolorpicker.OpacityBar;
@@ -114,6 +122,7 @@ import java.io.InputStream;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -439,8 +448,8 @@ public class CatEyeMainFragment extends BaseFragment {
                         loadRootFragment(R.id.layer_main_fragment_right_bottom, AirPlanDrawFragment.newInstance(polygonBundle));
                     }
                 } else {
-                    AirPlanDrawFragment airPlanDrawFragment=findChildFragment(AirPlanDrawFragment.class);
-                    if (airPlanDrawFragment!=null){
+                    AirPlanDrawFragment airPlanDrawFragment = findChildFragment(AirPlanDrawFragment.class);
+                    if (airPlanDrawFragment != null) {
                         airPlanDrawFragment.completeDrawAirPlan();
                     }
 
@@ -484,8 +493,55 @@ public class CatEyeMainFragment extends BaseFragment {
                         //需要设置参数的polygon集合
                         final List<Polygon> polygonList = airplanParamOverlayer.getAllPolygonList();
                         //弹出参数设置对话框
-//                        final View airPlanRootView=LayoutInflater.from(getActivity()).inflate(R.layout.dialog_air_plan_set_param,null);
-//                        new CanDialog.Builder(getActivity()).setView(airPlanRootView).show();
+                        final View airPlanRootView = LayoutInflater.from(getActivity()).inflate(R.layout.dialog_air_plan_set_param, null);
+                        new CanDialog.Builder(getActivity()).setView(airPlanRootView).setNeutralButton("取消", true, null).setPositiveButton("确定", true, new CanDialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(CanDialog dialog, int checkItem, CharSequence text, boolean[] checkItems) {
+                                //用户点击确定，首先检查用户输入的内容是否合规
+                                BootstrapEditText edt_name = airPlanRootView.findViewById(R.id.edt_air_plan_name);//名称
+                                BootstrapEditText edt_altitude = airPlanRootView.findViewById(R.id.edt_air_plan_altitude);//海拔
+                                BootstrapEditText edt_seqnum = airPlanRootView.findViewById(R.id.edt_air_plan_seqnum);//顺序
+                                BootstrapEditText edt_describe = airPlanRootView.findViewById(R.id.edt_air_plan_describe);//描述
+
+                                String altitude = edt_altitude.getText().toString();
+                                if (StringUtils.isBlank(altitude)) {
+                                    RxToast.info("海拔数据不能为空");
+                                    return;
+                                }
+                                String currentTime = DateUtil.date2Str(new Date(), "yyyy-MM-dd HH:mm:ss");
+
+                                String name = edt_name.getText().toString();
+                                if (StringUtils.isBlank(name)) {
+                                    name = currentTime;
+                                }
+
+                                //自动保存用户输入的参数数据到指定的文件夹中
+                                AirPlanEntity airPlanEntity = new AirPlanEntity();
+                                airPlanEntity.setName(name);
+                                List<AirPlanFeature> airPlanFeatureList = new ArrayList<>();
+                                airPlanEntity.setFeatures(airPlanFeatureList);
+                                if (polygonList != null && !polygonList.isEmpty()) {
+                                    for (int i = 0; i < polygonList.size(); i++) {
+                                        AirPlanFeature feature = new AirPlanFeature();
+                                        AirPlanProperties properties = new AirPlanProperties();
+                                        properties.setId(i + 1);
+                                        properties.setName(name + "_" + i);
+                                        properties.setAltitude(Integer.parseInt(altitude));
+                                        properties.setDescriptor(edt_describe.getText().toString());
+                                        properties.setSeqnum(i + 1);
+                                        properties.setAlt_ai(0);
+                                        feature.setProperties(properties);
+                                        feature.setGeometry(polygonList.get(i));
+
+                                        airPlanFeatureList.add(feature);
+                                    }
+                                }
+
+                                //保存数据到指定目录
+                                FileUtils.makeDirs(SystemConstant.AIR_PLAN_PATH);
+                                IOUtils.saveTextValue(SystemConstant.AIR_PLAN_PATH + File.pathSeparator + name + ".json", JSONObject.toJSONString(airPlanEntity), false);
+                            }
+                        }).show();
                     }
                 }
             }
@@ -1270,7 +1326,7 @@ public class CatEyeMainFragment extends BaseFragment {
                                     }
                                 }
                                 //如果穷举完所有的参数设置中的polygon
-                                if (addPolygon==null){
+                                if (addPolygon == null) {
                                     addPolygon = tapPolygon;
                                 }
                             }

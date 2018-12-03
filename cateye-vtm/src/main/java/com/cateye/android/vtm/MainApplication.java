@@ -3,6 +3,8 @@ package com.cateye.android.vtm;
 import android.app.Application;
 
 import com.beardedhen.androidbootstrap.TypefaceProvider;
+import com.cateye.vtm.util.SystemConstant;
+import com.github.lazylibrary.util.FileUtils;
 import com.lzy.okgo.OkGo;
 import com.lzy.okgo.cache.CacheEntity;
 import com.lzy.okgo.cache.CacheMode;
@@ -66,5 +68,8 @@ public class MainApplication extends Application {
 
         //为Bootstrap注册默认图标集
         TypefaceProvider.registerDefaultIconSets();
+
+        //自动创建应用目录
+        FileUtils.makeDirs(SystemConstant.APP_ROOT_DATA_PATH);
     }
 }

@@ -8,8 +8,8 @@
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
-    <style name="RowItem">
-        <item name="android:padding">@dimen/default_padding_side</item>
+    <style name="rowItem">
+        <item name="android:padding">@dimen/button_padding_default</item>
         <item name="android:gravity">center</item>
     </style>
 </resources>
