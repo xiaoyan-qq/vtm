@@ -108,7 +108,7 @@ dependencies {
 
     //https://github.com/rey5137/Material
     compile 'com.github.rey5137:material:1.2.4'
-    compile 'com.alibaba:fastjson:1.1.68.android'
+    compile 'com.alibaba:fastjson:1.2.54'
 
     //对话框样式https://github.com/canyinghao/CanDialog
     compile 'com.canyinghao:candialog:1.0.9'

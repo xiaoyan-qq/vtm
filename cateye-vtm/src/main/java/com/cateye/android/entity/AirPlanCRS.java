@@ -8,7 +8,7 @@ import java.io.Serializable;
 
 public class AirPlanCRS implements Serializable {
     private String type="name";
-    private AirPlanCRSProperties properties;
+    private AirPlanCRSProperties properties=new AirPlanCRSProperties();
 
     public String getType() {
         return type;

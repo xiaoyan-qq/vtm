@@ -1,8 +1,14 @@
 package com.cateye.android.entity;
 
+import com.alibaba.fastjson.annotation.JSONField;
+import com.alibaba.fastjson.serializer.JSONSerializer;
+import com.alibaba.fastjson.serializer.ObjectSerializer;
 import com.vividsolutions.jts.geom.Geometry;
+import com.vtm.library.tools.GeometryTools;
 
+import java.io.IOException;
 import java.io.Serializable;
+import java.lang.reflect.Type;
 
 /**
  * Created by xiaoxiao on 2018/12/3.
@@ -11,7 +17,7 @@ import java.io.Serializable;
 public class AirPlanFeature implements Serializable {
     private String type="Feature";
     private AirPlanProperties properties;
-    private Geometry geometry;
+    private String geometry;
 
     public String getType() {
         return type;
@@ -29,11 +35,12 @@ public class AirPlanFeature implements Serializable {
         this.properties = properties;
     }
 
-    public Geometry getGeometry() {
+    public String getGeometry() {
         return geometry;
     }
 
-    public void setGeometry(Geometry geometry) {
+    public void setGeometry(String geometry) {
         this.geometry = geometry;
     }
+
 }
