@@ -1,8 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    style="@style/CardView"
+    android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:padding="@dimen/bootstrap_badge_default_size"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            style="RowItem">
+            <com.beardedhen.androidbootstrap.BootstrapLabel
+                android:id="@+id/tv_air_plan_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="@dimen/button_padding_default"
+                android:layout_marginRight="@dimen/bootstrap_badge_default_size"
+                android:text="名称"/>
+            <com.beardedhen.androidbootstrap.BootstrapEditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:bootstrapSize="md"
+                app:bootstrapBrand="info"
+                />
+        </LinearLayout>
+    </LinearLayout>
+
 
 </RelativeLayout>
