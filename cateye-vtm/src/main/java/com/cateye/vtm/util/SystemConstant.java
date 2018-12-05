@@ -1,12 +1,13 @@
 package com.cateye.vtm.util;
 
+
 import com.litesuits.common.utils.SdCardUtil;
 
 import java.io.File;
 
 public class SystemConstant {
-    public static final String APP_ROOT_DATA_PATH= SdCardUtil.getSDCardPath()+ File.pathSeparator+"CatEye";
-    public static final String AIR_PLAN_PATH= APP_ROOT_DATA_PATH+ File.pathSeparator+"AirPlan";
+    public static final String APP_ROOT_DATA_PATH = SdCardUtil.getSDCardPath() + File.pathSeparator + "CatEye";
+    public static final String AIR_PLAN_PATH = APP_ROOT_DATA_PATH + File.pathSeparator + "AirPlan";
 
     public static final int MSG_WHAT_DRAW_POINT_LINE_POLYGON_DESTROY = 0x1001;//绘制点线面
     public static final int MSG_WHAT_LOCATION_UPDATE = 0x1002;//位置更新

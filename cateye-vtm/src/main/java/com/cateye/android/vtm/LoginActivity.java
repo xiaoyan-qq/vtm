@@ -5,12 +5,12 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.view.View;
-import android.view.animation.AlphaAnimation;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.github.lazylibrary.util.AnimationUtils;
+import com.vondear.rxtool.RxAnimationTool;
+
 
 /**
  * Created by xiaoxiao on 2018/7/19.
@@ -28,8 +28,7 @@ public class LoginActivity extends Activity {
         initView();
 
         //动画加载logo
-        AlphaAnimation alphaAnimation=AnimationUtils.getAlphaAnimation(255,0,1750);
-        img_logo.startAnimation(alphaAnimation);
+        RxAnimationTool.popup(img_logo,1200);
 
         btn_login.setOnClickListener(new View.OnClickListener() {
             @Override

@@ -34,13 +34,10 @@ import com.cateye.vtm.adapter.LayerManagerAdapter;
 import com.cateye.vtm.fragment.base.BaseFragment;
 import com.cateye.vtm.util.CatEyeMapManager;
 import com.cateye.vtm.util.SystemConstant;
-import com.github.lazylibrary.util.DateUtil;
-import com.github.lazylibrary.util.FileUtils;
-import com.github.lazylibrary.util.IOUtils;
-import com.github.lazylibrary.util.StringUtils;
 import com.larswerkman.holocolorpicker.ColorPicker;
 import com.larswerkman.holocolorpicker.OpacityBar;
 import com.larswerkman.holocolorpicker.SVBar;
+import com.litesuits.common.assist.Check;
 import com.lzy.okgo.OkGo;
 import com.lzy.okgo.convert.StringConvert;
 import com.lzy.okgo.model.Response;
@@ -504,7 +501,7 @@ public class CatEyeMainFragment extends BaseFragment {
                                 BootstrapEditText edt_describe = airPlanRootView.findViewById(R.id.edt_air_plan_describe);//描述
 
                                 String altitude = edt_altitude.getText().toString();
-                                if (StringUtils.isBlank(altitude)) {
+                                if (Check.isEmpty(altitude)) {
                                     RxToast.info("海拔数据不能为空");
                                     return;
                                 }
@@ -531,7 +528,7 @@ public class CatEyeMainFragment extends BaseFragment {
                                         properties.setSeqnum(i + 1);
                                         properties.setAlt_ai(0);
                                         feature.setProperties(properties);
-                                        feature.setGeometry(polygonList.get(i));
+                                        feature.setGeometry(GeometryTools.getGeoJson(polygonList.get(i)));
 
                                         airPlanFeatureList.add(feature);
                                     }
@@ -913,7 +910,7 @@ public class CatEyeMainFragment extends BaseFragment {
      * 设置地图样式
      */
     protected void loadTheme(final String styleId, boolean isAllLayers) {
-        if (!StringUtils.isEmpty(styleId)) {
+        if (!Check.isEmpty(styleId)) {
             mMap.setTheme(new AssetsRenderTheme(getActivity().getAssets(), "", "vtm/stylemenu.xml", new XmlRenderThemeMenuCallback() {
                 @Override
                 public Set<String> getCategories(XmlRenderThemeStyleMenu renderThemeStyleMenu) {

@@ -4,7 +4,6 @@ import android.app.Application;
 
 import com.beardedhen.androidbootstrap.TypefaceProvider;
 import com.cateye.vtm.util.SystemConstant;
-import com.github.lazylibrary.util.FileUtils;
 import com.lzy.okgo.OkGo;
 import com.lzy.okgo.cache.CacheEntity;
 import com.lzy.okgo.cache.CacheMode;
@@ -14,6 +13,7 @@ import com.lzy.okgo.interceptor.HttpLoggingInterceptor;
 import com.umeng.commonsdk.UMConfigure;
 import com.vondear.rxtool.RxTool;
 
+import java.io.File;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
@@ -70,6 +70,9 @@ public class MainApplication extends Application {
         TypefaceProvider.registerDefaultIconSets();
 
         //自动创建应用目录
-        FileUtils.makeDirs(SystemConstant.APP_ROOT_DATA_PATH);
+        File rootPathDir=new File(SystemConstant.APP_ROOT_DATA_PATH);
+        if (!rootPathDir.exists()){
+            rootPathDir.mkdirs();
+        }
     }
 }

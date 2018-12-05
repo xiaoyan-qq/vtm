@@ -3,7 +3,9 @@ package com.vtm.library.tools;
 import android.graphics.Point;
 import android.util.Log;
 
-import com.github.lazylibrary.util.StringUtils;
+import com.cocoahero.android.geojson.GeoJSON;
+import com.cocoahero.android.geojson.GeoJSONObject;
+import com.litesuits.common.assist.Check;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
@@ -13,8 +15,11 @@ import com.vividsolutions.jts.geom.MultiPoint;
 import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.io.WKTReader;
+import com.vividsolutions.jts.io.geojson.GeoJsonWriter;
 import com.vividsolutions.jts.operation.linemerge.LineMerger;
+import com.vondear.rxtool.RxLogTool;
 
+import org.json.JSONException;
 import org.oscim.core.GeoPoint;
 
 import java.math.BigDecimal;
@@ -540,7 +545,7 @@ public class GeometryTools {
      * @return
      */
     public static List<GeoPoint> getGeoPoints(String str) {
-        if (StringUtils.isEmpty(str))
+        if (Check.isEmpty(str))
             return null;
         List<GeoPoint> list = null;
         Geometry geometry = createGeometry(str);
@@ -558,7 +563,7 @@ public class GeometryTools {
 
     public static Coordinate[] getGeoPoints2(String str) {
         Coordinate[] coordinates = null;
-        if (StringUtils.isEmpty(str))
+        if (Check.isEmpty(str))
             return coordinates;
         Geometry geometry = createGeometry(str);
         if (geometry != null) {
@@ -695,19 +700,19 @@ public class GeometryTools {
     }
 
     public static List<List<GeoPoint>> getGeoPointArrFromMultiLineString(String multiLintString) {
-        if (StringUtils.isEmpty(multiLintString))
+        if (Check.isEmpty(multiLintString))
             return null;
         multiLintString = multiLintString.substring(multiLintString.indexOf("(") + 1,
                 multiLintString.length() - 1);
-        if (!StringUtils.isEmpty(multiLintString)) {
+        if (!Check.isEmpty(multiLintString)) {
             List<List<GeoPoint>> resultList = new ArrayList<List<GeoPoint>>();
-            while (!StringUtils.isEmpty(multiLintString)) {
+            while (!Check.isEmpty(multiLintString)) {
                 int startIndex = multiLintString.indexOf("(");
                 int endIndex = multiLintString.indexOf(")");
                 if (startIndex < endIndex) {
                     endIndex++;
                     String geometry = multiLintString.substring(startIndex, endIndex);
-                    if (StringUtils.isEmpty(geometry))
+                    if (Check.isEmpty(geometry))
                         continue;
                     if (geometry.startsWith("(")) {
                         geometry = geometry.substring(1, geometry.length());
@@ -776,7 +781,7 @@ public class GeometryTools {
      * @return boolean;
      */
     public boolean isFirstPoint(String lineString, String point) {
-        if (StringUtils.isEmpty(lineString) || StringUtils.isEmpty(point))
+        if (Check.isEmpty(lineString) || Check.isEmpty(point))
             return false;
 
         Geometry lineGeo = createGeometry(lineString);
@@ -803,7 +808,7 @@ public class GeometryTools {
      */
     public boolean isEndPoint(String lineString, String point) {
 
-        if (StringUtils.isEmpty(lineString) || StringUtils.isEmpty(point))
+        if (Check.isEmpty(lineString) || Check.isEmpty(point))
             return false;
 
         Geometry lineGeo = createGeometry(lineString);
@@ -832,7 +837,7 @@ public class GeometryTools {
     public boolean isFirstOrEndPoint(String lineString, String point) {
 
 
-        if (StringUtils.isEmpty(lineString) || StringUtils.isEmpty(point))
+        if (Check.isEmpty(lineString) || Check.isEmpty(point))
             return false;
 
         Geometry lineGeo = createGeometry(lineString);
@@ -1181,7 +1186,7 @@ public class GeometryTools {
 
                                 }
 
-                                if (!StringUtils.isEmpty(line)) {
+                                if (!Check.isEmpty(line)) {
 
                                     Geometry geometry = createGeometry(line);
 
@@ -1214,7 +1219,7 @@ public class GeometryTools {
     }
 
     public static double distance(String geo1, String geo2) {
-        if (StringUtils.isEmpty(geo1) || StringUtils.isEmpty(geo2)) {
+        if (Check.isEmpty(geo1) || Check.isEmpty(geo2)) {
             return -1;
         }
         Geometry mGeo = createGeometry(geo1);
@@ -1292,4 +1297,15 @@ public class GeometryTools {
         return null;
     }
 
+    private static GeoJsonWriter geoJsonWriter=new GeoJsonWriter();
+    public static GeoJSONObject getGeoJson(Geometry geometry) {
+        try {
+            GeoJSONObject geoJSONObject = GeoJSON.parse(geoJsonWriter.write(geometry));
+            return geoJSONObject;
+        } catch (JSONException e) {
+            e.printStackTrace();
+            RxLogTool.saveLogFile("geometry转GeoJson失败:" + e);
+        }
+        return null;
+    }
 }

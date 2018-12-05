@@ -1,6 +1,6 @@
 package com.cateye.android.entity;
 
-import com.vividsolutions.jts.geom.Geometry;
+import com.cocoahero.android.geojson.GeoJSONObject;
 
 import java.io.Serializable;
 
@@ -11,7 +11,7 @@ import java.io.Serializable;
 public class AirPlanFeature implements Serializable {
     private String type="Feature";
     private AirPlanProperties properties;
-    private Geometry geometry;
+    private GeoJSONObject geometry;
 
     public String getType() {
         return type;
@@ -29,11 +29,11 @@ public class AirPlanFeature implements Serializable {
         this.properties = properties;
     }
 
-    public Geometry getGeometry() {
+    public GeoJSONObject getGeometry() {
         return geometry;
     }
 
-    public void setGeometry(Geometry geometry) {
+    public void setGeometry(GeoJSONObject geometry) {
         this.geometry = geometry;
     }
 }
