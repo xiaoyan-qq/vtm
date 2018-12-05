@@ -10,7 +10,7 @@ import java.util.List;
 public class AirPlanEntity implements Serializable{
     private String type = "FeatureCollection";
     private String name;
-    private AirPlanCRS crs;
+    private AirPlanCRS crs=new AirPlanCRS();
     private List<AirPlanFeature> features;
 
     public String getType() {

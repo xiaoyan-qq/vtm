@@ -36,4 +36,5 @@ public class AirPlanFeature implements Serializable {
     public void setGeometry(GeoJSONObject geometry) {
         this.geometry = geometry;
     }
+
 }

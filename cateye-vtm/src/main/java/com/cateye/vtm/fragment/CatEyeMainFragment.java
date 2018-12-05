@@ -113,6 +113,7 @@ import org.oscim.tiling.source.mapfile.MapInfo;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -535,8 +536,24 @@ public class CatEyeMainFragment extends BaseFragment {
                                 }
 
                                 //保存数据到指定目录
-                                FileUtils.makeDirs(SystemConstant.AIR_PLAN_PATH);
-                                IOUtils.saveTextValue(SystemConstant.AIR_PLAN_PATH + File.pathSeparator + name + ".json", JSONObject.toJSONString(airPlanEntity), false);
+                                if (FileUtils.makeFolders(SystemConstant.AIR_PLAN_PATH)){
+//                                    IOUtils.saveTextValue(SystemConstant.AIR_PLAN_PATH + File.separator + name + ".json", JSONObject.toJSONString(airPlanEntity), false);
+                                    try {
+                                        File textFile = new File(SystemConstant.AIR_PLAN_PATH + File.separator + name + ".json");
+
+                                        if (textFile.exists()){
+                                            textFile.delete();
+                                        }
+
+                                        textFile.createNewFile();
+
+                                        FileOutputStream os = new FileOutputStream(textFile);
+                                        os.write(JSONObject.toJSONString(airPlanEntity).getBytes("UTF-8"));
+                                        os.close();
+                                    } catch (Exception ee) {
+                                        return ;
+                                    }
+                                }
                             }
                         }).show();
                     }
