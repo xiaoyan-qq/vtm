@@ -38,6 +38,7 @@ import com.larswerkman.holocolorpicker.ColorPicker;
 import com.larswerkman.holocolorpicker.OpacityBar;
 import com.larswerkman.holocolorpicker.SVBar;
 import com.litesuits.common.assist.Check;
+import com.litesuits.common.io.IOUtils;
 import com.lzy.okgo.OkGo;
 import com.lzy.okgo.convert.StringConvert;
 import com.lzy.okgo.model.Response;
@@ -46,6 +47,7 @@ import com.tencent.map.geolocation.TencentLocation;
 import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vondear.rxtool.RxLogTool;
+import com.vondear.rxtool.RxTimeTool;
 import com.vondear.rxtool.view.RxToast;
 import com.vondear.rxui.view.dialog.RxDialog;
 import com.vondear.rxui.view.dialog.RxDialogLoading;
@@ -120,7 +122,6 @@ import java.io.InputStream;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -506,10 +507,10 @@ public class CatEyeMainFragment extends BaseFragment {
                                     RxToast.info("海拔数据不能为空");
                                     return;
                                 }
-                                String currentTime = DateUtil.date2Str(new Date(), "yyyy-MM-dd HH:mm:ss");
+                                String currentTime=RxTimeTool.getCurTimeString();
 
                                 String name = edt_name.getText().toString();
-                                if (StringUtils.isBlank(name)) {
+                                if (Check.isEmpty(name)) {
                                     name = currentTime;
                                 }
 
@@ -536,23 +537,15 @@ public class CatEyeMainFragment extends BaseFragment {
                                 }
 
                                 //保存数据到指定目录
-                                if (FileUtils.makeFolders(SystemConstant.AIR_PLAN_PATH)){
-//                                    IOUtils.saveTextValue(SystemConstant.AIR_PLAN_PATH + File.separator + name + ".json", JSONObject.toJSONString(airPlanEntity), false);
-                                    try {
-                                        File textFile = new File(SystemConstant.AIR_PLAN_PATH + File.separator + name + ".json");
+                                File textFile = new File(SystemConstant.AIR_PLAN_PATH + File.separator + name + ".json");
+                                if (!textFile.getParentFile().exists()){
+                                    textFile.getParentFile().mkdirs();
+                                }
+                                try {
 
-                                        if (textFile.exists()){
-                                            textFile.delete();
-                                        }
-
-                                        textFile.createNewFile();
-
-                                        FileOutputStream os = new FileOutputStream(textFile);
-                                        os.write(JSONObject.toJSONString(airPlanEntity).getBytes("UTF-8"));
-                                        os.close();
-                                    } catch (Exception ee) {
-                                        return ;
-                                    }
+                                    IOUtils.write(JSONObject.toJSONString(airPlanEntity),new FileOutputStream(textFile),"UTF-8");
+                                } catch (Exception ee) {
+                                    return ;
                                 }
                             }
                         }).show();

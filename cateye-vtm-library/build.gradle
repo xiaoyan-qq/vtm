@@ -64,14 +64,14 @@ dependencies {
     api 'org.mapsforge:spatialite-android:master-SNAPSHOT:natives-x86'
 
 
-    //基础工具库
+    //基础工具库  https://github.com/vondear/RxTool
     compile "com.github.vondear.RxTool:RxKit:v2.0.4"
     //UI库
     compile "com.github.vondear.RxTool:RxUI:v2.0.4"
     //功能库（Zxing扫描与生成二维码条形码 支付宝 微信）
 //    implementation "com.github.vondear.RxTool:RxFeature:v2.0.4"
     //ArcGis For Android工具库（API：100.1以上版本）
-    compile "com.github.vondear.RxTool:RxArcGisKit:v2.0.4"
+//    compile "com.github.vondear.RxTool:RxArcGisKit:v2.0.4"
 
     //常用android工具类https://github.com/ReactiveX/RxAndroid
     compile 'io.reactivex.rxjava2:rxandroid:2.0.2'
