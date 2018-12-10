@@ -19,6 +19,7 @@ public class Project implements Serializable {
     private int id;
     private String modifyTime;
     private String name;
+    private String memo;
 
     public String getCreateTime() {
         return createTime;
@@ -50,5 +51,13 @@ public class Project implements Serializable {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getMemo() {
+        return memo;
+    }
+
+    public void setMemo(String memo) {
+        this.memo = memo;
     }
 }
