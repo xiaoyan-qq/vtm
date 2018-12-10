@@ -143,6 +143,4 @@ dependencies {
 
     //常用工具箱 https://github.com/litesuits/android-common
     compile 'com.luffykou:android-common-utils:1.1.3'
-    //jts转GeoJson的开发包 https://github.com/cocoahero/android-geojson
-    compile 'com.cocoahero.android:geojson:1.0.1@jar'
 }

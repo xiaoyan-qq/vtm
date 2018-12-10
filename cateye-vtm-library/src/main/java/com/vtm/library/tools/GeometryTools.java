@@ -3,8 +3,6 @@ package com.vtm.library.tools;
 import android.graphics.Point;
 import android.util.Log;
 
-import com.cocoahero.android.geojson.GeoJSON;
-import com.cocoahero.android.geojson.GeoJSONObject;
 import com.litesuits.common.assist.Check;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
@@ -17,9 +15,7 @@ import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.io.WKTReader;
 import com.vividsolutions.jts.io.geojson.GeoJsonWriter;
 import com.vividsolutions.jts.operation.linemerge.LineMerger;
-import com.vondear.rxtool.RxLogTool;
 
-import org.json.JSONException;
 import org.oscim.core.GeoPoint;
 
 import java.math.BigDecimal;
@@ -272,7 +268,7 @@ public class GeometryTools {
         return null;
     }
 
-/*	*//**
+    /*	*//**
      * 创建线
      *
      * @param coords
@@ -1297,15 +1293,11 @@ public class GeometryTools {
         return null;
     }
 
-    private static GeoJsonWriter geoJsonWriter=new GeoJsonWriter();
-    public static GeoJSONObject getGeoJson(Geometry geometry) {
-        try {
-            GeoJSONObject geoJSONObject = GeoJSON.parse(geoJsonWriter.write(geometry));
-            return geoJSONObject;
-        } catch (JSONException e) {
-            e.printStackTrace();
-            RxLogTool.saveLogFile("geometry转GeoJson失败:" + e);
-        }
-        return null;
+    private static GeoJsonWriter geoJsonWriter = new GeoJsonWriter();
+
+    public static String getGeoJson(Geometry geometry) {
+        geoJsonWriter.setEncodeCRS(false);
+        String geoJSONObject = geoJsonWriter.write(geometry);
+        return geoJSONObject;
     }
 }
