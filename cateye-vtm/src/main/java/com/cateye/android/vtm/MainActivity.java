@@ -262,7 +262,7 @@ public class MainActivity extends SupportActivity implements TencentLocationList
                         String[] projectNames = new String[projectList.size()];
                         int checkedItem = 0;
                         for (int i = 0; i < projectList.size(); i++) {
-                            projectNames[i] = projectList.get(i).getName();
+                            projectNames[i] = projectList.get(i).getMemo();
                             if (projectList.get(i).getId() == SystemConstant.CURRENT_PROJECTS_ID) {
                                 checkedItem = i;
                             }
