@@ -46,6 +46,7 @@ import com.lzy.okrx2.adapter.ObservableResponse;
 import com.tencent.map.geolocation.TencentLocation;
 import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
+import com.vondear.rxtool.RxFileTool;
 import com.vondear.rxtool.RxLogTool;
 import com.vondear.rxtool.RxTimeTool;
 import com.vondear.rxtool.view.RxToast;
@@ -150,6 +151,7 @@ public class CatEyeMainFragment extends BaseFragment {
     static final int SELECT_THEME_FILE = SELECT_MAP_FILE + 1;
     static final int SELECT_GEOJSON_FILE = SELECT_MAP_FILE + 2;
     static final int SELECT_CONTOUR_FILE = SELECT_MAP_FILE + 3;
+    static final int SELECT_AIR_PLAN_FILE = SELECT_MAP_FILE + 4;
 
     private static final Tag ISSEA_TAG = new Tag("natural", "issea");
     private static final Tag NOSEA_TAG = new Tag("natural", "nosea");
@@ -165,7 +167,7 @@ public class CatEyeMainFragment extends BaseFragment {
     private ImageView img_contour_selector;//加载等高线数据的按钮
     private ImageView img_change_contour_color;//修改等高线地图显示颜色的按钮
     private ImageView img_select_project;//选择当前项目的按钮
-    private ImageView img_chk_draw_airplan/*绘制航区*/, img_chk_set_airplan/*设置航区*/;
+    private ImageView img_chk_draw_airplan/*绘制航区*/, img_chk_set_airplan/*设置航区*/, img_chk_open_airplan/*打开航区文件*/, img_chk_save_airplan/*保存航区文件*/;
     private List<ImageView> chkDrawPointLinePolygonList;
     private FrameLayout layer_fragment;//用来显示fragment的布局文件
 //    private java.util.Map<String, MapSourceFromNet.DataBean> netDataSourceMap;//用来记录用户勾选了哪些网络数据显示
@@ -197,6 +199,8 @@ public class CatEyeMainFragment extends BaseFragment {
 
         img_chk_draw_airplan = rootView.findViewById(R.id.chk_draw_airplan);
         img_chk_set_airplan = rootView.findViewById(R.id.chk_set_airplan);
+        img_chk_open_airplan = rootView.findViewById(R.id.img_open_airplan);
+        img_chk_save_airplan = rootView.findViewById(R.id.img_save_airplan);
 
         img_select_project = rootView.findViewById(R.id.img_project);
         chkDrawPointLinePolygonList = new ArrayList<>();
@@ -313,6 +317,8 @@ public class CatEyeMainFragment extends BaseFragment {
 
         img_chk_draw_airplan.setOnClickListener(mainFragmentClickListener);
         img_chk_set_airplan.setOnClickListener(mainFragmentClickListener);
+        img_chk_open_airplan.setOnClickListener(mainFragmentClickListener);
+        img_chk_save_airplan.setOnClickListener(mainFragmentClickListener);
 
         img_map_source_selector.setOnClickListener(mainFragmentClickListener);
         img_contour_selector.setOnClickListener(mainFragmentClickListener);//选择等高线文件并显示
@@ -507,7 +513,7 @@ public class CatEyeMainFragment extends BaseFragment {
                                     RxToast.info("海拔数据不能为空");
                                     return;
                                 }
-                                String currentTime=RxTimeTool.getCurTimeString();
+                                String currentTime = RxTimeTool.getCurTimeString();
 
                                 String name = edt_name.getText().toString();
                                 if (Check.isEmpty(name)) {
@@ -538,19 +544,24 @@ public class CatEyeMainFragment extends BaseFragment {
 
                                 //保存数据到指定目录
                                 File textFile = new File(SystemConstant.AIR_PLAN_PATH + File.separator + name + ".json");
-                                if (!textFile.getParentFile().exists()){
+                                if (!textFile.getParentFile().exists()) {
                                     textFile.getParentFile().mkdirs();
                                 }
                                 try {
 
-                                    IOUtils.write(JSONObject.toJSONString(airPlanEntity),new FileOutputStream(textFile),"UTF-8");
+                                    IOUtils.write(JSONObject.toJSONString(airPlanEntity), new FileOutputStream(textFile), "UTF-8");
                                 } catch (Exception ee) {
-                                    return ;
+                                    return;
                                 }
                             }
                         }).show();
                     }
                 }
+            } else if (view.getId() == R.id.img_save_airplan) {//保存航区数据
+
+            } else if (view.getId() == R.id.img_open_airplan) {//打开航区数据
+                startActivityForResult(new Intent(getActivity(), MainActivity.AirplanFilePicker.class),
+                        SELECT_AIR_PLAN_FILE);
             }
         }
     };
@@ -761,7 +772,6 @@ public class CatEyeMainFragment extends BaseFragment {
 //                finish();
                 return;
             }
-
             String file = intent.getStringExtra(FilePicker.SELECTED_FILE);
 
             //增加本地layer的dataBean到dataBeanList中
@@ -885,6 +895,22 @@ public class CatEyeMainFragment extends BaseFragment {
                 e.printStackTrace();
             } catch (Exception e) {
                 RxToast.error("您选择的文件不符合等高线文件读取标准");
+            }
+        }else if (requestCode == SELECT_AIR_PLAN_FILE){//选择航区规划文件
+            //用户选择航区规划的文件，需要解析该文件，并且将对应的polygon加载到地图界面
+            if (resultCode != getActivity().RESULT_OK || intent == null || intent.getStringExtra(FilePicker.SELECTED_FILE) == null) {
+                return;
+            }
+            String filePath = intent.getStringExtra(FilePicker.SELECTED_FILE);
+            File geoJsonFile = new File(filePath);
+            if (geoJsonFile.exists() && geoJsonFile.isFile()) {
+                String geoJsonStr=RxFileTool.readFile2String(geoJsonFile,"utf-8");
+                if (Check.isEmpty(geoJsonStr)||Check.isEmpty(geoJsonStr.trim())){
+                    RxToast.error("选择的文件为空文件");
+                    return;
+                }
+
+                
             }
         }
     }

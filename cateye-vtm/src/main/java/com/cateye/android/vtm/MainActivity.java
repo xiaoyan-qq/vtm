@@ -177,6 +177,15 @@ public class MainActivity extends SupportActivity implements TencentLocationList
         }
     }
 
+    /**
+     * 选择本地航区规划的文件选择过滤器
+     */
+    public static class AirplanFilePicker extends FilePicker {
+        public AirplanFilePicker() {
+            setFileDisplayFilter(new FilterByFileExtension(".json"));
+        }
+    }
+
     @Override
     public void onBackPressedSupport() {
         super.onBackPressedSupport();

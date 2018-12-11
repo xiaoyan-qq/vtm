@@ -206,13 +206,27 @@
                 android:padding="@dimen/button_padding_default"
                 android:src="@drawable/selector_save" />
 
+            <!--保存航区绘制内容按钮-->
+            <ImageView
+                android:id="@+id/img_open_airplan"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_above="@id/img_save_airplan"
+                android:layout_gravity="bottom|right"
+                android:layout_marginBottom="@dimen/button_padding_default"
+                android:background="@drawable/selector_bg_blue_frame_white_bg_4_radius"
+                android:clickable="true"
+                android:focusable="true"
+                android:padding="@dimen/button_padding_default"
+                android:src="@drawable/selector_air_plan_open" />
+
             <LinearLayout
                 android:id="@+id/layer_main_fragment_right_bottom"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_above="@id/img_save_airplan"
-                android:paddingBottom="@dimen/button_padding_default"
-                android:orientation="vertical">
+                android:orientation="vertical"
+                android:paddingBottom="@dimen/button_padding_default">
 
             </LinearLayout>
 
