@@ -24,8 +24,11 @@ import com.canyinghao.candialog.CanDialogInterface;
 import com.cateye.android.entity.AirPlanEntity;
 import com.cateye.android.entity.AirPlanFeature;
 import com.cateye.android.entity.AirPlanProperties;
+import com.cateye.android.entity.Airport;
 import com.cateye.android.entity.ContourFromNet;
 import com.cateye.android.entity.ContourMPData;
+import com.cateye.android.entity.DigitalCameraInfo;
+import com.cateye.android.entity.FlightParameter;
 import com.cateye.android.entity.MapSourceFromNet;
 import com.cateye.android.vtm.MainActivity;
 import com.cateye.android.vtm.MainActivity.LAYER_GROUP_ENUM;
@@ -126,6 +129,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.Vector;
 
 import io.reactivex.Observable;
 import io.reactivex.Observer;
@@ -558,7 +562,36 @@ public class CatEyeMainFragment extends BaseFragment {
                     }
                 }
             } else if (view.getId() == R.id.img_save_airplan) {//保存航区数据
-
+                //判断当前参数设置图层是否有polygon，如果存在，则弹出对话框提示用户设置参数
+                MultiPolygonLayer airplanParamOverlayer = (MultiPolygonLayer) OverlayerManager.getInstance(mMap).getLayerByName(SystemConstant.AIR_PLAN_MULTI_POLYGON_PARAM);
+                if (airplanParamOverlayer != null) {
+                    List<Polygon> polygonList = airplanParamOverlayer.getAllPolygonList();
+                    FlightParameter parameter = new FlightParameter();
+                    Airport airport = new Airport();
+                    airport.setGeoJson(GeometryTools.getGeoJson(GeometryTools.createGeometry(new GeoPoint(40.077974, 116.251979))));
+                    airport.setAltitude(800);
+                    parameter.setAirport(airport);
+                    DigitalCameraInfo cameraInfo = new DigitalCameraInfo();
+                    cameraInfo.setF(55);
+                    cameraInfo.setHeight(7760);
+                    cameraInfo.setWidth(10328);
+                    cameraInfo.setPixelsize(5.2);
+                    parameter.setCameraInfo(cameraInfo);
+                    parameter.setAverageElevation(1000);//航区平均地面高程
+                    parameter.setGuidanceEntrancePointsDistance(100);//引导点距离
+                    parameter.setOverlap(70);//航向重叠度
+                    parameter.setOverlap_crossStrip(30);//旁向重叠度
+                    Vector<String> flightRegionList = new Vector<>();
+                    Vector<Double> flightHeightVector = new Vector<>();
+                    for (Polygon polygon : polygonList) {
+                        flightRegionList.add(GeometryTools.getGeoJson(polygon));
+                        flightHeightVector.add(600d);
+                    }
+                    parameter.setFightRegion(flightRegionList);
+                    parameter.setFightHeight_Vec(flightHeightVector);
+                    String jsonResult = JSON.toJSONString(parameter);
+                    System.out.print(jsonResult);
+                }
             } else if (view.getId() == R.id.img_open_airplan) {//打开航区数据
                 startActivityForResult(new Intent(getActivity(), MainActivity.AirplanFilePicker.class),
                         SELECT_AIR_PLAN_FILE);
@@ -896,7 +929,7 @@ public class CatEyeMainFragment extends BaseFragment {
             } catch (Exception e) {
                 RxToast.error("您选择的文件不符合等高线文件读取标准");
             }
-        }else if (requestCode == SELECT_AIR_PLAN_FILE){//选择航区规划文件
+        } else if (requestCode == SELECT_AIR_PLAN_FILE) {//选择航区规划文件
             //用户选择航区规划的文件，需要解析该文件，并且将对应的polygon加载到地图界面
             if (resultCode != getActivity().RESULT_OK || intent == null || intent.getStringExtra(FilePicker.SELECTED_FILE) == null) {
                 return;
@@ -904,13 +937,13 @@ public class CatEyeMainFragment extends BaseFragment {
             String filePath = intent.getStringExtra(FilePicker.SELECTED_FILE);
             File geoJsonFile = new File(filePath);
             if (geoJsonFile.exists() && geoJsonFile.isFile()) {
-                String geoJsonStr=RxFileTool.readFile2String(geoJsonFile,"utf-8");
-                if (Check.isEmpty(geoJsonStr)||Check.isEmpty(geoJsonStr.trim())){
+                String geoJsonStr = RxFileTool.readFile2String(geoJsonFile, "utf-8");
+                if (Check.isEmpty(geoJsonStr) || Check.isEmpty(geoJsonStr.trim())) {
                     RxToast.error("选择的文件为空文件");
                     return;
                 }
 
-                
+
             }
         }
     }
