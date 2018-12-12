@@ -3,6 +3,7 @@ package com.cateye.android.vtm;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.Message;
+import android.support.v4.widget.DrawerLayout;
 import android.view.KeyEvent;
 import android.widget.Toast;
 
@@ -54,6 +55,8 @@ import me.yokeyword.fragmentation.SupportActivity;
 public class MainActivity extends SupportActivity implements TencentLocationListener {
     private TencentLocation currentLocation;
     private CatEyeMainFragment mainFragment;
+
+    private DrawerLayout mDrawerLayout;//左边导航栏
 
     //地图layer的分组
     public enum LAYER_GROUP_ENUM {
@@ -136,6 +139,9 @@ public class MainActivity extends SupportActivity implements TencentLocationList
         RxBarTool.transparencyBar(this);
 
         setCurrentProject();//设置当前正在作业的项目
+
+        mDrawerLayout=findViewById(R.id.drawer_layout);
+        mDrawerLayout.openDrawer();
     }
 
     /**
