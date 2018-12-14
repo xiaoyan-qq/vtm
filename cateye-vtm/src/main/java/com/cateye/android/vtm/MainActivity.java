@@ -4,6 +4,7 @@ import android.content.Context;
 import android.os.Bundle;
 import android.os.Message;
 import android.view.KeyEvent;
+import android.view.View;
 import android.widget.Toast;
 
 import com.alibaba.fastjson.JSON;
@@ -15,6 +16,8 @@ import com.cateye.android.entity.Project;
 import com.cateye.vtm.fragment.CatEyeMainFragment;
 import com.cateye.vtm.fragment.MultiTimeLayerSelectFragment;
 import com.cateye.vtm.util.SystemConstant;
+import com.getbase.floatingactionbutton.FloatingActionButton;
+import com.getbase.floatingactionbutton.FloatingActionsMenu;
 import com.lzy.okgo.OkGo;
 import com.lzy.okgo.convert.StringConvert;
 import com.lzy.okgo.model.Response;
@@ -54,6 +57,7 @@ import me.yokeyword.fragmentation.SupportActivity;
 public class MainActivity extends SupportActivity implements TencentLocationListener {
     private TencentLocation currentLocation;
     private CatEyeMainFragment mainFragment;
+    private FloatingActionsMenu floatingActionsMenu;
 
     //地图layer的分组
     public enum LAYER_GROUP_ENUM {
@@ -281,7 +285,7 @@ public class MainActivity extends SupportActivity implements TencentLocationList
                             }
                         }
 
-                        new CanDialog.Builder(MainActivity.this).setTitle("请选择要作业的项目").setSingleChoiceItems(projectNames, checkedItem, null).setPositiveButton("确定", true, new CanDialogInterface.OnClickListener() {
+                        CanDialog canDialog=new CanDialog.Builder(MainActivity.this).setTitle("请选择要作业的项目").setSingleChoiceItems(projectNames, checkedItem, null).setPositiveButton("确定", true, new CanDialogInterface.OnClickListener() {
                             @Override
                             public void onClick(CanDialog dialog, int checkItem, CharSequence text, boolean[] checkItems) {
                                 if (SystemConstant.CURRENT_PROJECTS_ID != projectList.get(checkItem).getId()) {
@@ -312,6 +316,12 @@ public class MainActivity extends SupportActivity implements TencentLocationList
                                 }
                             }
                         }).setCancelable(true).show();
+                        canDialog.setOnDismissListener(new CanDialogInterface.OnDismissListener() {
+                            @Override
+                            public void onDismiss(CanDialog dialog) {
+                                initFloatingActionButton();//初始化右下角悬浮按钮
+                            }
+                        });
                     }
                 }
             }
@@ -334,4 +344,26 @@ public class MainActivity extends SupportActivity implements TencentLocationList
         });
     }
 
+    private void initFloatingActionButton() {
+        floatingActionsMenu = findViewById(R.id.fam_main);
+        FloatingActionButton fab_main = findViewById(R.id.fab_action_main);//主界面
+        FloatingActionButton fab_contour = findViewById(R.id.fab_action_contour);//等高线
+        FloatingActionButton fab_airplan = findViewById(R.id.fab_action_airplan);//航线规划
+        fab_main.setOnClickListener(floatingActionButtonListener);
+        fab_contour.setOnClickListener(floatingActionButtonListener);
+        fab_airplan.setOnClickListener(floatingActionButtonListener);
+    }
+
+    View.OnClickListener floatingActionButtonListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+            if (view.getId() == R.id.fab_action_main) {//主功能区域
+                RxToast.info("主功能");
+            }else if (view.getId()==R.id.fab_action_contour){//等高线
+                RxToast.info("等高线");
+            }else if (view.getId()==R.id.fab_action_airplan){//航线规划
+                RxToast.info("航线规划");
+            }
+        }
+    };
 }

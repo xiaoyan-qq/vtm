@@ -1,30 +1,66 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:fab="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context="com.cateye.android.vtm.MainActivity">
 
+    <!--此处fragment为主要fragment，地图界面以及常用功能场景均加载在此布局中-->
     <FrameLayout
+        android:id="@+id/fragment_main_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
-        <!--此处fragment为主要fragment，地图界面以及常用功能场景均加载在此布局中-->
-        <FrameLayout
-            android:id="@+id/fragment_main_container"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"></FrameLayout>
 
     </FrameLayout>
 
-    <com.getbase.floatingactionbutton.FloatingActionButton
-        android:layout_gravity="bottom|right"
-        android:layout_marginRight="@dimen/button_padding_default"
-        app:fab_size="mini"
-        app:fab_colorNormal="@color/colorPrimary"
-        app:fab_colorPressed="@color/primary_dark"
-        app:fab_icon="@"
+
+    <com.getbase.floatingactionbutton.FloatingActionsMenu
+        android:id="@+id/fam_main"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
+        android:layout_gravity="bottom|right"
+        android:layout_margin="@dimen/button_padding_default"
+        fab:fab_addButtonColorNormal="@color/white"
+        fab:fab_addButtonColorPressed="@color/whiteTrans66"
+        fab:fab_addButtonPlusIconColor="@color/deep_gray"
+        fab:fab_labelStyle="@style/menu_labels_style"
+        fab:fab_size="mini">
+
+        <com.getbase.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fab_action_main"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:fab_size="mini"
+            fab:fab_colorNormal="@color/white"
+            fab:fab_colorPressed="@color/whiteTrans66"
+            fab:fab_icon="@drawable/selector_icon_home"
+            fab:fab_title="主界面" />
+
+        <com.getbase.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fab_action_contour"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:fab_size="mini"
+            fab:fab_colorNormal="@color/white"
+            fab:fab_colorPressed="@color/whiteTrans66"
+            fab:fab_icon="@drawable/selector_contour_line"
+            fab:fab_title="等高线" />
+
+        <com.getbase.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fab_action_airplan"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:fab_size="mini"
+            fab:fab_colorNormal="@color/white"
+            fab:fab_colorPressed="@color/whiteTrans66"
+            fab:fab_icon="@drawable/selector_air_plan_draw"
+            fab:fab_title="航线规划" />
+    </com.getbase.floatingactionbutton.FloatingActionsMenu>
+
 </FrameLayout>

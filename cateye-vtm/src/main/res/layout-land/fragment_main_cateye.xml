@@ -229,8 +229,6 @@
                 android:paddingBottom="@dimen/button_padding_default">
 
             </LinearLayout>
-
-
         </RelativeLayout>
     </RelativeLayout>
 </FrameLayout>
