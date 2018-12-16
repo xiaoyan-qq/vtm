@@ -144,6 +144,6 @@ dependencies {
     //常用工具箱 https://github.com/litesuits/android-common
     compile 'com.luffykou:android-common-utils:1.1.3'
 
-    //https://github.com/HarinTrivedi/FABRevealMenu-master/wiki
-//    compile 'com.hlab.fabrevealmenu:fab-reveal-menu:1.0.4'
+    //https://github.com/Nightonke/BoomMenu/wiki/Basic-Usage
+    compile 'com.nightonke:boommenu:2.1.1'
 }

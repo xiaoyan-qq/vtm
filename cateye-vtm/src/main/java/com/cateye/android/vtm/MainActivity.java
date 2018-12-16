@@ -20,6 +20,8 @@ import com.lzy.okgo.OkGo;
 import com.lzy.okgo.convert.StringConvert;
 import com.lzy.okgo.model.Response;
 import com.lzy.okrx2.adapter.ObservableResponse;
+import com.nightonke.boommenu.BoomMenuButton;
+import com.nightonke.boommenu.ButtonEnum;
 import com.tencent.map.geolocation.TencentLocation;
 import com.tencent.map.geolocation.TencentLocationListener;
 import com.tencent.map.geolocation.TencentLocationManager;
@@ -55,6 +57,7 @@ import me.yokeyword.fragmentation.SupportActivity;
 public class MainActivity extends SupportActivity implements TencentLocationListener {
     private TencentLocation currentLocation;
     private CatEyeMainFragment mainFragment;
+    private BoomMenuButton bmb;//主界面右下角菜单按钮
 
     //地图layer的分组
     public enum LAYER_GROUP_ENUM {
@@ -137,6 +140,9 @@ public class MainActivity extends SupportActivity implements TencentLocationList
         RxBarTool.transparencyBar(this);
 
         setCurrentProject();//设置当前正在作业的项目
+
+        bmb=findViewById(R.id.bmb);
+        bmb.setButtonEnum(ButtonEnum.Ham);
     }
 
     /**
