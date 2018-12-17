@@ -2,22 +2,44 @@ package com.cateye.vtm.fragment;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.alibaba.fastjson.JSONObject;
+import com.beardedhen.androidbootstrap.BootstrapEditText;
+import com.canyinghao.candialog.CanDialog;
+import com.canyinghao.candialog.CanDialogInterface;
+import com.cateye.android.entity.AirPlanEntity;
+import com.cateye.android.entity.AirPlanFeature;
+import com.cateye.android.entity.AirPlanProperties;
 import com.cateye.android.vtm.MainActivity;
 import com.cateye.android.vtm.R;
 import com.cateye.vtm.fragment.base.BaseDrawFragment;
 import com.cateye.vtm.fragment.base.BaseFragment;
 import com.cateye.vtm.util.CatEyeMapManager;
 import com.cateye.vtm.util.SystemConstant;
+import com.github.lazylibrary.util.StringUtils;
+import com.litesuits.common.assist.Check;
+import com.litesuits.common.io.IOUtils;
+import com.litesuits.common.io.StringCodingUtils;
+import com.vondear.rxtool.RxTimeTool;
 import com.vondear.rxtool.view.RxToast;
 import com.vtm.library.layers.MultiPolygonLayer;
+import com.vtm.library.tools.GeometryTools;
 import com.vtm.library.tools.OverlayerManager;
 
 import org.oscim.backend.canvas.Color;
 import org.oscim.map.Map;
+import org.xutils.DbManager;
+import org.xutils.x;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 /**
  * Created by xiaoxiao on 2018/8/31.
@@ -161,6 +183,64 @@ public class AirPlanDrawFragment extends BaseDrawFragment {
             if (polygonOverlay.getPoints() == null || polygonOverlay.getPoints().isEmpty()) {
                 RxToast.warning("没有绘制任何内容！");
             } else if (polygonOverlay.getPoints().size() >= 3) {
+                //绘制结束，提示用户设置该polygon的参数，弹出对话框
+                //弹出参数设置对话框
+                final View airPlanRootView = LayoutInflater.from(getActivity()).inflate(R.layout.dialog_air_plan_set_param, null);
+                new CanDialog.Builder(getActivity()).setView(airPlanRootView).setNeutralButton("取消", true, null).setPositiveButton("确定", true, new CanDialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(CanDialog dialog, int checkItem, CharSequence text, boolean[] checkItems) {
+                        //用户点击确定，首先检查用户输入的内容是否合规
+                        BootstrapEditText edt_name = airPlanRootView.findViewById(R.id.edt_air_plan_name);//名称
+                        BootstrapEditText edt_altitude = airPlanRootView.findViewById(R.id.edt_air_plan_altitude);//海拔
+                        BootstrapEditText edt_seqnum = airPlanRootView.findViewById(R.id.edt_air_plan_seqnum);//顺序
+                        BootstrapEditText edt_describe = airPlanRootView.findViewById(R.id.edt_air_plan_describe);//描述
+
+                        String altitude = edt_altitude.getText().toString();
+                        if (Check.isEmpty(altitude)) {
+                            RxToast.info("海拔数据不能为空");
+                            return;
+                        }
+                        String currentTime = RxTimeTool.getCurTimeString();
+
+                        String name = edt_name.getText().toString();
+                        if (Check.isEmpty(name)) {
+                            name = currentTime;
+                        }
+
+                        //自动保存用户输入的参数数据到指定的文件夹中
+                        AirPlanEntity airPlanEntity = new AirPlanEntity();
+                        airPlanEntity.setName(name);
+                        List<AirPlanFeature> airPlanFeatureList = new ArrayList<>();
+                        airPlanEntity.setFeatures(airPlanFeatureList);
+                        AirPlanFeature feature = new AirPlanFeature();
+                        AirPlanProperties properties = new AirPlanProperties();
+                        properties.setId(UUID.randomUUID());
+                        properties.setName(name + "_" + i);
+                        properties.setAltitude(Integer.parseInt(altitude));
+                        properties.setDescriptor(edt_describe.getText().toString());
+                        properties.setSeqnum(i + 1);
+                        properties.setAlt_ai(0);
+                        feature.setProperties(properties);
+                        feature.setGeometry(GeometryTools.createPolygon(polygonOverlay.getPoints()));
+
+                        airPlanFeatureList.add(feature);
+
+                        DbManager db= x.getDb();
+                        db.execNonQuery();
+                        //保存数据到指定目录
+                        File textFile = new File(SystemConstant.AIR_PLAN_PATH + File.separator + name + ".json");
+                        if (!textFile.getParentFile().exists()) {
+                            textFile.getParentFile().mkdirs();
+                        }
+                        try {
+
+                            IOUtils.write(JSONObject.toJSONString(airPlanEntity), new FileOutputStream(textFile), "UTF-8");
+                        } catch (Exception ee) {
+                            return;
+                        }
+                    }
+                }).show();
+
                 //绘制结束，将绘制的数据添加到airplan的图层内
                 multiPolygonLayer.addPolygonDrawable(polygonOverlay.getPoints());
             } else {

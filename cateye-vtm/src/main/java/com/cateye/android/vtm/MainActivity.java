@@ -4,7 +4,6 @@ import android.content.Context;
 import android.os.Bundle;
 import android.os.Message;
 import android.view.KeyEvent;
-import android.view.View;
 import android.widget.Toast;
 
 import com.alibaba.fastjson.JSON;
@@ -16,12 +15,16 @@ import com.cateye.android.entity.Project;
 import com.cateye.vtm.fragment.CatEyeMainFragment;
 import com.cateye.vtm.fragment.MultiTimeLayerSelectFragment;
 import com.cateye.vtm.util.SystemConstant;
-import com.getbase.floatingactionbutton.FloatingActionButton;
-import com.getbase.floatingactionbutton.FloatingActionsMenu;
 import com.lzy.okgo.OkGo;
 import com.lzy.okgo.convert.StringConvert;
 import com.lzy.okgo.model.Response;
 import com.lzy.okrx2.adapter.ObservableResponse;
+import com.nightonke.boommenu.BoomButtons.ButtonPlaceEnum;
+import com.nightonke.boommenu.BoomButtons.HamButton;
+import com.nightonke.boommenu.BoomButtons.OnBMClickListener;
+import com.nightonke.boommenu.BoomMenuButton;
+import com.nightonke.boommenu.ButtonEnum;
+import com.nightonke.boommenu.Piece.PiecePlaceEnum;
 import com.tencent.map.geolocation.TencentLocation;
 import com.tencent.map.geolocation.TencentLocationListener;
 import com.tencent.map.geolocation.TencentLocationManager;
@@ -57,7 +60,8 @@ import me.yokeyword.fragmentation.SupportActivity;
 public class MainActivity extends SupportActivity implements TencentLocationListener {
     private TencentLocation currentLocation;
     private CatEyeMainFragment mainFragment;
-    private FloatingActionsMenu floatingActionsMenu;
+
+    private BoomMenuButton bmb;
 
     //地图layer的分组
     public enum LAYER_GROUP_ENUM {
@@ -140,6 +144,8 @@ public class MainActivity extends SupportActivity implements TencentLocationList
         RxBarTool.transparencyBar(this);
 
         setCurrentProject();//设置当前正在作业的项目
+
+        initBMB();
     }
 
     /**
@@ -285,7 +291,7 @@ public class MainActivity extends SupportActivity implements TencentLocationList
                             }
                         }
 
-                        CanDialog canDialog=new CanDialog.Builder(MainActivity.this).setTitle("请选择要作业的项目").setSingleChoiceItems(projectNames, checkedItem, null).setPositiveButton("确定", true, new CanDialogInterface.OnClickListener() {
+                        CanDialog canDialog = new CanDialog.Builder(MainActivity.this).setTitle("请选择要作业的项目").setSingleChoiceItems(projectNames, checkedItem, null).setPositiveButton("确定", true, new CanDialogInterface.OnClickListener() {
                             @Override
                             public void onClick(CanDialog dialog, int checkItem, CharSequence text, boolean[] checkItems) {
                                 if (SystemConstant.CURRENT_PROJECTS_ID != projectList.get(checkItem).getId()) {
@@ -316,12 +322,6 @@ public class MainActivity extends SupportActivity implements TencentLocationList
                                 }
                             }
                         }).setCancelable(true).show();
-                        canDialog.setOnDismissListener(new CanDialogInterface.OnDismissListener() {
-                            @Override
-                            public void onDismiss(CanDialog dialog) {
-                                initFloatingActionButton();//初始化右下角悬浮按钮
-                            }
-                        });
                     }
                 }
             }
@@ -344,26 +344,39 @@ public class MainActivity extends SupportActivity implements TencentLocationList
         });
     }
 
-    private void initFloatingActionButton() {
-        floatingActionsMenu = findViewById(R.id.fam_main);
-        FloatingActionButton fab_main = findViewById(R.id.fab_action_main);//主界面
-        FloatingActionButton fab_contour = findViewById(R.id.fab_action_contour);//等高线
-        FloatingActionButton fab_airplan = findViewById(R.id.fab_action_airplan);//航线规划
-        fab_main.setOnClickListener(floatingActionButtonListener);
-        fab_contour.setOnClickListener(floatingActionButtonListener);
-        fab_airplan.setOnClickListener(floatingActionButtonListener);
-    }
+    private void initBMB() {
+        bmb = findViewById(R.id.bmb);
+        bmb.setButtonEnum(ButtonEnum.Ham);
+        bmb.setPiecePlaceEnum(PiecePlaceEnum.HAM_3);
+        bmb.setButtonPlaceEnum(ButtonPlaceEnum.HAM_3);
 
-    View.OnClickListener floatingActionButtonListener = new View.OnClickListener() {
-        @Override
-        public void onClick(View view) {
-            if (view.getId() == R.id.fab_action_main) {//主功能区域
-                RxToast.info("主功能");
-            }else if (view.getId()==R.id.fab_action_contour){//等高线
-                RxToast.info("等高线");
-            }else if (view.getId()==R.id.fab_action_airplan){//航线规划
-                RxToast.info("航线规划");
-            }
-        }
-    };
+        //自动添加三个指定选项
+        HamButton.Builder mainBuilder = new HamButton.Builder()
+                .normalImageRes(R.drawable.selector_icon_home)
+                .normalText("主界面").listener(new OnBMClickListener() {
+                    @Override
+                    public void onBoomButtonClick(int index) {
+                        mainFragment.setCurrentOperateMap(CatEyeMainFragment.MAIN_FRAGMENT_OPERATE.MAIN);
+                    }
+                });
+        bmb.addBuilder(mainBuilder);
+        HamButton.Builder contourBuilder = new HamButton.Builder()
+                .normalImageRes(R.drawable.selector_contour_line)
+                .normalText("等高线").listener(new OnBMClickListener() {
+                    @Override
+                    public void onBoomButtonClick(int index) {
+                        mainFragment.setCurrentOperateMap(CatEyeMainFragment.MAIN_FRAGMENT_OPERATE.CONTOUR);
+                    }
+                });
+        bmb.addBuilder(contourBuilder);
+        HamButton.Builder airPlanBuilder = new HamButton.Builder()
+                .normalImageRes(R.drawable.selector_air_plan_draw)
+                .normalText("航区规划").listener(new OnBMClickListener() {
+                    @Override
+                    public void onBoomButtonClick(int index) {
+                        mainFragment.setCurrentOperateMap(CatEyeMainFragment.MAIN_FRAGMENT_OPERATE.AIR_PLAN);
+                    }
+                });
+        bmb.addBuilder(airPlanBuilder);
+    }
 }

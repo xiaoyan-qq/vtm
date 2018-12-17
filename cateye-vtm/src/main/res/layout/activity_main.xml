@@ -2,7 +2,6 @@
 
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:fab="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -16,51 +15,10 @@
 
     </FrameLayout>
 
-
-    <com.getbase.floatingactionbutton.FloatingActionsMenu
-        android:id="@+id/fam_main"
+    <com.nightonke.boommenu.BoomMenuButton
+        android:id="@+id/bmb"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentRight="true"
-        android:layout_gravity="bottom|right"
-        android:layout_margin="@dimen/button_padding_default"
-        fab:fab_addButtonColorNormal="@color/white"
-        fab:fab_addButtonColorPressed="@color/whiteTrans66"
-        fab:fab_addButtonPlusIconColor="@color/deep_gray"
-        fab:fab_labelStyle="@style/menu_labels_style"
-        fab:fab_size="mini">
-
-        <com.getbase.floatingactionbutton.FloatingActionButton
-            android:id="@+id/fab_action_main"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:fab_size="mini"
-            fab:fab_colorNormal="@color/white"
-            fab:fab_colorPressed="@color/whiteTrans66"
-            fab:fab_icon="@drawable/selector_icon_home"
-            fab:fab_title="主界面" />
-
-        <com.getbase.floatingactionbutton.FloatingActionButton
-            android:id="@+id/fab_action_contour"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:fab_size="mini"
-            fab:fab_colorNormal="@color/white"
-            fab:fab_colorPressed="@color/whiteTrans66"
-            fab:fab_icon="@drawable/selector_contour_line"
-            fab:fab_title="等高线" />
-
-        <com.getbase.floatingactionbutton.FloatingActionButton
-            android:id="@+id/fab_action_airplan"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:fab_size="mini"
-            fab:fab_colorNormal="@color/white"
-            fab:fab_colorPressed="@color/whiteTrans66"
-            fab:fab_icon="@drawable/selector_air_plan_draw"
-            fab:fab_title="航线规划" />
-    </com.getbase.floatingactionbutton.FloatingActionsMenu>
+        android:layout_gravity="bottom|right"/>
 
 </FrameLayout>

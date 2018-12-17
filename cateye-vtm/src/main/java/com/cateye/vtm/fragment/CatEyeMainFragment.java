@@ -16,14 +16,9 @@ import android.widget.Toast;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.JSONReader;
-import com.beardedhen.androidbootstrap.BootstrapEditText;
 import com.canyinghao.candialog.CanDialog;
 import com.canyinghao.candialog.CanDialogInterface;
-import com.cateye.android.entity.AirPlanEntity;
-import com.cateye.android.entity.AirPlanFeature;
-import com.cateye.android.entity.AirPlanProperties;
 import com.cateye.android.entity.Airport;
 import com.cateye.android.entity.ContourFromNet;
 import com.cateye.android.entity.ContourMPData;
@@ -41,7 +36,6 @@ import com.larswerkman.holocolorpicker.ColorPicker;
 import com.larswerkman.holocolorpicker.OpacityBar;
 import com.larswerkman.holocolorpicker.SVBar;
 import com.litesuits.common.assist.Check;
-import com.litesuits.common.io.IOUtils;
 import com.lzy.okgo.OkGo;
 import com.lzy.okgo.convert.StringConvert;
 import com.lzy.okgo.model.Response;
@@ -51,7 +45,6 @@ import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vondear.rxtool.RxFileTool;
 import com.vondear.rxtool.RxLogTool;
-import com.vondear.rxtool.RxTimeTool;
 import com.vondear.rxtool.view.RxToast;
 import com.vondear.rxui.view.dialog.RxDialog;
 import com.vondear.rxui.view.dialog.RxDialogLoading;
@@ -119,13 +112,13 @@ import org.oscim.tiling.source.mapfile.MapInfo;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -185,6 +178,12 @@ public class CatEyeMainFragment extends BaseFragment {
     private LayerManagerAdapter layerManagerAdapter;//图层管理对应的adapter
     private List<MapSourceFromNet.DataBean> multiTimeLayerList;//记录拥有多个时序图层的list，如果存在，则需要提供切换时序的控件
 
+    private HashMap<MAIN_FRAGMENT_OPERATE, Integer> operateLayerMap;
+
+    public enum MAIN_FRAGMENT_OPERATE {
+        MAIN, CONTOUR, AIR_PLAN;
+    }
+
     @Override
     public int getFragmentLayoutId() {
         return R.layout.fragment_main_cateye;
@@ -221,6 +220,8 @@ public class CatEyeMainFragment extends BaseFragment {
 
         initData();
         initScaleBar();
+        initOperateLayerMap();
+
         if (!EventBus.getDefault().isRegistered(this)) {
             EventBus.getDefault().register(this);
         }
@@ -501,64 +502,64 @@ public class CatEyeMainFragment extends BaseFragment {
                     } else {
                         //需要设置参数的polygon集合
                         final List<Polygon> polygonList = airplanParamOverlayer.getAllPolygonList();
-                        //弹出参数设置对话框
-                        final View airPlanRootView = LayoutInflater.from(getActivity()).inflate(R.layout.dialog_air_plan_set_param, null);
-                        new CanDialog.Builder(getActivity()).setView(airPlanRootView).setNeutralButton("取消", true, null).setPositiveButton("确定", true, new CanDialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(CanDialog dialog, int checkItem, CharSequence text, boolean[] checkItems) {
-                                //用户点击确定，首先检查用户输入的内容是否合规
-                                BootstrapEditText edt_name = airPlanRootView.findViewById(R.id.edt_air_plan_name);//名称
-                                BootstrapEditText edt_altitude = airPlanRootView.findViewById(R.id.edt_air_plan_altitude);//海拔
-                                BootstrapEditText edt_seqnum = airPlanRootView.findViewById(R.id.edt_air_plan_seqnum);//顺序
-                                BootstrapEditText edt_describe = airPlanRootView.findViewById(R.id.edt_air_plan_describe);//描述
-
-                                String altitude = edt_altitude.getText().toString();
-                                if (Check.isEmpty(altitude)) {
-                                    RxToast.info("海拔数据不能为空");
-                                    return;
-                                }
-                                String currentTime = RxTimeTool.getCurTimeString();
-
-                                String name = edt_name.getText().toString();
-                                if (Check.isEmpty(name)) {
-                                    name = currentTime;
-                                }
-
-                                //自动保存用户输入的参数数据到指定的文件夹中
-                                AirPlanEntity airPlanEntity = new AirPlanEntity();
-                                airPlanEntity.setName(name);
-                                List<AirPlanFeature> airPlanFeatureList = new ArrayList<>();
-                                airPlanEntity.setFeatures(airPlanFeatureList);
-                                if (polygonList != null && !polygonList.isEmpty()) {
-                                    for (int i = 0; i < polygonList.size(); i++) {
-                                        AirPlanFeature feature = new AirPlanFeature();
-                                        AirPlanProperties properties = new AirPlanProperties();
-                                        properties.setId(i + 1);
-                                        properties.setName(name + "_" + i);
-                                        properties.setAltitude(Integer.parseInt(altitude));
-                                        properties.setDescriptor(edt_describe.getText().toString());
-                                        properties.setSeqnum(i + 1);
-                                        properties.setAlt_ai(0);
-                                        feature.setProperties(properties);
-                                        feature.setGeometry(GeometryTools.getGeoJson(polygonList.get(i)));
-
-                                        airPlanFeatureList.add(feature);
-                                    }
-                                }
-
-                                //保存数据到指定目录
-                                File textFile = new File(SystemConstant.AIR_PLAN_PATH + File.separator + name + ".json");
-                                if (!textFile.getParentFile().exists()) {
-                                    textFile.getParentFile().mkdirs();
-                                }
-                                try {
-
-                                    IOUtils.write(JSONObject.toJSONString(airPlanEntity), new FileOutputStream(textFile), "UTF-8");
-                                } catch (Exception ee) {
-                                    return;
-                                }
-                            }
-                        }).show();
+//                        //弹出参数设置对话框
+//                        final View airPlanRootView = LayoutInflater.from(getActivity()).inflate(R.layout.dialog_air_plan_set_param, null);
+//                        new CanDialog.Builder(getActivity()).setView(airPlanRootView).setNeutralButton("取消", true, null).setPositiveButton("确定", true, new CanDialogInterface.OnClickListener() {
+//                            @Override
+//                            public void onClick(CanDialog dialog, int checkItem, CharSequence text, boolean[] checkItems) {
+//                                //用户点击确定，首先检查用户输入的内容是否合规
+//                                BootstrapEditText edt_name = airPlanRootView.findViewById(R.id.edt_air_plan_name);//名称
+//                                BootstrapEditText edt_altitude = airPlanRootView.findViewById(R.id.edt_air_plan_altitude);//海拔
+//                                BootstrapEditText edt_seqnum = airPlanRootView.findViewById(R.id.edt_air_plan_seqnum);//顺序
+//                                BootstrapEditText edt_describe = airPlanRootView.findViewById(R.id.edt_air_plan_describe);//描述
+//
+//                                String altitude = edt_altitude.getText().toString();
+//                                if (Check.isEmpty(altitude)) {
+//                                    RxToast.info("海拔数据不能为空");
+//                                    return;
+//                                }
+//                                String currentTime = RxTimeTool.getCurTimeString();
+//
+//                                String name = edt_name.getText().toString();
+//                                if (Check.isEmpty(name)) {
+//                                    name = currentTime;
+//                                }
+//
+//                                //自动保存用户输入的参数数据到指定的文件夹中
+//                                AirPlanEntity airPlanEntity = new AirPlanEntity();
+//                                airPlanEntity.setName(name);
+//                                List<AirPlanFeature> airPlanFeatureList = new ArrayList<>();
+//                                airPlanEntity.setFeatures(airPlanFeatureList);
+//                                if (polygonList != null && !polygonList.isEmpty()) {
+//                                    for (int i = 0; i < polygonList.size(); i++) {
+//                                        AirPlanFeature feature = new AirPlanFeature();
+//                                        AirPlanProperties properties = new AirPlanProperties();
+//                                        properties.setId(i + 1);
+//                                        properties.setName(name + "_" + i);
+//                                        properties.setAltitude(Integer.parseInt(altitude));
+//                                        properties.setDescriptor(edt_describe.getText().toString());
+//                                        properties.setSeqnum(i + 1);
+//                                        properties.setAlt_ai(0);
+//                                        feature.setProperties(properties);
+//                                        feature.setGeometry(GeometryTools.getGeoJson(polygonList.get(i)));
+//
+//                                        airPlanFeatureList.add(feature);
+//                                    }
+//                                }
+//
+//                                //保存数据到指定目录
+//                                File textFile = new File(SystemConstant.AIR_PLAN_PATH + File.separator + name + ".json");
+//                                if (!textFile.getParentFile().exists()) {
+//                                    textFile.getParentFile().mkdirs();
+//                                }
+//                                try {
+//
+//                                    IOUtils.write(JSONObject.toJSONString(airPlanEntity), new FileOutputStream(textFile), "UTF-8");
+//                                } catch (Exception ee) {
+//                                    return;
+//                                }
+//                            }
+//                        }).show();
                     }
                 }
             } else if (view.getId() == R.id.img_save_airplan) {//保存航区数据
@@ -1428,12 +1429,32 @@ public class CatEyeMainFragment extends BaseFragment {
         }
     }
 
+    private void initOperateLayerMap() {
+        operateLayerMap = new HashMap<>();
+        operateLayerMap.put(MAIN_FRAGMENT_OPERATE.MAIN, R.id.layer_main_cateye_operate_main);
+        operateLayerMap.put(MAIN_FRAGMENT_OPERATE.CONTOUR, R.id.layer_main_cateye_operate_contour);
+        operateLayerMap.put(MAIN_FRAGMENT_OPERATE.AIR_PLAN, R.id.layer_main_cateye_operate_airplan);
+    }
+
     public List<MapSourceFromNet.DataBean> getLayerDataBeanList() {
         return layerDataBeanList;
     }
 
     public List<MapSourceFromNet.DataBean> getMultiTimeLayerList() {
         return multiTimeLayerList;
+    }
+
+    public void setCurrentOperateMap(MAIN_FRAGMENT_OPERATE operate) {
+        if (operateLayerMap == null) {
+            initOperateLayerMap();
+        }
+        for (MAIN_FRAGMENT_OPERATE key : operateLayerMap.keySet()) {
+            if (key != operate) {
+                rootView.findViewById(operateLayerMap.get(key)).setVisibility(View.GONE);
+            } else {
+                rootView.findViewById(operateLayerMap.get(key)).setVisibility(View.VISIBLE);
+            }
+        }
     }
 
     @Override
