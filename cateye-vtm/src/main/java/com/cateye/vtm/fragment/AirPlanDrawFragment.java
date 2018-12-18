@@ -7,38 +7,27 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
 
-import com.alibaba.fastjson.JSONObject;
 import com.beardedhen.androidbootstrap.BootstrapEditText;
 import com.canyinghao.candialog.CanDialog;
 import com.canyinghao.candialog.CanDialogInterface;
-import com.cateye.android.entity.AirPlanEntity;
-import com.cateye.android.entity.AirPlanFeature;
-import com.cateye.android.entity.AirPlanProperties;
+import com.cateye.android.entity.AirPlanDBEntity;
 import com.cateye.android.vtm.MainActivity;
 import com.cateye.android.vtm.R;
 import com.cateye.vtm.fragment.base.BaseDrawFragment;
 import com.cateye.vtm.fragment.base.BaseFragment;
 import com.cateye.vtm.util.CatEyeMapManager;
 import com.cateye.vtm.util.SystemConstant;
-import com.github.lazylibrary.util.StringUtils;
 import com.litesuits.common.assist.Check;
-import com.litesuits.common.io.IOUtils;
-import com.litesuits.common.io.StringCodingUtils;
+import com.vondear.rxtool.RxLogTool;
 import com.vondear.rxtool.RxTimeTool;
 import com.vondear.rxtool.view.RxToast;
 import com.vtm.library.layers.MultiPolygonLayer;
-import com.vtm.library.tools.GeometryTools;
 import com.vtm.library.tools.OverlayerManager;
 
 import org.oscim.backend.canvas.Color;
 import org.oscim.map.Map;
-import org.xutils.DbManager;
-import org.xutils.x;
+import org.xutils.ex.DbException;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 /**
@@ -88,7 +77,6 @@ public class AirPlanDrawFragment extends BaseDrawFragment {
                     currentDrawState = DRAW_STATE.DRAW_POLYGON;
                     //初始化绘制图层
                     initDrawLayers();
-
                 } else {
                     completeDrawAirPlan();
                 }
@@ -174,6 +162,7 @@ public class AirPlanDrawFragment extends BaseDrawFragment {
         }
     }
 
+    //绘制结束一个polygon
     public void completeDrawAirPlan() {
         if (img_airplan_draw != null) {
             img_airplan_draw.setSelected(false);
@@ -197,58 +186,47 @@ public class AirPlanDrawFragment extends BaseDrawFragment {
 
                         String altitude = edt_altitude.getText().toString();
                         if (Check.isEmpty(altitude)) {
-                            RxToast.info("海拔数据不能为空");
+                            RxToast.error("海拔数据不能为空");
                             return;
                         }
-                        String currentTime = RxTimeTool.getCurTimeString();
 
                         String name = edt_name.getText().toString();
                         if (Check.isEmpty(name)) {
-                            name = currentTime;
-                        }
-
-                        //自动保存用户输入的参数数据到指定的文件夹中
-                        AirPlanEntity airPlanEntity = new AirPlanEntity();
-                        airPlanEntity.setName(name);
-                        List<AirPlanFeature> airPlanFeatureList = new ArrayList<>();
-                        airPlanEntity.setFeatures(airPlanFeatureList);
-                        AirPlanFeature feature = new AirPlanFeature();
-                        AirPlanProperties properties = new AirPlanProperties();
-                        properties.setId(UUID.randomUUID());
-                        properties.setName(name + "_" + i);
-                        properties.setAltitude(Integer.parseInt(altitude));
-                        properties.setDescriptor(edt_describe.getText().toString());
-                        properties.setSeqnum(i + 1);
-                        properties.setAlt_ai(0);
-                        feature.setProperties(properties);
-                        feature.setGeometry(GeometryTools.createPolygon(polygonOverlay.getPoints()));
-
-                        airPlanFeatureList.add(feature);
-
-                        DbManager db= x.getDb();
-                        db.execNonQuery();
-                        //保存数据到指定目录
-                        File textFile = new File(SystemConstant.AIR_PLAN_PATH + File.separator + name + ".json");
-                        if (!textFile.getParentFile().exists()) {
-                            textFile.getParentFile().mkdirs();
-                        }
-                        try {
-
-                            IOUtils.write(JSONObject.toJSONString(airPlanEntity), new FileOutputStream(textFile), "UTF-8");
-                        } catch (Exception ee) {
+                            RxToast.error("名称不能为空");
                             return;
+                        }
+
+                        //自动保存用户输入的参数和Polygon保存到数据库中
+                        AirPlanDBEntity entity = new AirPlanDBEntity();
+                        entity.setName(name);
+                        entity.setAltitude(Integer.parseInt(altitude));
+                        String currentTime = RxTimeTool.getCurTimeString();
+                        entity.setLastUpdate(currentTime);
+                        entity.setDescriptor(edt_describe.getText().toString());
+                        entity.setGeometry(polygonOverlay.getPolygon());
+                        entity.setId(UUID.randomUUID().toString().replace("-", ""));
+
+                        try {
+                            ((MainActivity) getActivity()).getDbManager().save(entity);
+                            RxToast.success("保存polygon成功!");
+
+                            //绘制结束，将绘制的数据添加到airplan的图层内
+                            multiPolygonLayer.addPolygonDrawable(polygonOverlay.getPoints());
+                            //复制点位到展示图层，则清除绘制面的所有数据
+                            clearDrawLayers();
+                        } catch (DbException e) {
+                            e.printStackTrace();
+                            RxToast.error("保存polygon失败!");
+                            RxLogTool.saveLogFile("保存航线polygon到数据库失败：" + e.toString());
+                            //保存失败，不清除图层
                         }
                     }
                 }).show();
 
-                //绘制结束，将绘制的数据添加到airplan的图层内
-                multiPolygonLayer.addPolygonDrawable(polygonOverlay.getPoints());
             } else {
                 RxToast.warning("绘制的点无法组成面！");
             }
         }
-        //复制点位到展示图层，则清除绘制面的所有数据
-        clearDrawLayers();
     }
 
     @Override

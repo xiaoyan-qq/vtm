@@ -46,7 +46,10 @@ import org.oscim.android.filepicker.FilePicker;
 import org.oscim.android.filepicker.FilterByFileExtension;
 import org.oscim.android.filepicker.ValidMapFile;
 import org.oscim.android.filepicker.ValidRenderTheme;
+import org.xutils.DbManager;
+import org.xutils.x;
 
+import java.io.File;
 import java.util.List;
 
 import io.reactivex.Observer;
@@ -62,6 +65,7 @@ public class MainActivity extends SupportActivity implements TencentLocationList
     private CatEyeMainFragment mainFragment;
 
     private BoomMenuButton bmb;
+    private DbManager dbManager;//数据库管理类，使用xUtils
 
     //地图layer的分组
     public enum LAYER_GROUP_ENUM {
@@ -94,8 +98,6 @@ public class MainActivity extends SupportActivity implements TencentLocationList
         setContentView(R.layout.activity_main);
 
         //启动fragment，显示地图界面
-//        Rigger.getRigger(this).startFragment(CatEyeMainFragment.newInstance(new Bundle()));
-//        startFragment(CatEyeMainFragment.class);
         mainFragment = CatEyeMainFragment.newInstance(new Bundle());
         loadRootFragment(R.id.fragment_main_container, mainFragment);
         //申请所需要的权限
@@ -146,6 +148,11 @@ public class MainActivity extends SupportActivity implements TencentLocationList
         setCurrentProject();//设置当前正在作业的项目
 
         initBMB();
+
+        //初始化数据库管理
+        DbManager.DaoConfig daoConfig = new DbManager.DaoConfig();
+        daoConfig.setDbVersion(SystemConstant.DB_VERSION).setDbDir(new File(SystemConstant.APP_ROOT_DATA_PATH)).setDbName("cateye.sqlite");
+        dbManager= x.getDb(daoConfig);
     }
 
     /**
@@ -378,5 +385,9 @@ public class MainActivity extends SupportActivity implements TencentLocationList
                     }
                 });
         bmb.addBuilder(airPlanBuilder);
+    }
+
+    public DbManager getDbManager() {
+        return dbManager;
     }
 }

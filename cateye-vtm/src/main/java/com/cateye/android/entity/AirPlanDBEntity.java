@@ -1,16 +1,30 @@
 package com.cateye.android.entity;
 
+import com.vividsolutions.jts.geom.Geometry;
+
+import org.xutils.db.annotation.Column;
+import org.xutils.db.annotation.Table;
+
 /**
  * Created by xiaoxiao on 2018/12/3.
  */
 
+@Table(name = "AirPlanDBEntity")
 public class AirPlanDBEntity {
+    @Column(name = "_id",isId = true)
     private String id;//id
+    @Column(name = "name")
     private String name;//航区名称，方便用户再次查找
+    @Column(name = "lastUpdate")
     private String lastUpdate;//最后一次更新时间
+    @Column(name = "altitude")
     private int altitude;//海拔
+    @Column(name = "descriptor")
     private String descriptor;//描述
+    @Column(name = "alt_ai")
     private int alt_ai;//保留字段，智能分区高度
+    @Column(name = "geometry")
+    private Geometry geometry;//geometry
 
     public String getId() {
         return id;
@@ -58,5 +72,13 @@ public class AirPlanDBEntity {
 
     public void setAlt_ai(int alt_ai) {
         this.alt_ai = alt_ai;
+    }
+
+    public Geometry getGeometry() {
+        return geometry;
+    }
+
+    public void setGeometry(Geometry geometry) {
+        this.geometry = geometry;
     }
 }

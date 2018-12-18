@@ -6,6 +6,7 @@ import com.litesuits.common.utils.SdCardUtil;
 import java.io.File;
 
 public class SystemConstant {
+    public static final int DB_VERSION=1;
     public static final String APP_ROOT_DATA_PATH = SdCardUtil.getSDCardPath() + File.separator + "CatEye";
     public static final String AIR_PLAN_PATH = APP_ROOT_DATA_PATH + File.separator + "AirPlan";
 
