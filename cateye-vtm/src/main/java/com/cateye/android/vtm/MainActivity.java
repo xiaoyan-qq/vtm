@@ -150,9 +150,7 @@ public class MainActivity extends SupportActivity implements TencentLocationList
         initBMB();
 
         //初始化数据库管理
-        DbManager.DaoConfig daoConfig = new DbManager.DaoConfig();
-        daoConfig.setDbVersion(SystemConstant.DB_VERSION).setDbDir(new File(SystemConstant.APP_ROOT_DATA_PATH)).setDbName("cateye.sqlite");
-        dbManager= x.getDb(daoConfig);
+        initDbManager();
     }
 
     /**
@@ -387,7 +385,16 @@ public class MainActivity extends SupportActivity implements TencentLocationList
         bmb.addBuilder(airPlanBuilder);
     }
 
+    private void initDbManager(){
+        if (dbManager==null){
+            DbManager.DaoConfig daoConfig = new DbManager.DaoConfig();
+            daoConfig.setDbVersion(SystemConstant.DB_VERSION).setDbDir(new File(SystemConstant.APP_ROOT_DATA_PATH)).setDbName("cateye.sqlite");
+            dbManager= x.getDb(daoConfig);
+        }
+    }
+
     public DbManager getDbManager() {
+        initDbManager();
         return dbManager;
     }
 }

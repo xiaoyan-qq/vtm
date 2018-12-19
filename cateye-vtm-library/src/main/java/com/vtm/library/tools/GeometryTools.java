@@ -1300,4 +1300,8 @@ public class GeometryTools {
         String geoJSONObject = geoJsonWriter.write(geometry);
         return geoJSONObject;
     }
+
+    public static GeoPoint createOSCGeoPoint(com.vividsolutions.jts.geom.Point point) {
+        return new GeoPoint(point.getY(), point.getX());
+    }
 }

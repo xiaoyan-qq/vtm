@@ -170,7 +170,8 @@ public class AirPlanDrawFragment extends BaseDrawFragment {
         currentDrawState = DRAW_STATE.DRAW_NONE;
         if (polygonOverlay != null) {
             if (polygonOverlay.getPoints() == null || polygonOverlay.getPoints().isEmpty()) {
-                RxToast.warning("没有绘制任何内容！");
+                //复制点位到展示图层，则清除绘制面的所有数据
+                clearDrawLayers();
             } else if (polygonOverlay.getPoints().size() >= 3) {
                 //绘制结束，提示用户设置该polygon的参数，弹出对话框
                 //弹出参数设置对话框
@@ -203,7 +204,7 @@ public class AirPlanDrawFragment extends BaseDrawFragment {
                         String currentTime = RxTimeTool.getCurTimeString();
                         entity.setLastUpdate(currentTime);
                         entity.setDescriptor(edt_describe.getText().toString());
-                        entity.setGeometry(polygonOverlay.getPolygon());
+                        entity.setGeometry(polygonOverlay.getPolygon().toString());
                         entity.setId(UUID.randomUUID().toString().replace("-", ""));
 
                         try {

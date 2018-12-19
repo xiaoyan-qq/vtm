@@ -19,17 +19,15 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONReader;
 import com.canyinghao.candialog.CanDialog;
 import com.canyinghao.candialog.CanDialogInterface;
-import com.cateye.android.entity.Airport;
 import com.cateye.android.entity.ContourFromNet;
 import com.cateye.android.entity.ContourMPData;
-import com.cateye.android.entity.DigitalCameraInfo;
-import com.cateye.android.entity.FlightParameter;
 import com.cateye.android.entity.MapSourceFromNet;
 import com.cateye.android.vtm.MainActivity;
 import com.cateye.android.vtm.MainActivity.LAYER_GROUP_ENUM;
 import com.cateye.android.vtm.R;
 import com.cateye.vtm.adapter.LayerManagerAdapter;
 import com.cateye.vtm.fragment.base.BaseFragment;
+import com.cateye.vtm.util.AirPlanUtils;
 import com.cateye.vtm.util.CatEyeMapManager;
 import com.cateye.vtm.util.SystemConstant;
 import com.larswerkman.holocolorpicker.ColorPicker;
@@ -41,16 +39,11 @@ import com.lzy.okgo.convert.StringConvert;
 import com.lzy.okgo.model.Response;
 import com.lzy.okrx2.adapter.ObservableResponse;
 import com.tencent.map.geolocation.TencentLocation;
-import com.vividsolutions.jts.geom.Point;
-import com.vividsolutions.jts.geom.Polygon;
 import com.vondear.rxtool.RxFileTool;
 import com.vondear.rxtool.RxLogTool;
 import com.vondear.rxtool.view.RxToast;
 import com.vondear.rxui.view.dialog.RxDialog;
 import com.vondear.rxui.view.dialog.RxDialogLoading;
-import com.vtm.library.layers.MultiPolygonLayer;
-import com.vtm.library.tools.GeometryTools;
-import com.vtm.library.tools.OverlayerManager;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -69,9 +62,6 @@ import org.oscim.core.MapElement;
 import org.oscim.core.MapPosition;
 import org.oscim.core.Tag;
 import org.oscim.core.Tile;
-import org.oscim.event.Gesture;
-import org.oscim.event.GestureListener;
-import org.oscim.event.MotionEvent;
 import org.oscim.layers.ContourLineLayer;
 import org.oscim.layers.Layer;
 import org.oscim.layers.LocationLayer;
@@ -122,7 +112,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.Vector;
 
 import io.reactivex.Observable;
 import io.reactivex.Observer;
@@ -148,7 +137,7 @@ public class CatEyeMainFragment extends BaseFragment {
     static final int SELECT_THEME_FILE = SELECT_MAP_FILE + 1;
     static final int SELECT_GEOJSON_FILE = SELECT_MAP_FILE + 2;
     static final int SELECT_CONTOUR_FILE = SELECT_MAP_FILE + 3;
-    static final int SELECT_AIR_PLAN_FILE = SELECT_MAP_FILE + 4;
+    public static final int SELECT_AIR_PLAN_FILE = SELECT_MAP_FILE + 4;
 
     private static final Tag ISSEA_TAG = new Tag("natural", "issea");
     private static final Tag NOSEA_TAG = new Tag("natural", "nosea");
@@ -320,10 +309,12 @@ public class CatEyeMainFragment extends BaseFragment {
         chk_draw_line.setOnClickListener(mainFragmentClickListener);
         chk_draw_polygon.setOnClickListener(mainFragmentClickListener);
 
-        img_chk_draw_airplan.setOnClickListener(mainFragmentClickListener);
-        img_chk_set_airplan.setOnClickListener(mainFragmentClickListener);
-        img_chk_open_airplan.setOnClickListener(mainFragmentClickListener);
-        img_chk_save_airplan.setOnClickListener(mainFragmentClickListener);
+        //航区规划相关的设置
+        AirPlanUtils airPlanUtils=AirPlanUtils.getInstance(this,mMap,img_chk_set_airplan);
+        img_chk_draw_airplan.setOnClickListener(airPlanUtils.airplanClickListener);
+        img_chk_set_airplan.setOnClickListener(airPlanUtils.airplanClickListener);
+        img_chk_open_airplan.setOnClickListener(airPlanUtils.airplanClickListener);
+        img_chk_save_airplan.setOnClickListener(airPlanUtils.airplanClickListener);
 
         img_map_source_selector.setOnClickListener(mainFragmentClickListener);
         img_contour_selector.setOnClickListener(mainFragmentClickListener);//选择等高线文件并显示
@@ -443,159 +434,6 @@ public class CatEyeMainFragment extends BaseFragment {
                         loadRootFragment(R.id.layer_main_cateye_bottom, com.cateye.vtm.fragment.DrawPointLinePolygonFragment.newInstance(lineBundle));
                     }
                 });
-            } else if (view.getId() == R.id.chk_draw_airplan) {//绘制航区
-                if (!view.isSelected()) {
-                    view.setSelected(true);//设置为选中状态，启动绘制fragment，右侧面板显示开始、上一笔、结束按钮
-                    //自动弹出绘制点线面的fragment
-                    AirPlanDrawFragment fragment = findFragment(AirPlanDrawFragment.class);
-                    //自动弹出绘制点线面的fragment
-                    Bundle polygonBundle = new Bundle();
-                    polygonBundle.putSerializable(com.cateye.vtm.fragment.DrawPointLinePolygonFragment.DRAW_STATE.class.getSimpleName(), com.cateye.vtm.fragment.DrawPointLinePolygonFragment.DRAW_STATE.DRAW_POLYGON);
-                    if (fragment != null) {
-                        fragment.setArguments(polygonBundle);
-                        start(fragment);
-                    } else {
-                        loadRootFragment(R.id.layer_main_fragment_right_bottom, AirPlanDrawFragment.newInstance(polygonBundle));
-                    }
-                } else {
-                    AirPlanDrawFragment airPlanDrawFragment = findChildFragment(AirPlanDrawFragment.class);
-                    if (airPlanDrawFragment != null) {
-                        airPlanDrawFragment.completeDrawAirPlan();
-                    }
-
-                    view.setSelected(false);//设置为未选中状态
-                    popChild();//弹出绘制界面
-                }
-            } else if (view.getId() == R.id.chk_set_airplan) {//设置航区参数
-                if (!view.isSelected()) {
-                    //首先判断当前图层列表中是否存在航区显示的图层
-                    MultiPolygonLayer airplanDrawOverlayer = (MultiPolygonLayer) OverlayerManager.getInstance(mMap).getLayerByName(SystemConstant.AIR_PLAN_MULTI_POLYGON_DRAW);
-                    if (airplanDrawOverlayer == null) {
-                        RxToast.warning("当前没有需要编辑参数的航区面");
-                        return;
-                    }
-
-                    view.setSelected(true);
-                    if (airplanDrawOverlayer != null) {
-                        if (OverlayerManager.getInstance(mMap).getLayerByName(SystemConstant.AIR_PLAN_MULTI_POLYGON_PARAM) == null) {
-                            //开始编辑参数，增加编辑参数layer，和用户点击layer
-                            int c = Color.YELLOW;
-                            org.oscim.layers.vector.geometries.Style polygonStyle = org.oscim.layers.vector.geometries.Style.builder()
-                                    .stippleColor(c)
-                                    .stipple(24)
-                                    .stippleWidth(1)
-                                    .strokeWidth(1)
-                                    .strokeColor(Color.BLACK).fillColor(c).fillAlpha(0.35f)
-                                    .fixed(true)
-                                    .randomOffset(false)
-                                    .build();
-                            mMap.layers().add(new MultiPolygonLayer(mMap, polygonStyle, SystemConstant.AIR_PLAN_MULTI_POLYGON_PARAM), LAYER_GROUP_ENUM.OPERTOR_GROUP.orderIndex);
-                            mMap.layers().add(new MapEventsReceiver(mMap, SystemConstant.AIR_PLAN_MULTI_POLYGON_PARAM_EVENT), LAYER_GROUP_ENUM.OPERTOR_GROUP.orderIndex);
-                        }
-                    }
-                } else {
-                    view.setSelected(false);
-                    //判断当前参数设置图层是否有polygon，如果存在，则弹出对话框提示用户设置参数
-                    MultiPolygonLayer airplanParamOverlayer = (MultiPolygonLayer) OverlayerManager.getInstance(mMap).getLayerByName(SystemConstant.AIR_PLAN_MULTI_POLYGON_PARAM);
-                    if (airplanParamOverlayer == null || airplanParamOverlayer.getAllPolygonList() == null || airplanParamOverlayer.getAllPolygonList().isEmpty()) {
-                        RxToast.warning("没有需要设置参数的航区");
-                    } else {
-                        //需要设置参数的polygon集合
-                        final List<Polygon> polygonList = airplanParamOverlayer.getAllPolygonList();
-//                        //弹出参数设置对话框
-//                        final View airPlanRootView = LayoutInflater.from(getActivity()).inflate(R.layout.dialog_air_plan_set_param, null);
-//                        new CanDialog.Builder(getActivity()).setView(airPlanRootView).setNeutralButton("取消", true, null).setPositiveButton("确定", true, new CanDialogInterface.OnClickListener() {
-//                            @Override
-//                            public void onClick(CanDialog dialog, int checkItem, CharSequence text, boolean[] checkItems) {
-//                                //用户点击确定，首先检查用户输入的内容是否合规
-//                                BootstrapEditText edt_name = airPlanRootView.findViewById(R.id.edt_air_plan_name);//名称
-//                                BootstrapEditText edt_altitude = airPlanRootView.findViewById(R.id.edt_air_plan_altitude);//海拔
-//                                BootstrapEditText edt_seqnum = airPlanRootView.findViewById(R.id.edt_air_plan_seqnum);//顺序
-//                                BootstrapEditText edt_describe = airPlanRootView.findViewById(R.id.edt_air_plan_describe);//描述
-//
-//                                String altitude = edt_altitude.getText().toString();
-//                                if (Check.isEmpty(altitude)) {
-//                                    RxToast.info("海拔数据不能为空");
-//                                    return;
-//                                }
-//                                String currentTime = RxTimeTool.getCurTimeString();
-//
-//                                String name = edt_name.getText().toString();
-//                                if (Check.isEmpty(name)) {
-//                                    name = currentTime;
-//                                }
-//
-//                                //自动保存用户输入的参数数据到指定的文件夹中
-//                                AirPlanEntity airPlanEntity = new AirPlanEntity();
-//                                airPlanEntity.setName(name);
-//                                List<AirPlanFeature> airPlanFeatureList = new ArrayList<>();
-//                                airPlanEntity.setFeatures(airPlanFeatureList);
-//                                if (polygonList != null && !polygonList.isEmpty()) {
-//                                    for (int i = 0; i < polygonList.size(); i++) {
-//                                        AirPlanFeature feature = new AirPlanFeature();
-//                                        AirPlanProperties properties = new AirPlanProperties();
-//                                        properties.setId(i + 1);
-//                                        properties.setName(name + "_" + i);
-//                                        properties.setAltitude(Integer.parseInt(altitude));
-//                                        properties.setDescriptor(edt_describe.getText().toString());
-//                                        properties.setSeqnum(i + 1);
-//                                        properties.setAlt_ai(0);
-//                                        feature.setProperties(properties);
-//                                        feature.setGeometry(GeometryTools.getGeoJson(polygonList.get(i)));
-//
-//                                        airPlanFeatureList.add(feature);
-//                                    }
-//                                }
-//
-//                                //保存数据到指定目录
-//                                File textFile = new File(SystemConstant.AIR_PLAN_PATH + File.separator + name + ".json");
-//                                if (!textFile.getParentFile().exists()) {
-//                                    textFile.getParentFile().mkdirs();
-//                                }
-//                                try {
-//
-//                                    IOUtils.write(JSONObject.toJSONString(airPlanEntity), new FileOutputStream(textFile), "UTF-8");
-//                                } catch (Exception ee) {
-//                                    return;
-//                                }
-//                            }
-//                        }).show();
-                    }
-                }
-            } else if (view.getId() == R.id.img_save_airplan) {//保存航区数据
-                //判断当前参数设置图层是否有polygon，如果存在，则弹出对话框提示用户设置参数
-                MultiPolygonLayer airplanParamOverlayer = (MultiPolygonLayer) OverlayerManager.getInstance(mMap).getLayerByName(SystemConstant.AIR_PLAN_MULTI_POLYGON_PARAM);
-                if (airplanParamOverlayer != null) {
-                    List<Polygon> polygonList = airplanParamOverlayer.getAllPolygonList();
-                    FlightParameter parameter = new FlightParameter();
-                    Airport airport = new Airport();
-                    airport.setGeoJson(GeometryTools.getGeoJson(GeometryTools.createGeometry(new GeoPoint(40.077974, 116.251979))));
-                    airport.setAltitude(800);
-                    parameter.setAirport(airport);
-                    DigitalCameraInfo cameraInfo = new DigitalCameraInfo();
-                    cameraInfo.setF(55);
-                    cameraInfo.setHeight(7760);
-                    cameraInfo.setWidth(10328);
-                    cameraInfo.setPixelsize(5.2);
-                    parameter.setCameraInfo(cameraInfo);
-                    parameter.setAverageElevation(1000);//航区平均地面高程
-                    parameter.setGuidanceEntrancePointsDistance(100);//引导点距离
-                    parameter.setOverlap(70);//航向重叠度
-                    parameter.setOverlap_crossStrip(30);//旁向重叠度
-                    Vector<String> flightRegionList = new Vector<>();
-                    Vector<Double> flightHeightVector = new Vector<>();
-                    for (Polygon polygon : polygonList) {
-                        flightRegionList.add(GeometryTools.getGeoJson(polygon));
-                        flightHeightVector.add(600d);
-                    }
-                    parameter.setFightRegion(flightRegionList);
-                    parameter.setFightHeight_Vec(flightHeightVector);
-                    String jsonResult = JSON.toJSONString(parameter);
-                    System.out.print(jsonResult);
-                }
-            } else if (view.getId() == R.id.img_open_airplan) {//打开航区数据
-                startActivityForResult(new Intent(getActivity(), MainActivity.AirplanFilePicker.class),
-                        SELECT_AIR_PLAN_FILE);
             }
         }
     };
@@ -1340,92 +1178,6 @@ public class CatEyeMainFragment extends BaseFragment {
                     mapLayerIterator.remove();
                 }
             }
-        }
-    }
-
-    /**
-     * @author : xiaoxiao
-     * @version V1.0
-     * @ClassName : CatEyeMainFragment
-     * @Date : 2018/11/28
-     * @Description:
-     */
-    private class MapEventsReceiver extends Layer implements GestureListener {
-
-        public MapEventsReceiver(Map map) {
-            super(map);
-        }
-
-        public MapEventsReceiver(Map map, String name) {
-            this(map);
-            setName(name);
-        }
-
-        @Override
-        public boolean onGesture(Gesture g, MotionEvent e) {
-            if (img_chk_set_airplan.isSelected() && g instanceof Gesture.Tap) {
-                GeoPoint p = mMap.viewport().fromScreenPoint(e.getX(), e.getY());
-                Point geometryPoint = (Point) GeometryTools.createGeometry(p);
-                //获取当前绘制layer的所有polygon，检查是否与当前点击点位交叉
-                MultiPolygonLayer drawPolygonLayer = (MultiPolygonLayer) OverlayerManager.getInstance(mMap).getLayerByName(SystemConstant.AIR_PLAN_MULTI_POLYGON_DRAW);
-                List<Polygon> drawPolygonList = drawPolygonLayer.getAllPolygonList();
-                if (drawPolygonList != null && !drawPolygonList.isEmpty()) {
-                    List<Polygon> tapPolygonList = new ArrayList<>();
-                    for (Polygon polygon : drawPolygonList) {
-                        if (polygon.contains(geometryPoint)) {//如果点击的点位在polygon的位置上，则认为需要操作当前polygon
-                            tapPolygonList.add(polygon);
-                        }
-                    }
-
-                    if (tapPolygonList != null && !tapPolygonList.isEmpty()) {
-                        MultiPolygonLayer paramPolygonLayer = (MultiPolygonLayer) OverlayerManager.getInstance(mMap).getLayerByName(SystemConstant.AIR_PLAN_MULTI_POLYGON_PARAM);
-                        List<Polygon> paramPolygonList = paramPolygonLayer.getAllPolygonList();
-                        if (paramPolygonList != null && !paramPolygonList.isEmpty()) {
-                            //第一遍遍历-添加polygon：用户有选中的polygon，遍历此列表，如果没有被绘制到参数设置图层，则添加到该图层，如果存在，则从该图层删除
-                            Polygon addPolygon = null;
-                            a:
-                            for (Polygon tapPolygon : tapPolygonList) {
-                                for (Polygon paramPolygon : paramPolygonList) {
-                                    //如果已经存在点击对应的polygon，则存在此polygon，跳到下一个polygon判断
-                                    if (paramPolygon.equals(tapPolygon)) {
-                                        addPolygon = null;
-                                        continue a;
-                                    }
-                                }
-                                //如果穷举完所有的参数设置中的polygon
-                                if (addPolygon == null) {
-                                    addPolygon = tapPolygon;
-                                }
-                            }
-
-                            if (addPolygon != null) {
-                                paramPolygonLayer.addPolygonDrawable(addPolygon);
-                                mMap.updateMap(true);
-                                return true;
-                            }
-
-                            //第二遍遍历-移除polygon
-                            for (Polygon tapPolygon : tapPolygonList) {
-                                for (Polygon paramPolygon : paramPolygonList) {
-                                    //如果已经存在点击对应的polygon，则存在此polygon，跳到下一个polygon判断
-                                    if (paramPolygon.equals(tapPolygon)) {
-                                        paramPolygonLayer.removePolygonDrawable(paramPolygon);
-                                        mMap.updateMap(true);
-                                        return true;
-                                    }
-                                }
-                            }
-                        } else {//不存在参数设置polygon，则直接添加第一个点击的polygon到参数设置layer上
-                            paramPolygonLayer.addPolygonDrawable(tapPolygonList.get(0));
-                            mMap.updateMap(true);
-                        }
-
-                    }
-                }
-
-                return true;
-            }
-            return false;
         }
     }
 

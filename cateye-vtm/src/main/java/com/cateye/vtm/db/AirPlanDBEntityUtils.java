@@ -5,5 +5,4 @@ package com.cateye.vtm.db;
  */
 
 public class AirPlanDBEntityUtils {
-    public void
 }

@@ -11,18 +11,19 @@ import org.xutils.DbManager;
 public class DbBaseTools {
     protected DbManager dbManager;
     private DbBaseTools instance;
-    public DbBaseTools getInstance(Context context,DbManager dbManager){
-        if (instance==null){
-            instance=new DbBaseTools(context,dbManager);
+
+    public DbBaseTools getInstance(Context context, DbManager dbManager) {
+        if (instance == null) {
+            instance = new DbBaseTools(context, dbManager);
         }
         return instance;
     }
 
-    public DbBaseTools(Context context,DbManager dbManager) {
+    public DbBaseTools(Context context, DbManager dbManager) {
         this.dbManager = dbManager;
     }
 
-    public boolean createAirPlanDBEntityTable(){
-        dbManager.execNonQuery("create table 'AirPlanDBEntity'");
+    public boolean createAirPlanDBEntityTable() {
+        return true;
     }
 }

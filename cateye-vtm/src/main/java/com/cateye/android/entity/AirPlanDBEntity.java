@@ -1,7 +1,5 @@
 package com.cateye.android.entity;
 
-import com.vividsolutions.jts.geom.Geometry;
-
 import org.xutils.db.annotation.Column;
 import org.xutils.db.annotation.Table;
 
@@ -24,7 +22,7 @@ public class AirPlanDBEntity {
     @Column(name = "alt_ai")
     private int alt_ai;//保留字段，智能分区高度
     @Column(name = "geometry")
-    private Geometry geometry;//geometry
+    private String geometry;//geometry
 
     public String getId() {
         return id;
@@ -74,11 +72,11 @@ public class AirPlanDBEntity {
         this.alt_ai = alt_ai;
     }
 
-    public Geometry getGeometry() {
+    public String getGeometry() {
         return geometry;
     }
 
-    public void setGeometry(Geometry geometry) {
+    public void setGeometry(String geometry) {
         this.geometry = geometry;
     }
 }
