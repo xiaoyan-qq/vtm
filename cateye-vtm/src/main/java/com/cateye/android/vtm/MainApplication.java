@@ -70,9 +70,10 @@ public class MainApplication extends Application {
         TypefaceProvider.registerDefaultIconSets();
 
         //自动创建应用目录
-        File rootPathDir=new File(SystemConstant.APP_ROOT_DATA_PATH);
-        if (!rootPathDir.exists()){
+        File rootPathDir = new File(SystemConstant.APP_ROOT_DATA_PATH);
+        if (!rootPathDir.exists()) {
             rootPathDir.mkdirs();
         }
+
     }
 }

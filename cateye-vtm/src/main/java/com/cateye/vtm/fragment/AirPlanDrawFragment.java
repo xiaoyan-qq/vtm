@@ -2,22 +2,33 @@ package com.cateye.vtm.fragment;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.beardedhen.androidbootstrap.BootstrapEditText;
+import com.canyinghao.candialog.CanDialog;
+import com.canyinghao.candialog.CanDialogInterface;
+import com.cateye.android.entity.AirPlanDBEntity;
 import com.cateye.android.vtm.MainActivity;
 import com.cateye.android.vtm.R;
 import com.cateye.vtm.fragment.base.BaseDrawFragment;
 import com.cateye.vtm.fragment.base.BaseFragment;
 import com.cateye.vtm.util.CatEyeMapManager;
 import com.cateye.vtm.util.SystemConstant;
+import com.litesuits.common.assist.Check;
+import com.vondear.rxtool.RxLogTool;
+import com.vondear.rxtool.RxTimeTool;
 import com.vondear.rxtool.view.RxToast;
 import com.vtm.library.layers.MultiPolygonLayer;
 import com.vtm.library.tools.OverlayerManager;
 
 import org.oscim.backend.canvas.Color;
 import org.oscim.map.Map;
+import org.xutils.ex.DbException;
+
+import java.util.UUID;
 
 /**
  * Created by xiaoxiao on 2018/8/31.
@@ -66,7 +77,6 @@ public class AirPlanDrawFragment extends BaseDrawFragment {
                     currentDrawState = DRAW_STATE.DRAW_POLYGON;
                     //初始化绘制图层
                     initDrawLayers();
-
                 } else {
                     completeDrawAirPlan();
                 }
@@ -152,6 +162,7 @@ public class AirPlanDrawFragment extends BaseDrawFragment {
         }
     }
 
+    //绘制结束一个polygon
     public void completeDrawAirPlan() {
         if (img_airplan_draw != null) {
             img_airplan_draw.setSelected(false);
@@ -159,16 +170,64 @@ public class AirPlanDrawFragment extends BaseDrawFragment {
         currentDrawState = DRAW_STATE.DRAW_NONE;
         if (polygonOverlay != null) {
             if (polygonOverlay.getPoints() == null || polygonOverlay.getPoints().isEmpty()) {
-                RxToast.warning("没有绘制任何内容！");
+                //复制点位到展示图层，则清除绘制面的所有数据
+                clearDrawLayers();
             } else if (polygonOverlay.getPoints().size() >= 3) {
-                //绘制结束，将绘制的数据添加到airplan的图层内
-                multiPolygonLayer.addPolygonDrawable(polygonOverlay.getPoints());
+                //绘制结束，提示用户设置该polygon的参数，弹出对话框
+                //弹出参数设置对话框
+                final View airPlanRootView = LayoutInflater.from(getActivity()).inflate(R.layout.dialog_air_plan_set_param, null);
+                new CanDialog.Builder(getActivity()).setView(airPlanRootView).setNeutralButton("取消", true, null).setPositiveButton("确定", true, new CanDialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(CanDialog dialog, int checkItem, CharSequence text, boolean[] checkItems) {
+                        //用户点击确定，首先检查用户输入的内容是否合规
+                        BootstrapEditText edt_name = airPlanRootView.findViewById(R.id.edt_air_plan_name);//名称
+                        BootstrapEditText edt_altitude = airPlanRootView.findViewById(R.id.edt_air_plan_altitude);//海拔
+                        BootstrapEditText edt_seqnum = airPlanRootView.findViewById(R.id.edt_air_plan_seqnum);//顺序
+                        BootstrapEditText edt_describe = airPlanRootView.findViewById(R.id.edt_air_plan_describe);//描述
+
+                        String altitude = edt_altitude.getText().toString();
+                        if (Check.isEmpty(altitude)) {
+                            RxToast.error("海拔数据不能为空");
+                            return;
+                        }
+
+                        String name = edt_name.getText().toString();
+                        if (Check.isEmpty(name)) {
+                            RxToast.error("名称不能为空");
+                            return;
+                        }
+
+                        //自动保存用户输入的参数和Polygon保存到数据库中
+                        AirPlanDBEntity entity = new AirPlanDBEntity();
+                        entity.setName(name);
+                        entity.setAltitude(Integer.parseInt(altitude));
+                        String currentTime = RxTimeTool.getCurTimeString();
+                        entity.setLastUpdate(currentTime);
+                        entity.setDescriptor(edt_describe.getText().toString());
+                        entity.setGeometry(polygonOverlay.getPolygon().toString());
+                        entity.setId(UUID.randomUUID().toString().replace("-", ""));
+
+                        try {
+                            ((MainActivity) getActivity()).getDbManager().save(entity);
+                            RxToast.success("保存polygon成功!");
+
+                            //绘制结束，将绘制的数据添加到airplan的图层内
+                            multiPolygonLayer.addPolygonDrawable(polygonOverlay.getPoints());
+                            //复制点位到展示图层，则清除绘制面的所有数据
+                            clearDrawLayers();
+                        } catch (DbException e) {
+                            e.printStackTrace();
+                            RxToast.error("保存polygon失败!");
+                            RxLogTool.saveLogFile("保存航线polygon到数据库失败：" + e.toString());
+                            //保存失败，不清除图层
+                        }
+                    }
+                }).show();
+
             } else {
                 RxToast.warning("绘制的点无法组成面！");
             }
         }
-        //复制点位到展示图层，则清除绘制面的所有数据
-        clearDrawLayers();
     }
 
     @Override

@@ -1,5 +1,6 @@
 package com.vtm.library.layers;
 
+import com.vividsolutions.jts.geom.Polygon;
 import com.vtm.library.tools.GeometryTools;
 
 import org.oscim.core.GeoPoint;
@@ -83,5 +84,23 @@ public class PolygonLayer extends PathLayer {
             remove(mDrawable);
             mDrawable = null;
         }
+    }
+
+    /**
+     * @method : getPolygon
+     * @Author : xiaoxiao
+     * @Describe : 获取当前polygon的wkt
+     * @param :
+     * @return :
+     * @Date : 2018/12/18
+    */
+    public Polygon getPolygon(){
+        if (mPoints==null||mPoints.size()<3){
+            return null;
+        }
+        if (mPoints.get(0).distance(mPoints.get(mPoints.size()-1))>0){
+            mPoints.add(mPoints.get(0));
+        }
+        return GeometryTools.createPolygon(mPoints);
     }
 }

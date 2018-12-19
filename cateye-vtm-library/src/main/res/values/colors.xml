@@ -55,4 +55,6 @@
         <item>@color/custom_theme_primary</item> <!-- main color of your theme -->
         <item>@color/custom_theme_light</item> <!-- really much lighter color of main color -->
     </integer-array>
+
+    <color name="black_semi_transparent">#B2000000</color>
 </resources>

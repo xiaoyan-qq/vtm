@@ -42,21 +42,9 @@
                 android:orientation="horizontal">
 
                 <ImageView
-                    android:id="@+id/img_contour_select"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/selector_bg_blue_frame_white_bg_4_radius"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:padding="@dimen/button_padding_default"
-                    android:src="@drawable/selector_contour_line"
-                    android:text="@null" />
-
-                <ImageView
                     android:id="@+id/img_map_source_select"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginLeft="@dimen/button_padding_default"
                     android:background="@drawable/selector_bg_blue_frame_white_bg_4_radius"
                     android:clickable="true"
                     android:focusable="true"
@@ -64,82 +52,143 @@
                     android:src="@drawable/selector_map_add"
                     android:text="@null" />
 
-
-                <ImageView
-                    android:id="@+id/chk_draw_vector_point"
+                <LinearLayout
+                    android:id="@+id/layer_main_cateye_operate_main"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginLeft="@dimen/button_padding_default"
-                    android:background="@drawable/selector_bg_blue_frame_white_bg_4_radius"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:padding="@dimen/button_padding_default"
-                    android:src="@drawable/selector_vector_point"
-                    android:text="@null" />
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:id="@+id/chk_draw_vector_point"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="@dimen/button_padding_default"
+                        android:background="@drawable/selector_bg_blue_frame_white_bg_4_radius"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:padding="@dimen/button_padding_default"
+                        android:src="@drawable/selector_vector_point"
+                        android:text="@null" />
 
 
-                <ImageView
-                    android:id="@+id/chk_draw_vector_line"
+                    <ImageView
+                        android:id="@+id/chk_draw_vector_line"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="@dimen/button_padding_default"
+                        android:background="@drawable/selector_bg_blue_frame_white_bg_4_radius"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:padding="@dimen/button_padding_default"
+                        android:src="@drawable/selector_vector_polyline"
+                        android:text="@null" />
+
+
+                    <ImageView
+                        android:id="@+id/chk_draw_vector_polygon"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="@dimen/button_padding_default"
+                        android:background="@drawable/selector_bg_blue_frame_white_bg_4_radius"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:padding="@dimen/button_padding_default"
+                        android:src="@drawable/selector_vector_polygon"
+                        android:text="@null" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/layer_main_cateye_operate_contour"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginLeft="@dimen/button_padding_default"
-                    android:background="@drawable/selector_bg_blue_frame_white_bg_4_radius"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:padding="@dimen/button_padding_default"
-                    android:src="@drawable/selector_vector_polyline"
-                    android:text="@null" />
+                    android:orientation="horizontal"
+                    android:visibility="gone">
 
+                    <ImageView
+                        android:id="@+id/img_contour_select"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="@dimen/button_padding_default"
+                        android:background="@drawable/selector_bg_blue_frame_white_bg_4_radius"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:padding="@dimen/button_padding_default"
+                        android:src="@drawable/selector_contour_line"
+                        android:text="@null" />
 
-                <ImageView
-                    android:id="@+id/chk_draw_vector_polygon"
+                    <ImageView
+                        android:id="@+id/img_change_contour_color"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="@dimen/button_padding_default"
+                        android:background="@drawable/selector_bg_blue_frame_white_bg_4_radius"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:padding="@dimen/button_padding_default"
+                        android:src="@drawable/selector_vector_polyline"
+                        android:text="@null"
+                        android:visibility="gone" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/layer_main_cateye_operate_airplan"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginLeft="@dimen/button_padding_default"
-                    android:background="@drawable/selector_bg_blue_frame_white_bg_4_radius"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:padding="@dimen/button_padding_default"
-                    android:src="@drawable/selector_vector_polygon"
-                    android:text="@null" />
+                    android:orientation="horizontal">
 
-                <ImageView
-                    android:id="@+id/chk_draw_airplan"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginLeft="@dimen/button_padding_default"
-                    android:background="@drawable/selector_bg_blue_frame_white_bg_4_radius"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:padding="@dimen/button_padding_default"
-                    android:src="@drawable/selector_air_plan_draw"
-                    android:text="@null" />
+                    <ImageView
+                        android:id="@+id/chk_draw_airplan"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="@dimen/button_padding_default"
+                        android:background="@drawable/selector_bg_blue_frame_white_bg_4_radius"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:padding="@dimen/button_padding_default"
+                        android:src="@drawable/selector_air_plan_draw"
+                        android:text="@null" />
 
-                <ImageView
-                    android:id="@+id/chk_set_airplan"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginLeft="@dimen/button_padding_default"
-                    android:background="@drawable/selector_bg_blue_frame_white_bg_4_radius"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:padding="@dimen/button_padding_default"
-                    android:src="@drawable/selector_air_plan_set"
-                    android:text="@null" />
+                    <ImageView
+                        android:id="@+id/chk_set_airplan"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="@dimen/button_padding_default"
+                        android:background="@drawable/selector_bg_blue_frame_white_bg_4_radius"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:padding="@dimen/button_padding_default"
+                        android:src="@drawable/selector_air_plan_set"
+                        android:text="@null" />
 
-                <ImageView
-                    android:id="@+id/img_change_contour_color"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginLeft="@dimen/button_padding_default"
-                    android:background="@drawable/selector_bg_blue_frame_white_bg_4_radius"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:padding="@dimen/button_padding_default"
-                    android:src="@drawable/selector_vector_polyline"
-                    android:text="@null"
-                    android:visibility="gone" />
+                    <!--保存航区绘制内容按钮-->
+                    <ImageView
+                        android:id="@+id/img_save_airplan"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentBottom="true"
+                        android:layout_marginLeft="@dimen/button_padding_default"
+                        android:background="@drawable/selector_bg_blue_frame_white_bg_4_radius"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:padding="@dimen/button_padding_default"
+                        android:src="@drawable/selector_save"
+                        android:text="@null" />
 
+                    <!--保存航区绘制内容按钮-->
+                    <ImageView
+                        android:id="@+id/img_open_airplan"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_above="@id/img_save_airplan"
+                        android:layout_marginBottom="@dimen/button_padding_default"
+                        android:layout_marginLeft="@dimen/button_padding_default"
+                        android:background="@drawable/selector_bg_blue_frame_white_bg_4_radius"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:padding="@dimen/button_padding_default"
+                        android:src="@drawable/selector_air_plan_open"
+                        android:text="@null" />
+                </LinearLayout>
             </LinearLayout>
         </RelativeLayout>
 
@@ -191,46 +240,17 @@
             android:layout_height="match_parent"
             android:layout_above="@id/layer_main_fragment_bottom"
             android:layout_alignParentRight="true"
-            android:layout_marginBottom="@dimen/activity_vertical_margin"
+            android:layout_marginBottom="@dimen/default_slider_height"
             android:layout_marginRight="@dimen/activity_horizontal_margin">
-            <!--保存航区绘制内容按钮-->
-            <ImageView
-                android:id="@+id/img_save_airplan"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentBottom="true"
-                android:layout_gravity="bottom|right"
-                android:background="@drawable/selector_bg_blue_frame_white_bg_4_radius"
-                android:clickable="true"
-                android:focusable="true"
-                android:padding="@dimen/button_padding_default"
-                android:src="@drawable/selector_save" />
-
-            <!--保存航区绘制内容按钮-->
-            <ImageView
-                android:id="@+id/img_open_airplan"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_above="@id/img_save_airplan"
-                android:layout_gravity="bottom|right"
-                android:layout_marginBottom="@dimen/button_padding_default"
-                android:background="@drawable/selector_bg_blue_frame_white_bg_4_radius"
-                android:clickable="true"
-                android:focusable="true"
-                android:padding="@dimen/button_padding_default"
-                android:src="@drawable/selector_air_plan_open" />
 
             <LinearLayout
                 android:id="@+id/layer_main_fragment_right_bottom"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_above="@id/img_save_airplan"
-                android:orientation="vertical"
-                android:paddingBottom="@dimen/button_padding_default">
+                android:layout_alignParentBottom="true"
+                android:orientation="vertical">
 
             </LinearLayout>
-
-
         </RelativeLayout>
     </RelativeLayout>
 </FrameLayout>

@@ -3,7 +3,6 @@ package com.cateye.android.vtm;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.Message;
-import android.support.v4.widget.DrawerLayout;
 import android.view.KeyEvent;
 import android.widget.Toast;
 
@@ -20,8 +19,12 @@ import com.lzy.okgo.OkGo;
 import com.lzy.okgo.convert.StringConvert;
 import com.lzy.okgo.model.Response;
 import com.lzy.okrx2.adapter.ObservableResponse;
+import com.nightonke.boommenu.BoomButtons.ButtonPlaceEnum;
+import com.nightonke.boommenu.BoomButtons.HamButton;
+import com.nightonke.boommenu.BoomButtons.OnBMClickListener;
 import com.nightonke.boommenu.BoomMenuButton;
 import com.nightonke.boommenu.ButtonEnum;
+import com.nightonke.boommenu.Piece.PiecePlaceEnum;
 import com.tencent.map.geolocation.TencentLocation;
 import com.tencent.map.geolocation.TencentLocationListener;
 import com.tencent.map.geolocation.TencentLocationManager;
@@ -43,7 +46,10 @@ import org.oscim.android.filepicker.FilePicker;
 import org.oscim.android.filepicker.FilterByFileExtension;
 import org.oscim.android.filepicker.ValidMapFile;
 import org.oscim.android.filepicker.ValidRenderTheme;
+import org.xutils.DbManager;
+import org.xutils.x;
 
+import java.io.File;
 import java.util.List;
 
 import io.reactivex.Observer;
@@ -57,7 +63,9 @@ import me.yokeyword.fragmentation.SupportActivity;
 public class MainActivity extends SupportActivity implements TencentLocationListener {
     private TencentLocation currentLocation;
     private CatEyeMainFragment mainFragment;
-    private BoomMenuButton bmb;//主界面右下角菜单按钮
+
+    private BoomMenuButton bmb;
+    private DbManager dbManager;//数据库管理类，使用xUtils
 
     //地图layer的分组
     public enum LAYER_GROUP_ENUM {
@@ -90,8 +98,6 @@ public class MainActivity extends SupportActivity implements TencentLocationList
         setContentView(R.layout.activity_main);
 
         //启动fragment，显示地图界面
-//        Rigger.getRigger(this).startFragment(CatEyeMainFragment.newInstance(new Bundle()));
-//        startFragment(CatEyeMainFragment.class);
         mainFragment = CatEyeMainFragment.newInstance(new Bundle());
         loadRootFragment(R.id.fragment_main_container, mainFragment);
         //申请所需要的权限
@@ -141,8 +147,10 @@ public class MainActivity extends SupportActivity implements TencentLocationList
 
         setCurrentProject();//设置当前正在作业的项目
 
-        bmb=findViewById(R.id.bmb);
-        bmb.setButtonEnum(ButtonEnum.Ham);
+        initBMB();
+
+        //初始化数据库管理
+        initDbManager();
     }
 
     /**
@@ -218,7 +226,7 @@ public class MainActivity extends SupportActivity implements TencentLocationList
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         System.out.print(((CatEyeMainFragment) getTopFragment()).getTopFragment().getClass());
         System.out.print(((CatEyeMainFragment) getTopFragment()).getTopChildFragment());
-        if (getTopFragment() != null && getTopFragment() instanceof CatEyeMainFragment&&((CatEyeMainFragment) getTopFragment()).getTopChildFragment() == null) {//如果当前主界面是最后一个主Fragment，则调用双击退出程序的方法
+        if (getTopFragment() != null && getTopFragment() instanceof CatEyeMainFragment && ((CatEyeMainFragment) getTopFragment()).getTopChildFragment() == null) {//如果当前主界面是最后一个主Fragment，则调用双击退出程序的方法
             if (keyCode == KeyEvent.KEYCODE_BACK && event.getAction() == KeyEvent.ACTION_DOWN) {
                 if (System.currentTimeMillis() - firstTime > 2000) {
                     RxToast.info("再按一次退出程序");
@@ -288,7 +296,7 @@ public class MainActivity extends SupportActivity implements TencentLocationList
                             }
                         }
 
-                        new CanDialog.Builder(MainActivity.this).setTitle("请选择要作业的项目").setSingleChoiceItems(projectNames, checkedItem, null).setPositiveButton("确定", true, new CanDialogInterface.OnClickListener() {
+                        CanDialog canDialog = new CanDialog.Builder(MainActivity.this).setTitle("请选择要作业的项目").setSingleChoiceItems(projectNames, checkedItem, null).setPositiveButton("确定", true, new CanDialogInterface.OnClickListener() {
                             @Override
                             public void onClick(CanDialog dialog, int checkItem, CharSequence text, boolean[] checkItems) {
                                 if (SystemConstant.CURRENT_PROJECTS_ID != projectList.get(checkItem).getId()) {
@@ -341,4 +349,52 @@ public class MainActivity extends SupportActivity implements TencentLocationList
         });
     }
 
+    private void initBMB() {
+        bmb = findViewById(R.id.bmb);
+        bmb.setButtonEnum(ButtonEnum.Ham);
+        bmb.setPiecePlaceEnum(PiecePlaceEnum.HAM_3);
+        bmb.setButtonPlaceEnum(ButtonPlaceEnum.HAM_3);
+
+        //自动添加三个指定选项
+        HamButton.Builder mainBuilder = new HamButton.Builder()
+                .normalImageRes(R.drawable.selector_icon_home)
+                .normalText("主界面").listener(new OnBMClickListener() {
+                    @Override
+                    public void onBoomButtonClick(int index) {
+                        mainFragment.setCurrentOperateMap(CatEyeMainFragment.MAIN_FRAGMENT_OPERATE.MAIN);
+                    }
+                });
+        bmb.addBuilder(mainBuilder);
+        HamButton.Builder contourBuilder = new HamButton.Builder()
+                .normalImageRes(R.drawable.selector_contour_line)
+                .normalText("等高线").listener(new OnBMClickListener() {
+                    @Override
+                    public void onBoomButtonClick(int index) {
+                        mainFragment.setCurrentOperateMap(CatEyeMainFragment.MAIN_FRAGMENT_OPERATE.CONTOUR);
+                    }
+                });
+        bmb.addBuilder(contourBuilder);
+        HamButton.Builder airPlanBuilder = new HamButton.Builder()
+                .normalImageRes(R.drawable.selector_air_plan_draw)
+                .normalText("航区规划").listener(new OnBMClickListener() {
+                    @Override
+                    public void onBoomButtonClick(int index) {
+                        mainFragment.setCurrentOperateMap(CatEyeMainFragment.MAIN_FRAGMENT_OPERATE.AIR_PLAN);
+                    }
+                });
+        bmb.addBuilder(airPlanBuilder);
+    }
+
+    private void initDbManager(){
+        if (dbManager==null){
+            DbManager.DaoConfig daoConfig = new DbManager.DaoConfig();
+            daoConfig.setDbVersion(SystemConstant.DB_VERSION).setDbDir(new File(SystemConstant.APP_ROOT_DATA_PATH)).setDbName("cateye.sqlite");
+            dbManager= x.getDb(daoConfig);
+        }
+    }
+
+    public DbManager getDbManager() {
+        initDbManager();
+        return dbManager;
+    }
 }
