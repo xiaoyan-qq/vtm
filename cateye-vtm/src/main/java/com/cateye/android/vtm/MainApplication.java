@@ -13,6 +13,8 @@ import com.lzy.okgo.interceptor.HttpLoggingInterceptor;
 import com.umeng.commonsdk.UMConfigure;
 import com.vondear.rxtool.RxTool;
 
+import org.xutils.x;
+
 import java.io.File;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -75,5 +77,6 @@ public class MainApplication extends Application {
             rootPathDir.mkdirs();
         }
 
+        x.Ext.init(this);
     }
 }

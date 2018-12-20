@@ -78,7 +78,7 @@ public class AirPlanDrawFragment extends BaseDrawFragment {
                     //初始化绘制图层
                     initDrawLayers();
                 } else {
-                    completeDrawAirPlan();
+                    completeDrawAirPlan(false);
                 }
             }
         });
@@ -163,7 +163,7 @@ public class AirPlanDrawFragment extends BaseDrawFragment {
     }
 
     //绘制结束一个polygon
-    public void completeDrawAirPlan() {
+    public void completeDrawAirPlan(final boolean isPop/*标识是否编辑结束后回退当前fragment*/) {
         if (img_airplan_draw != null) {
             img_airplan_draw.setSelected(false);
         }
@@ -172,11 +172,22 @@ public class AirPlanDrawFragment extends BaseDrawFragment {
             if (polygonOverlay.getPoints() == null || polygonOverlay.getPoints().isEmpty()) {
                 //复制点位到展示图层，则清除绘制面的所有数据
                 clearDrawLayers();
+                if (isPop) {
+                    pop();
+                }
             } else if (polygonOverlay.getPoints().size() >= 3) {
                 //绘制结束，提示用户设置该polygon的参数，弹出对话框
                 //弹出参数设置对话框
                 final View airPlanRootView = LayoutInflater.from(getActivity()).inflate(R.layout.dialog_air_plan_set_param, null);
-                new CanDialog.Builder(getActivity()).setView(airPlanRootView).setNeutralButton("取消", true, null).setPositiveButton("确定", true, new CanDialogInterface.OnClickListener() {
+                new CanDialog.Builder(getActivity()).setView(airPlanRootView).setNeutralButton("取消", true, new CanDialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(CanDialog dialog, int checkItem, CharSequence text, boolean[] checkItems) {
+                        if (isPop) {
+                            clearDrawLayers();
+                            pop();
+                        }
+                    }
+                }).setPositiveButton("确定", true, new CanDialogInterface.OnClickListener() {
                     @Override
                     public void onClick(CanDialog dialog, int checkItem, CharSequence text, boolean[] checkItems) {
                         //用户点击确定，首先检查用户输入的内容是否合规
@@ -208,18 +219,25 @@ public class AirPlanDrawFragment extends BaseDrawFragment {
                         entity.setId(UUID.randomUUID().toString().replace("-", ""));
 
                         try {
-                            ((MainActivity) getActivity()).getDbManager().save(entity);
+                            ((MainActivity) AirPlanDrawFragment.this.getActivity()).getDbManager().save(entity);
                             RxToast.success("保存polygon成功!");
 
                             //绘制结束，将绘制的数据添加到airplan的图层内
                             multiPolygonLayer.addPolygonDrawable(polygonOverlay.getPoints());
                             //复制点位到展示图层，则清除绘制面的所有数据
                             clearDrawLayers();
+                            if (isPop) {
+                                pop();
+                            }
                         } catch (DbException e) {
                             e.printStackTrace();
                             RxToast.error("保存polygon失败!");
                             RxLogTool.saveLogFile("保存航线polygon到数据库失败：" + e.toString());
                             //保存失败，不清除图层
+                            if (isPop) {
+                                clearDrawLayers();
+                                pop();
+                            }
                         }
                     }
                 }).show();

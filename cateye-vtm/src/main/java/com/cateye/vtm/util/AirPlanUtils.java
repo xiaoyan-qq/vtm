@@ -83,11 +83,9 @@ public class AirPlanUtils {
                 } else {
                     AirPlanDrawFragment airPlanDrawFragment = mainFragment.findChildFragment(AirPlanDrawFragment.class);
                     if (airPlanDrawFragment != null) {
-                        airPlanDrawFragment.completeDrawAirPlan();
+                        airPlanDrawFragment.completeDrawAirPlan(true);
                     }
-
                     view.setSelected(false);//设置为未选中状态
-                    mainFragment.popChild();//弹出绘制界面
                 }
             } else if (view.getId() == R.id.chk_set_airplan) {//设置航区参数,设置飞行航区
                 if (!view.isSelected()) {
@@ -235,6 +233,7 @@ public class AirPlanUtils {
 
                             if (addPolygon != null) {
                                 paramPolygonLayer.addPolygonDrawable(addPolygon);
+                                ((MainActivity) mainFragment.getActivity()).showSlidingLayout(0.33f, AirPlanDrawFragment.newInstance(null));
                                 mMap.updateMap(true);
                                 return true;
                             }
@@ -245,6 +244,7 @@ public class AirPlanUtils {
                                     //如果已经存在点击对应的polygon，则存在此polygon，跳到下一个polygon判断
                                     if (paramPolygon.equals(tapPolygon)) {
                                         paramPolygonLayer.removePolygonDrawable(paramPolygon);
+                                        ((MainActivity) mainFragment.getActivity()).hiddenSlidingLayout();
                                         mMap.updateMap(true);
                                         return true;
                                     }
@@ -252,10 +252,11 @@ public class AirPlanUtils {
                             }
                         } else {//不存在参数设置polygon，则直接添加第一个点击的polygon到参数设置layer上
                             paramPolygonLayer.addPolygonDrawable(tapPolygonList.get(0));
+                            ((MainActivity) mainFragment.getActivity()).showSlidingLayout(0.33f, AirPlanDrawFragment.newInstance(null));
                             mMap.updateMap(true);
                         }
 
-                    }else {//点击的位置不在polygon中，即为设置飞机的起飞位置
+                    } else {//点击的位置不在polygon中，即为设置飞机的起飞位置
                         ItemizedLayer airportLayer = (ItemizedLayer) OverlayerManager.getInstance(mMap).getLayerByName(SystemConstant.AIR_PLAN_MARKER_AIR_PORT);
                         airportLayer.removeAllItems();
                         airportLayer.addItem(new MarkerItem("机场", "机场", p));

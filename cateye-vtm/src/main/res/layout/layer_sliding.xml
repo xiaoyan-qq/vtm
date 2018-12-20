@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?><!--此处用来显示某些需要侧边栏显示的内容-->
+<SlidingDrawer xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/slidingdrawer"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_gravity="right"
+    android:content="@+id/content"
+    android:handle="@+id/handle"
+    android:orientation="horizontal"
+    android:visibility="gone">
+
+    <RelativeLayout
+        android:id="@id/handle"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent">
+
+        <ImageView
+            android:id="@+id/iv_slide"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:paddingBottom="@dimen/button_padding_default"
+            android:paddingLeft="@dimen/button_padding_default"
+            android:paddingTop="@dimen/button_padding_default"
+            android:src="@drawable/slibe_up" />
+
+    </RelativeLayout>
+
+    <LinearLayout
+        android:id="@id/content"
+        android:layout_width="match_parent"
+        android:layout_height="fill_parent"
+        android:background="#dd707070"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:id="@+id/sliding_content"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"></LinearLayout>
+    </LinearLayout>
+</SlidingDrawer>
