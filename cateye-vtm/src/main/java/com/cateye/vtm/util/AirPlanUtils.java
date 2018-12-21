@@ -1,6 +1,5 @@
 package com.cateye.vtm.util;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
@@ -12,6 +11,7 @@ import com.cateye.android.entity.FlightParameter;
 import com.cateye.android.vtm.MainActivity;
 import com.cateye.android.vtm.R;
 import com.cateye.vtm.fragment.AirPlanDrawFragment;
+import com.cateye.vtm.fragment.AirPlanSelectPolygonListFragment;
 import com.cateye.vtm.fragment.base.BaseFragment;
 import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
@@ -36,7 +36,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
 
-import static com.cateye.vtm.fragment.CatEyeMainFragment.SELECT_AIR_PLAN_FILE;
 import static org.oscim.android.canvas.AndroidGraphics.drawableToBitmap;
 
 /**
@@ -127,6 +126,8 @@ public class AirPlanUtils {
                             mMap.layers().add(new MapEventsReceiver(mMap, SystemConstant.AIR_PLAN_MULTI_POLYGON_PARAM_EVENT), MainActivity.LAYER_GROUP_ENUM.OPERTOR_GROUP.orderIndex);
                         }
                     }
+                    //图层添加完毕，侧边栏显示需要处理的polygon列表
+                    ((MainActivity) mainFragment.getActivity()).showSlidingLayout(0.33f, AirPlanDrawFragment.newInstance(null));
                 } else {
                     view.setSelected(false);
                     //判断当前参数设置图层是否有polygon，如果存在，则弹出对话框提示用户设置参数
@@ -170,8 +171,10 @@ public class AirPlanUtils {
                     System.out.print(jsonResult);
                 }
             } else if (view.getId() == R.id.img_open_airplan) {//打开航区数据
-                mainFragment.startActivityForResult(new Intent(mainFragment.getActivity(), MainActivity.AirplanFilePicker.class),
-                        SELECT_AIR_PLAN_FILE);
+//                mainFragment.startActivityForResult(new Intent(mainFragment.getActivity(), MainActivity.AirplanFilePicker.class),
+//                        SELECT_AIR_PLAN_FILE);
+                AirPlanSelectPolygonListFragment airPlanSelectPolygonListFragment = (AirPlanSelectPolygonListFragment) AirPlanSelectPolygonListFragment.newInstance(new Bundle());
+                ((MainActivity) mainFragment.getActivity()).showSlidingLayout(0.4f, airPlanSelectPolygonListFragment);
             }
         }
     };

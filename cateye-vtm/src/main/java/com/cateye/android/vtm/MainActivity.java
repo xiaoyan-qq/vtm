@@ -162,7 +162,7 @@ public class MainActivity extends SupportActivity implements TencentLocationList
 
         //右侧抽屉图层
         slidingDrawer = (SlidingDrawer) findViewById(R.id.slidingdrawer);
-        sliding_content = findViewById(R.id.sliding_content);
+        sliding_content = slidingDrawer.getContent();
     }
 
     /**
@@ -415,9 +415,7 @@ public class MainActivity extends SupportActivity implements TencentLocationList
         layoutParams.width = (int) (pecent * screenWidth);
         slidingDrawer.setLayoutParams(layoutParams);
         slidingDrawer.setVisibility(View.VISIBLE);
-
         //内容界面显示用户指定的fragment
-        loadRootFragment(R.id.sliding_content,fragment);
     }
 
     public void hiddenSlidingLayout() {
