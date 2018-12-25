@@ -236,7 +236,6 @@ public class AirPlanUtils {
 
                             if (addPolygon != null) {
                                 paramPolygonLayer.addPolygonDrawable(addPolygon);
-                                ((MainActivity) mainFragment.getActivity()).showSlidingLayout(0.33f, AirPlanDrawFragment.newInstance(null));
                                 mMap.updateMap(true);
                                 return true;
                             }
@@ -255,7 +254,6 @@ public class AirPlanUtils {
                             }
                         } else {//不存在参数设置polygon，则直接添加第一个点击的polygon到参数设置layer上
                             paramPolygonLayer.addPolygonDrawable(tapPolygonList.get(0));
-                            ((MainActivity) mainFragment.getActivity()).showSlidingLayout(0.33f, AirPlanDrawFragment.newInstance(null));
                             mMap.updateMap(true);
                         }
 

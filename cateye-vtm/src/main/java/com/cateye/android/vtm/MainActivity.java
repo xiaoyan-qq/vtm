@@ -73,7 +73,6 @@ public class MainActivity extends SupportActivity implements TencentLocationList
     private DbManager dbManager;//数据库管理类，使用xUtils
 
     private SlidingDrawer slidingDrawer;//右侧的抽屉式界面，默认隐藏，在某些情况下才会正常显示
-    private View sliding_content;//用来显示右侧抽屉的内容区域
 
     //地图layer的分组
     public enum LAYER_GROUP_ENUM {
@@ -162,7 +161,6 @@ public class MainActivity extends SupportActivity implements TencentLocationList
 
         //右侧抽屉图层
         slidingDrawer = (SlidingDrawer) findViewById(R.id.slidingdrawer);
-        sliding_content = slidingDrawer.getContent();
     }
 
     /**
@@ -415,7 +413,9 @@ public class MainActivity extends SupportActivity implements TencentLocationList
         layoutParams.width = (int) (pecent * screenWidth);
         slidingDrawer.setLayoutParams(layoutParams);
         slidingDrawer.setVisibility(View.VISIBLE);
+        slidingDrawer.animateOpen();//动画打开右侧面板
         //内容界面显示用户指定的fragment
+        loadRootFragment(R.id.layer_slideing_content,fragment);
     }
 
     public void hiddenSlidingLayout() {

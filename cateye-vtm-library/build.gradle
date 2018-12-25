@@ -152,6 +152,6 @@ dependencies {
     compile 'org.xutils:xutils:3.5.0'
 
     //https://github.com/scwang90/SmartRefreshLayout?utm_medium=email&utm_source=gank.io
-    compile 'com.scwang.smartrefresh:SmartRefreshLayout:1.1.0-andx-1'
+    compile 'com.scwang.smartrefresh:SmartRefreshLayout:1.0.5.1'
 
 }

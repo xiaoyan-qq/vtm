@@ -75,6 +75,7 @@ public class AirPlanSelectPolygonListFragment extends BaseDrawFragment {
         recyclerView.setAdapter(adapter);
         //设置 Footer 为 球脉冲 样式
         refreshLayout.setRefreshFooter(new BallPulseFooter(getActivity()).setSpinnerStyle(SpinnerStyle.Scale));
+        refreshLayout.setEnableRefresh(false);
         //默认加载前20条数据
         try {
             List<AirPlanDBEntity> dbEntityList = dbManager.selector(AirPlanDBEntity.class).limit(PAGE_SIZE).offset(page * PAGE_SIZE).findAll();
@@ -168,5 +169,12 @@ public class AirPlanSelectPolygonListFragment extends BaseDrawFragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+    }
+
+    @Override
+    public boolean onBackPressedSupport() {
+        pop();
+        ((MainActivity) getActivity()).hiddenSlidingLayout();//同时隐藏右侧面板
+        return true;
     }
 }

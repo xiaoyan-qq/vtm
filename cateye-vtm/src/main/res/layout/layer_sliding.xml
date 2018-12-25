@@ -9,22 +9,29 @@
     android:orientation="horizontal"
     android:visibility="gone">
 
-    <RelativeLayout
+    <LinearLayout
         android:id="@id/handle"
         android:layout_width="wrap_content"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:orientation="horizontal">
+        <!--需要使用该view撑开handler，否则滑动过程中仅能看到一半视图-->
+        <View
+            android:layout_width="10dp"
+            android:layout_height="match_parent"
+            android:layout_above="@id/img_back"
+            android:layout_weight="1"></View>
 
         <ImageView
-            android:id="@+id/iv_slide"
+            android:id="@+id/img_back"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
+            android:layout_centerVertical="true"
+            android:layout_gravity="center"
             android:paddingBottom="@dimen/button_padding_default"
             android:paddingLeft="@dimen/button_padding_default"
             android:paddingTop="@dimen/button_padding_default"
             android:src="@drawable/slibe_up" />
-
-    </RelativeLayout>
+    </LinearLayout>
 
     <LinearLayout
         android:id="@id/content"
@@ -33,6 +40,11 @@
         android:background="#dd707070"
         android:orientation="vertical">
 
+        <LinearLayout
+            android:id="@+id/layer_slideing_content"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"></LinearLayout>
 
     </LinearLayout>
 </SlidingDrawer>
