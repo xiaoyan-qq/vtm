@@ -18,12 +18,13 @@ import com.cateye.android.vtm.R;
 import com.cateye.vtm.fragment.base.BaseDrawFragment;
 import com.cateye.vtm.fragment.base.BaseFragment;
 import com.cateye.vtm.util.CatEyeMapManager;
-import com.rey.material.widget.CompoundButton;
+import com.rey.material.widget.CheckBox;
 import com.rey.material.widget.SnackBar;
 import com.scwang.smartrefresh.layout.api.RefreshLayout;
 import com.scwang.smartrefresh.layout.constant.SpinnerStyle;
 import com.scwang.smartrefresh.layout.footer.BallPulseFooter;
 import com.scwang.smartrefresh.layout.listener.OnLoadMoreListener;
+import com.vondear.rxtool.RxRecyclerViewDividerTool;
 
 import org.oscim.map.Map;
 import org.xutils.DbManager;
@@ -44,7 +45,7 @@ public class AirPlanSelectPolygonListFragment extends BaseDrawFragment {
     private List<AirPlanDBEntity> listData;
     private DbManager dbManager;
 
-    private final int PAGE_SIZE = 20;
+    private final int PAGE_SIZE = 10;
     private int page = 0;
 
     @Override
@@ -75,7 +76,7 @@ public class AirPlanSelectPolygonListFragment extends BaseDrawFragment {
         recyclerView.setAdapter(adapter);
         //设置 Footer 为 球脉冲 样式
         refreshLayout.setRefreshFooter(new BallPulseFooter(getActivity()).setSpinnerStyle(SpinnerStyle.Scale));
-        refreshLayout.setEnableRefresh(false);
+        recyclerView.addItemDecoration(new RxRecyclerViewDividerTool(0, 0, 2, 2));
         //默认加载前20条数据
         try {
             List<AirPlanDBEntity> dbEntityList = dbManager.selector(AirPlanDBEntity.class).limit(PAGE_SIZE).offset(page * PAGE_SIZE).findAll();
@@ -102,6 +103,7 @@ public class AirPlanSelectPolygonListFragment extends BaseDrawFragment {
                     List<AirPlanDBEntity> dbEntityList = dbManager.selector(AirPlanDBEntity.class).limit(PAGE_SIZE).offset(page * PAGE_SIZE).findAll();
                     if (dbEntityList != null && !dbEntityList.isEmpty()) {
                         listData.addAll(dbEntityList);
+                        adapter.notifyDataSetChanged();
                     } else {
                         SnackBar.make(getActivity()).text("没有更多的数据!").actionText("确定").actionClickListener(new SnackBar.OnActionClickListener() {
                             @Override
@@ -114,6 +116,8 @@ public class AirPlanSelectPolygonListFragment extends BaseDrawFragment {
                     }
                 } catch (DbException e) {
                     e.printStackTrace();
+                }finally {
+                    refreshLayout.finishLoadMore();
                 }
             }
         });
@@ -140,7 +144,7 @@ public class AirPlanSelectPolygonListFragment extends BaseDrawFragment {
 
         @Override
         public void onBindViewHolder(@NonNull AirPlanPolygonAdapter.ViewHolder viewHolder, int i) {
-            viewHolder.tv_name.setText(listData.get(i).getName());
+            viewHolder.chk_name.setText(listData.get(i).getName());
             viewHolder.tv_updateTime.setText(listData.get(i).getLastUpdate());
         }
 
@@ -153,15 +157,13 @@ public class AirPlanSelectPolygonListFragment extends BaseDrawFragment {
         }
 
         public class ViewHolder extends RecyclerView.ViewHolder {
-            public TextView tv_name;//polygon的名称
+            public CheckBox chk_name;//polygon的名称
             public TextView tv_updateTime;//最后更新时间
-            public CompoundButton btn_add;//添加此polygon到绘制图层中
 
             public ViewHolder(@NonNull View itemView) {
                 super(itemView);
-                tv_name = itemView.findViewById(R.id.tv_polygon_name);
+                chk_name = itemView.findViewById(R.id.chk_polygon_name);
                 tv_updateTime = itemView.findViewById(R.id.tv_polygon_updatetime);
-                btn_add = itemView.findViewById(R.id.btn_polygon_add);
             }
         }
     }

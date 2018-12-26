@@ -8,6 +8,6 @@
         android:id="@+id/rv_air_plan_polygon"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#fff"
+        android:background="@color/bootstrap_gray_lighter"
         android:overScrollMode="ifContentScrolls" />
 </com.scwang.smartrefresh.layout.SmartRefreshLayout>
