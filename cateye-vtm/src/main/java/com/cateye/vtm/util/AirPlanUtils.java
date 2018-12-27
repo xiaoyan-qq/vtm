@@ -21,7 +21,6 @@ import com.vtm.library.tools.GeometryTools;
 import com.vtm.library.tools.OverlayerManager;
 
 import org.oscim.backend.canvas.Bitmap;
-import org.oscim.backend.canvas.Color;
 import org.oscim.core.GeoPoint;
 import org.oscim.event.Gesture;
 import org.oscim.event.GestureListener;
@@ -98,21 +97,7 @@ public class AirPlanUtils {
                     view.setSelected(true);
                     if (airplanDrawOverlayer != null) {
                         //绘制多个polygon的图层
-                        if (OverlayerManager.getInstance(mMap).getLayerByName(SystemConstant.AIR_PLAN_MULTI_POLYGON_PARAM) == null) {
-                            //开始编辑参数，增加编辑参数layer，和用户点击layer
-                            int c = Color.YELLOW;
-                            org.oscim.layers.vector.geometries.Style polygonStyle = org.oscim.layers.vector.geometries.Style.builder()
-                                    .stippleColor(c)
-                                    .stipple(24)
-                                    .stippleWidth(1)
-                                    .strokeWidth(1)
-                                    .strokeColor(Color.BLACK).fillColor(c).fillAlpha(0.35f)
-                                    .fixed(true)
-                                    .randomOffset(false)
-                                    .build();
-                            mMap.layers().add(new MultiPolygonLayer(mMap, polygonStyle, SystemConstant.AIR_PLAN_MULTI_POLYGON_PARAM), MainActivity.LAYER_GROUP_ENUM.OPERTOR_GROUP.orderIndex);
-                        }
-
+                        MultiPolygonLayer airPlanParamLayer=LayerUtils.getAirPlanParamLayer(mMap);
                         if (OverlayerManager.getInstance(mMap).getLayerByName(SystemConstant.AIR_PLAN_MARKER_PARAM) == null) {
                             //添加绘制marker的图层，用来绘制无人机起飞的位置
                             Bitmap bitmapPoi = drawableToBitmap(mainFragment.getResources().getDrawable(R.drawable.marker_poi));
@@ -131,7 +116,7 @@ public class AirPlanUtils {
                 } else {
                     view.setSelected(false);
                     //判断当前参数设置图层是否有polygon，如果存在，则弹出对话框提示用户设置参数
-                    MultiPolygonLayer airplanParamOverlayer = (MultiPolygonLayer) OverlayerManager.getInstance(mMap).getLayerByName(SystemConstant.AIR_PLAN_MULTI_POLYGON_PARAM);
+                    MultiPolygonLayer airplanParamOverlayer = LayerUtils.getAirPlanParamLayer(mMap);
                     if (airplanParamOverlayer == null || airplanParamOverlayer.getAllPolygonList() == null || airplanParamOverlayer.getAllPolygonList().isEmpty()) {
                         RxToast.warning("没有需要设置参数的航区");
                     } else {
@@ -171,8 +156,6 @@ public class AirPlanUtils {
                     System.out.print(jsonResult);
                 }
             } else if (view.getId() == R.id.img_open_airplan) {//打开航区数据
-//                mainFragment.startActivityForResult(new Intent(mainFragment.getActivity(), MainActivity.AirplanFilePicker.class),
-//                        SELECT_AIR_PLAN_FILE);
                 AirPlanSelectPolygonListFragment airPlanSelectPolygonListFragment = (AirPlanSelectPolygonListFragment) AirPlanSelectPolygonListFragment.newInstance(new Bundle());
                 ((MainActivity) mainFragment.getActivity()).showSlidingLayout(0.4f, airPlanSelectPolygonListFragment);
             }

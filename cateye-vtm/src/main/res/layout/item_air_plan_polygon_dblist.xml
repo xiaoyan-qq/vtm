@@ -1,25 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    style="@style/rowItem"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:descendantFocusability="blocksDescendants"
-    style="@style/rowItem">
+    android:descendantFocusability="blocksDescendants">
+
+    <com.beardedhen.androidbootstrap.BootstrapButton
+        android:id="@+id/btn_polygon_delete"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="删除"
+        app:bootstrapBrand="danger"
+        app:bootstrapSize="md"
+        app:buttonMode="regular"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:roundedCorners="true"
+        app:showOutline="false" />
 
     <com.rey.material.widget.CheckBox
         android:id="@+id/chk_polygon_name"
-        android:layout_width="0dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textSize="@dimen/lv_font_main_text"
-        app:layout_constraintHorizontal_weight="1"
-        app:layout_constraintLeft_toLeftOf="parent" />
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toLeftOf="@id/btn_polygon_delete" />
 
     <com.rey.material.widget.TextView
         android:id="@+id/tv_polygon_updatetime"
-        android:layout_width="0dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:layout_constraintHorizontal_weight="1"
         app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toLeftOf="@id/btn_polygon_delete"
         app:layout_constraintTop_toBottomOf="@id/chk_polygon_name" />
 
 </android.support.constraint.ConstraintLayout>

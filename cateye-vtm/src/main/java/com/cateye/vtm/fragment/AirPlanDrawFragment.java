@@ -16,19 +16,15 @@ import com.cateye.android.vtm.R;
 import com.cateye.vtm.fragment.base.BaseDrawFragment;
 import com.cateye.vtm.fragment.base.BaseFragment;
 import com.cateye.vtm.util.CatEyeMapManager;
-import com.cateye.vtm.util.SystemConstant;
+import com.cateye.vtm.util.LayerUtils;
 import com.litesuits.common.assist.Check;
 import com.vondear.rxtool.RxLogTool;
 import com.vondear.rxtool.RxTimeTool;
 import com.vondear.rxtool.view.RxToast;
 import com.vtm.library.layers.MultiPolygonLayer;
-import com.vtm.library.tools.OverlayerManager;
 
-import org.oscim.backend.canvas.Color;
 import org.oscim.map.Map;
 import org.xutils.ex.DbException;
-
-import java.util.UUID;
 
 /**
  * Created by xiaoxiao on 2018/8/31.
@@ -144,22 +140,7 @@ public class AirPlanDrawFragment extends BaseDrawFragment {
         CatEyeMapManager.getInstance(getActivity()).getCatEyeMap().layers().add(mapEventsReceiver, MainActivity.LAYER_GROUP_ENUM.OPERTOR_GROUP.orderIndex);
 
         //如果当前地图不存在multiPolygon的图层，则自动生成添加到地图上
-        multiPolygonLayer = (MultiPolygonLayer) OverlayerManager.getInstance(mMap).getLayerByName(SystemConstant.AIR_PLAN_MULTI_POLYGON_DRAW);
-        if (multiPolygonLayer == null) {
-            //向主界面添加polygon显示的overlayer
-            int c = Color.GREEN;
-            org.oscim.layers.vector.geometries.Style polygonStyle = org.oscim.layers.vector.geometries.Style.builder()
-                    .stippleColor(c)
-                    .stipple(24)
-                    .stippleWidth(1)
-                    .strokeWidth(1)
-                    .strokeColor(c).fillColor(c).fillAlpha(0.35f)
-                    .fixed(true)
-                    .randomOffset(false)
-                    .build();
-            multiPolygonLayer = new MultiPolygonLayer(mMap, polygonStyle, SystemConstant.AIR_PLAN_MULTI_POLYGON_DRAW);
-            mMap.layers().add(multiPolygonLayer, MainActivity.LAYER_GROUP_ENUM.OPERTOR_GROUP.orderIndex);
-        }
+        multiPolygonLayer = LayerUtils.getAirPlanDrawLayer(mMap);
     }
 
     //绘制结束一个polygon
@@ -216,7 +197,6 @@ public class AirPlanDrawFragment extends BaseDrawFragment {
                         entity.setLastUpdate(currentTime);
                         entity.setDescriptor(edt_describe.getText().toString());
                         entity.setGeometry(polygonOverlay.getPolygon().toString());
-                        entity.setId(UUID.randomUUID().toString().replace("-", ""));
 
                         try {
                             ((MainActivity) AirPlanDrawFragment.this.getActivity()).getDbManager().save(entity);

@@ -19,6 +19,7 @@ import com.cateye.vtm.fragment.CatEyeMainFragment;
 import com.cateye.vtm.fragment.MultiTimeLayerSelectFragment;
 import com.cateye.vtm.fragment.base.BaseFragment;
 import com.cateye.vtm.util.SystemConstant;
+import com.desmond.ripple.RippleCompat;
 import com.lzy.okgo.OkGo;
 import com.lzy.okgo.convert.StringConvert;
 import com.lzy.okgo.model.Response;
@@ -103,6 +104,8 @@ public class MainActivity extends SupportActivity implements TencentLocationList
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        RippleCompat.init(this);
 
         //启动fragment，显示地图界面
         mainFragment = CatEyeMainFragment.newInstance(new Bundle());

@@ -14,4 +14,9 @@
         <item name="android:gravity">center</item>
         <item name="android:background">@drawable/ripple_bg</item>
     </style>
+    <style name="headStyle">
+        <item name="android:padding">@dimen/button_padding_default</item>
+        <item name="android:background">@drawable/ripple_bg</item>
+        <item name="android:orientation">horizontal</item>
+    </style>
 </resources>
