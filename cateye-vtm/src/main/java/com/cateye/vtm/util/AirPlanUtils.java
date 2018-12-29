@@ -5,12 +5,14 @@ import android.view.View;
 import android.widget.ImageView;
 
 import com.alibaba.fastjson.JSON;
+import com.cateye.android.entity.AirPlanDBEntity;
 import com.cateye.android.entity.Airport;
 import com.cateye.android.entity.DigitalCameraInfo;
 import com.cateye.android.entity.FlightParameter;
 import com.cateye.android.vtm.MainActivity;
 import com.cateye.android.vtm.R;
 import com.cateye.vtm.fragment.AirPlanDrawFragment;
+import com.cateye.vtm.fragment.AirPlanParamListFragment;
 import com.cateye.vtm.fragment.AirPlanSelectPolygonListFragment;
 import com.cateye.vtm.fragment.base.BaseFragment;
 import com.vividsolutions.jts.geom.Point;
@@ -95,9 +97,13 @@ public class AirPlanUtils {
                     }
 
                     view.setSelected(true);
+                    //右侧弹出选中的polygon列表，支持上下拖动调整顺序
+                    AirPlanParamListFragment airPlanParamListFragment = (AirPlanParamListFragment) AirPlanParamListFragment.newInstance(new Bundle());
+                    ((MainActivity) mainFragment.getActivity()).showSlidingLayout(0.4f, airPlanParamListFragment);
+
                     if (airplanDrawOverlayer != null) {
                         //绘制多个polygon的图层
-                        MultiPolygonLayer airPlanParamLayer=LayerUtils.getAirPlanParamLayer(mMap);
+                        MultiPolygonLayer airPlanParamLayer = LayerUtils.getAirPlanParamLayer(mMap);
                         if (OverlayerManager.getInstance(mMap).getLayerByName(SystemConstant.AIR_PLAN_MARKER_PARAM) == null) {
                             //添加绘制marker的图层，用来绘制无人机起飞的位置
                             Bitmap bitmapPoi = drawableToBitmap(mainFragment.getResources().getDrawable(R.drawable.marker_poi));
@@ -186,7 +192,7 @@ public class AirPlanUtils {
                 GeoPoint p = mMap.viewport().fromScreenPoint(e.getX(), e.getY());
                 Point geometryPoint = (Point) GeometryTools.createGeometry(p);
                 //获取当前绘制layer的所有polygon，检查是否与当前点击点位交叉
-                MultiPolygonLayer drawPolygonLayer = (MultiPolygonLayer) OverlayerManager.getInstance(mMap).getLayerByName(SystemConstant.AIR_PLAN_MULTI_POLYGON_DRAW);
+                AirPlanMultiPolygonLayer drawPolygonLayer = (AirPlanMultiPolygonLayer) OverlayerManager.getInstance(mMap).getLayerByName(SystemConstant.AIR_PLAN_MULTI_POLYGON_DRAW);
                 List<Polygon> drawPolygonList = drawPolygonLayer.getAllPolygonList();
                 if (drawPolygonList != null && !drawPolygonList.isEmpty()) {//点击的区域与polygon交叉，即为点击到了指定的polygon上
                     List<Polygon> tapPolygonList = new ArrayList<>();
@@ -196,8 +202,10 @@ public class AirPlanUtils {
                         }
                     }
 
+                    AirPlanParamListFragment airPlanParamListFragment = ((MainActivity) mainFragment.getActivity()).findFragment(AirPlanParamListFragment.class);
+
                     if (tapPolygonList != null && !tapPolygonList.isEmpty()) {
-                        MultiPolygonLayer paramPolygonLayer = (MultiPolygonLayer) OverlayerManager.getInstance(mMap).getLayerByName(SystemConstant.AIR_PLAN_MULTI_POLYGON_PARAM);
+                        AirPlanMultiPolygonLayer paramPolygonLayer = (AirPlanMultiPolygonLayer) OverlayerManager.getInstance(mMap).getLayerByName(SystemConstant.AIR_PLAN_MULTI_POLYGON_PARAM);
                         List<Polygon> paramPolygonList = paramPolygonLayer.getAllPolygonList();
                         if (paramPolygonList != null && !paramPolygonList.isEmpty()) {
                             //第一遍遍历-添加polygon：用户有选中的polygon，遍历此列表，如果没有被绘制到参数设置图层，则添加到该图层，如果存在，则从该图层删除
@@ -217,9 +225,14 @@ public class AirPlanUtils {
                                 }
                             }
 
+                            //！！！！此前没有添加过该polygon，向地图添加polygon
                             if (addPolygon != null) {
-                                paramPolygonLayer.addPolygonDrawable(addPolygon);
+                                AirPlanDBEntity airPlanDBEntity = drawPolygonLayer.getAirPlanDBEntityMap().get(addPolygon);
+                                paramPolygonLayer.addPolygon(airPlanDBEntity);
                                 mMap.updateMap(true);
+
+                                //向侧边栏list添加entity
+                                airPlanParamListFragment.addData(airPlanDBEntity);
                                 return true;
                             }
 
@@ -228,8 +241,12 @@ public class AirPlanUtils {
                                 for (Polygon paramPolygon : paramPolygonList) {
                                     //如果已经存在点击对应的polygon，则存在此polygon，跳到下一个polygon判断
                                     if (paramPolygon.equals(tapPolygon)) {
+                                        //右侧面板移除此polygon对应的数据
+                                        AirPlanDBEntity airPlanDBEntity = paramPolygonLayer.getAirPlanDBEntityMap().get(tapPolygon);
+                                        airPlanParamListFragment.removeData(airPlanDBEntity);
+
+                                        //！！！！曾添加过该polygon，移除polygon
                                         paramPolygonLayer.removePolygonDrawable(paramPolygon);
-                                        ((MainActivity) mainFragment.getActivity()).hiddenSlidingLayout();
                                         mMap.updateMap(true);
                                         return true;
                                     }

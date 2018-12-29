@@ -18,16 +18,9 @@
 
     </android.support.constraint.ConstraintLayout>
 
-    <com.scwang.smartrefresh.layout.SmartRefreshLayout
-        android:id="@+id/refreshLayout"
+    <com.yydcdut.sdlv.SlideAndDragListView
+        android:id="@+id/sadLv_paramPolygonList"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
-
-        <android.support.v7.widget.RecyclerView
-            android:id="@+id/rv_air_plan_polygon"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="@color/bootstrap_gray_lighter"
-            android:overScrollMode="ifContentScrolls" />
-    </com.scwang.smartrefresh.layout.SmartRefreshLayout>
+    </com.yydcdut.sdlv.SlideAndDragListView>
 </LinearLayout>
