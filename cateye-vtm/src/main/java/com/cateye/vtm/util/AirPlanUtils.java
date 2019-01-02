@@ -227,7 +227,7 @@ public class AirPlanUtils {
 
                             //！！！！此前没有添加过该polygon，向地图添加polygon
                             if (addPolygon != null) {
-                                AirPlanDBEntity airPlanDBEntity = drawPolygonLayer.getAirPlanDBEntityMap().get(addPolygon);
+                                AirPlanDBEntity airPlanDBEntity = drawPolygonLayer.getAirPlanDBEntityMap().get(addPolygon.toString());
                                 paramPolygonLayer.addPolygon(airPlanDBEntity);
                                 mMap.updateMap(true);
 
