@@ -115,7 +115,10 @@ public class MainActivity extends SupportActivity implements TencentLocationList
                 .onGranted(new Action() {//用户允许
                     @Override
                     public void onAction(List<String> permissions) {
-
+                        if (permissions.contains(Permission.Group.STORAGE)){
+                            //初始化数据库管理
+                            initDbManager();
+                        }
                     }
                 })
                 .onDenied(new Action() {//用户拒绝
@@ -158,9 +161,6 @@ public class MainActivity extends SupportActivity implements TencentLocationList
         setCurrentProject();//设置当前正在作业的项目
 
         initBMB();
-
-        //初始化数据库管理
-        initDbManager();
 
         //右侧抽屉图层
         slidingDrawer = (SlidingDrawer) findViewById(R.id.slidingdrawer);

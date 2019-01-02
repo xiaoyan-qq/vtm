@@ -1,11 +1,11 @@
 apply plugin: 'com.android.application'
 apply plugin: 'android-aspectjx'
 android {
-    compileSdkVersion 28
+    compileSdkVersion 27
     defaultConfig {
         applicationId "com.cateye.android.vtm"
         minSdkVersion 21
-        targetSdkVersion 28
+        targetSdkVersion 27
         versionCode 8
         versionName "0.9.1"
 

@@ -117,8 +117,6 @@ public class AirPlanUtils {
                             mMap.layers().add(new MapEventsReceiver(mMap, SystemConstant.AIR_PLAN_MULTI_POLYGON_PARAM_EVENT), MainActivity.LAYER_GROUP_ENUM.OPERTOR_GROUP.orderIndex);
                         }
                     }
-                    //图层添加完毕，侧边栏显示需要处理的polygon列表
-                    ((MainActivity) mainFragment.getActivity()).showSlidingLayout(0.33f, AirPlanDrawFragment.newInstance(null));
                 } else {
                     view.setSelected(false);
                     //判断当前参数设置图层是否有polygon，如果存在，则弹出对话框提示用户设置参数
@@ -228,7 +226,11 @@ public class AirPlanUtils {
                             //！！！！此前没有添加过该polygon，向地图添加polygon
                             if (addPolygon != null) {
                                 AirPlanDBEntity airPlanDBEntity = drawPolygonLayer.getAirPlanDBEntityMap().get(addPolygon.toString());
-                                paramPolygonLayer.addPolygon(airPlanDBEntity);
+                                if (airPlanDBEntity!=null){
+                                    paramPolygonLayer.addPolygon(airPlanDBEntity);
+                                }else {
+                                    RxToast.error(mainFragment.getContext().getString(R.string.error_info_cant_find_tap_polygon));
+                                }
                                 mMap.updateMap(true);
 
                                 //向侧边栏list添加entity
@@ -255,6 +257,14 @@ public class AirPlanUtils {
                         } else {//不存在参数设置polygon，则直接添加第一个点击的polygon到参数设置layer上
                             paramPolygonLayer.addPolygonDrawable(tapPolygonList.get(0));
                             mMap.updateMap(true);
+
+                            //向侧边栏list添加entity
+                            AirPlanDBEntity airPlanDBEntity = drawPolygonLayer.getAirPlanDBEntityMap().get(tapPolygonList.get(0).toString());
+                            if (airPlanDBEntity!=null){
+                                paramPolygonLayer.addPolygon(airPlanDBEntity);
+                            }else {
+                                RxToast.error(mainFragment.getContext().getString(R.string.error_info_cant_find_tap_polygon));
+                            }
                         }
 
                     } else {//点击的位置不在polygon中，即为设置飞机的起飞位置
