@@ -4,6 +4,9 @@ import android.content.Context;
 import android.os.Bundle;
 import android.os.Message;
 import android.view.KeyEvent;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.SlidingDrawer;
 import android.widget.Toast;
 
 import com.alibaba.fastjson.JSON;
@@ -14,7 +17,9 @@ import com.cateye.android.entity.DataFromNet;
 import com.cateye.android.entity.Project;
 import com.cateye.vtm.fragment.CatEyeMainFragment;
 import com.cateye.vtm.fragment.MultiTimeLayerSelectFragment;
+import com.cateye.vtm.fragment.base.BaseFragment;
 import com.cateye.vtm.util.SystemConstant;
+import com.desmond.ripple.RippleCompat;
 import com.lzy.okgo.OkGo;
 import com.lzy.okgo.convert.StringConvert;
 import com.lzy.okgo.model.Response;
@@ -47,6 +52,7 @@ import org.oscim.android.filepicker.FilterByFileExtension;
 import org.oscim.android.filepicker.ValidMapFile;
 import org.oscim.android.filepicker.ValidRenderTheme;
 import org.xutils.DbManager;
+import org.xutils.common.util.DensityUtil;
 import org.xutils.x;
 
 import java.io.File;
@@ -66,6 +72,8 @@ public class MainActivity extends SupportActivity implements TencentLocationList
 
     private BoomMenuButton bmb;
     private DbManager dbManager;//数据库管理类，使用xUtils
+
+    private SlidingDrawer slidingDrawer;//右侧的抽屉式界面，默认隐藏，在某些情况下才会正常显示
 
     //地图layer的分组
     public enum LAYER_GROUP_ENUM {
@@ -96,6 +104,8 @@ public class MainActivity extends SupportActivity implements TencentLocationList
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        RippleCompat.init(this);
 
         //启动fragment，显示地图界面
         mainFragment = CatEyeMainFragment.newInstance(new Bundle());
@@ -151,6 +161,9 @@ public class MainActivity extends SupportActivity implements TencentLocationList
 
         //初始化数据库管理
         initDbManager();
+
+        //右侧抽屉图层
+        slidingDrawer = (SlidingDrawer) findViewById(R.id.slidingdrawer);
     }
 
     /**
@@ -224,8 +237,6 @@ public class MainActivity extends SupportActivity implements TencentLocationList
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        System.out.print(((CatEyeMainFragment) getTopFragment()).getTopFragment().getClass());
-        System.out.print(((CatEyeMainFragment) getTopFragment()).getTopChildFragment());
         if (getTopFragment() != null && getTopFragment() instanceof CatEyeMainFragment && ((CatEyeMainFragment) getTopFragment()).getTopChildFragment() == null) {//如果当前主界面是最后一个主Fragment，则调用双击退出程序的方法
             if (keyCode == KeyEvent.KEYCODE_BACK && event.getAction() == KeyEvent.ACTION_DOWN) {
                 if (System.currentTimeMillis() - firstTime > 2000) {
@@ -295,7 +306,6 @@ public class MainActivity extends SupportActivity implements TencentLocationList
                                 checkedItem = i;
                             }
                         }
-
                         CanDialog canDialog = new CanDialog.Builder(MainActivity.this).setTitle("请选择要作业的项目").setSingleChoiceItems(projectNames, checkedItem, null).setPositiveButton("确定", true, new CanDialogInterface.OnClickListener() {
                             @Override
                             public void onClick(CanDialog dialog, int checkItem, CharSequence text, boolean[] checkItems) {
@@ -385,16 +395,32 @@ public class MainActivity extends SupportActivity implements TencentLocationList
         bmb.addBuilder(airPlanBuilder);
     }
 
-    private void initDbManager(){
-        if (dbManager==null){
+    private void initDbManager() {
+        if (dbManager == null) {
             DbManager.DaoConfig daoConfig = new DbManager.DaoConfig();
             daoConfig.setDbVersion(SystemConstant.DB_VERSION).setDbDir(new File(SystemConstant.APP_ROOT_DATA_PATH)).setDbName("cateye.sqlite");
-            dbManager= x.getDb(daoConfig);
+            dbManager = x.getDb(daoConfig);
         }
     }
 
     public DbManager getDbManager() {
         initDbManager();
         return dbManager;
+    }
+
+    public void showSlidingLayout(float pecent, BaseFragment fragment) {
+        //获取当前界面的宽度
+        int screenWidth = DensityUtil.getScreenWidth();
+        ViewGroup.LayoutParams layoutParams = slidingDrawer.getLayoutParams();
+        layoutParams.width = (int) (pecent * screenWidth);
+        slidingDrawer.setLayoutParams(layoutParams);
+        slidingDrawer.setVisibility(View.VISIBLE);
+        slidingDrawer.animateOpen();//动画打开右侧面板
+        //内容界面显示用户指定的fragment
+        loadRootFragment(R.id.layer_slideing_content,fragment);
+    }
+
+    public void hiddenSlidingLayout() {
+        slidingDrawer.setVisibility(View.GONE);
     }
 }

@@ -310,7 +310,7 @@ public class CatEyeMainFragment extends BaseFragment {
         chk_draw_polygon.setOnClickListener(mainFragmentClickListener);
 
         //航区规划相关的设置
-        AirPlanUtils airPlanUtils=AirPlanUtils.getInstance(this,mMap,img_chk_set_airplan);
+        AirPlanUtils airPlanUtils = AirPlanUtils.getInstance(this, mMap, img_chk_set_airplan);
         img_chk_draw_airplan.setOnClickListener(airPlanUtils.airplanClickListener);
         img_chk_set_airplan.setOnClickListener(airPlanUtils.airplanClickListener);
         img_chk_open_airplan.setOnClickListener(airPlanUtils.airplanClickListener);

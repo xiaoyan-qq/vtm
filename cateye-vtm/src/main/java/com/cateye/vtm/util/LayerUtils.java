@@ -1,0 +1,62 @@
+package com.cateye.vtm.util;
+
+import com.cateye.android.vtm.MainActivity;
+import com.vtm.library.layers.MultiPolygonLayer;
+import com.vtm.library.tools.OverlayerManager;
+
+import org.oscim.backend.canvas.Color;
+import org.oscim.map.Map;
+
+/**
+ * Created by xiaoxiao on 2018/12/27.
+ * 维护map上的不同layer的工具类
+ */
+
+public class LayerUtils {
+    /**
+     * 获取用户绘制航摄区域的图层，也可作为从数据库加载polygon的图层
+     *
+     * @param mMap
+     * @return 被加载的图层
+     */
+    public static MultiPolygonLayer getAirPlanDrawLayer(Map mMap) {
+        //如果当前地图不存在multiPolygon的图层，则自动生成添加到地图上
+        MultiPolygonLayer multiPolygonLayer = (MultiPolygonLayer) OverlayerManager.getInstance(mMap).getLayerByName(SystemConstant.AIR_PLAN_MULTI_POLYGON_DRAW);
+        if (multiPolygonLayer == null) {
+            //向主界面添加polygon显示的overlayer
+            int c = Color.GREEN;
+            org.oscim.layers.vector.geometries.Style polygonStyle = org.oscim.layers.vector.geometries.Style.builder()
+                    .stippleColor(c)
+                    .stipple(24)
+                    .stippleWidth(1)
+                    .strokeWidth(1)
+                    .strokeColor(c).fillColor(c).fillAlpha(0.35f)
+                    .fixed(true)
+                    .randomOffset(false)
+                    .build();
+            multiPolygonLayer = new MultiPolygonLayer(mMap, polygonStyle, SystemConstant.AIR_PLAN_MULTI_POLYGON_DRAW);
+            mMap.layers().add(multiPolygonLayer, MainActivity.LAYER_GROUP_ENUM.OPERTOR_GROUP.orderIndex);
+        }
+        return multiPolygonLayer;
+    }
+
+    public static MultiPolygonLayer getAirPlanParamLayer(Map mMap) {
+        MultiPolygonLayer multiPolygonLayer = (MultiPolygonLayer) OverlayerManager.getInstance(mMap).getLayerByName(SystemConstant.AIR_PLAN_MULTI_POLYGON_PARAM);
+        if (multiPolygonLayer == null) {
+            //开始编辑参数，增加编辑参数layer，和用户点击layer
+            int c = Color.YELLOW;
+            org.oscim.layers.vector.geometries.Style polygonStyle = org.oscim.layers.vector.geometries.Style.builder()
+                    .stippleColor(c)
+                    .stipple(24)
+                    .stippleWidth(1)
+                    .strokeWidth(1)
+                    .strokeColor(Color.BLACK).fillColor(c).fillAlpha(0.35f)
+                    .fixed(true)
+                    .randomOffset(false)
+                    .build();
+            multiPolygonLayer = new MultiPolygonLayer(mMap, polygonStyle, SystemConstant.AIR_PLAN_MULTI_POLYGON_PARAM);
+            mMap.layers().add(multiPolygonLayer, MainActivity.LAYER_GROUP_ENUM.OPERTOR_GROUP.orderIndex);
+        }
+        return multiPolygonLayer;
+    }
+}

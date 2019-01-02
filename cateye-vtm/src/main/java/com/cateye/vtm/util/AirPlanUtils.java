@@ -1,6 +1,5 @@
 package com.cateye.vtm.util;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
@@ -12,6 +11,7 @@ import com.cateye.android.entity.FlightParameter;
 import com.cateye.android.vtm.MainActivity;
 import com.cateye.android.vtm.R;
 import com.cateye.vtm.fragment.AirPlanDrawFragment;
+import com.cateye.vtm.fragment.AirPlanSelectPolygonListFragment;
 import com.cateye.vtm.fragment.base.BaseFragment;
 import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
@@ -21,7 +21,6 @@ import com.vtm.library.tools.GeometryTools;
 import com.vtm.library.tools.OverlayerManager;
 
 import org.oscim.backend.canvas.Bitmap;
-import org.oscim.backend.canvas.Color;
 import org.oscim.core.GeoPoint;
 import org.oscim.event.Gesture;
 import org.oscim.event.GestureListener;
@@ -36,7 +35,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
 
-import static com.cateye.vtm.fragment.CatEyeMainFragment.SELECT_AIR_PLAN_FILE;
 import static org.oscim.android.canvas.AndroidGraphics.drawableToBitmap;
 
 /**
@@ -83,11 +81,9 @@ public class AirPlanUtils {
                 } else {
                     AirPlanDrawFragment airPlanDrawFragment = mainFragment.findChildFragment(AirPlanDrawFragment.class);
                     if (airPlanDrawFragment != null) {
-                        airPlanDrawFragment.completeDrawAirPlan();
+                        airPlanDrawFragment.completeDrawAirPlan(true);
                     }
-
                     view.setSelected(false);//设置为未选中状态
-                    mainFragment.popChild();//弹出绘制界面
                 }
             } else if (view.getId() == R.id.chk_set_airplan) {//设置航区参数,设置飞行航区
                 if (!view.isSelected()) {
@@ -101,21 +97,7 @@ public class AirPlanUtils {
                     view.setSelected(true);
                     if (airplanDrawOverlayer != null) {
                         //绘制多个polygon的图层
-                        if (OverlayerManager.getInstance(mMap).getLayerByName(SystemConstant.AIR_PLAN_MULTI_POLYGON_PARAM) == null) {
-                            //开始编辑参数，增加编辑参数layer，和用户点击layer
-                            int c = Color.YELLOW;
-                            org.oscim.layers.vector.geometries.Style polygonStyle = org.oscim.layers.vector.geometries.Style.builder()
-                                    .stippleColor(c)
-                                    .stipple(24)
-                                    .stippleWidth(1)
-                                    .strokeWidth(1)
-                                    .strokeColor(Color.BLACK).fillColor(c).fillAlpha(0.35f)
-                                    .fixed(true)
-                                    .randomOffset(false)
-                                    .build();
-                            mMap.layers().add(new MultiPolygonLayer(mMap, polygonStyle, SystemConstant.AIR_PLAN_MULTI_POLYGON_PARAM), MainActivity.LAYER_GROUP_ENUM.OPERTOR_GROUP.orderIndex);
-                        }
-
+                        MultiPolygonLayer airPlanParamLayer=LayerUtils.getAirPlanParamLayer(mMap);
                         if (OverlayerManager.getInstance(mMap).getLayerByName(SystemConstant.AIR_PLAN_MARKER_PARAM) == null) {
                             //添加绘制marker的图层，用来绘制无人机起飞的位置
                             Bitmap bitmapPoi = drawableToBitmap(mainFragment.getResources().getDrawable(R.drawable.marker_poi));
@@ -129,10 +111,12 @@ public class AirPlanUtils {
                             mMap.layers().add(new MapEventsReceiver(mMap, SystemConstant.AIR_PLAN_MULTI_POLYGON_PARAM_EVENT), MainActivity.LAYER_GROUP_ENUM.OPERTOR_GROUP.orderIndex);
                         }
                     }
+                    //图层添加完毕，侧边栏显示需要处理的polygon列表
+                    ((MainActivity) mainFragment.getActivity()).showSlidingLayout(0.33f, AirPlanDrawFragment.newInstance(null));
                 } else {
                     view.setSelected(false);
                     //判断当前参数设置图层是否有polygon，如果存在，则弹出对话框提示用户设置参数
-                    MultiPolygonLayer airplanParamOverlayer = (MultiPolygonLayer) OverlayerManager.getInstance(mMap).getLayerByName(SystemConstant.AIR_PLAN_MULTI_POLYGON_PARAM);
+                    MultiPolygonLayer airplanParamOverlayer = LayerUtils.getAirPlanParamLayer(mMap);
                     if (airplanParamOverlayer == null || airplanParamOverlayer.getAllPolygonList() == null || airplanParamOverlayer.getAllPolygonList().isEmpty()) {
                         RxToast.warning("没有需要设置参数的航区");
                     } else {
@@ -172,8 +156,8 @@ public class AirPlanUtils {
                     System.out.print(jsonResult);
                 }
             } else if (view.getId() == R.id.img_open_airplan) {//打开航区数据
-                mainFragment.startActivityForResult(new Intent(mainFragment.getActivity(), MainActivity.AirplanFilePicker.class),
-                        SELECT_AIR_PLAN_FILE);
+                AirPlanSelectPolygonListFragment airPlanSelectPolygonListFragment = (AirPlanSelectPolygonListFragment) AirPlanSelectPolygonListFragment.newInstance(new Bundle());
+                ((MainActivity) mainFragment.getActivity()).showSlidingLayout(0.4f, airPlanSelectPolygonListFragment);
             }
         }
     };
@@ -245,6 +229,7 @@ public class AirPlanUtils {
                                     //如果已经存在点击对应的polygon，则存在此polygon，跳到下一个polygon判断
                                     if (paramPolygon.equals(tapPolygon)) {
                                         paramPolygonLayer.removePolygonDrawable(paramPolygon);
+                                        ((MainActivity) mainFragment.getActivity()).hiddenSlidingLayout();
                                         mMap.updateMap(true);
                                         return true;
                                     }
@@ -255,7 +240,7 @@ public class AirPlanUtils {
                             mMap.updateMap(true);
                         }
 
-                    }else {//点击的位置不在polygon中，即为设置飞机的起飞位置
+                    } else {//点击的位置不在polygon中，即为设置飞机的起飞位置
                         ItemizedLayer airportLayer = (ItemizedLayer) OverlayerManager.getInstance(mMap).getLayerByName(SystemConstant.AIR_PLAN_MARKER_AIR_PORT);
                         airportLayer.removeAllItems();
                         airportLayer.addItem(new MarkerItem("机场", "机场", p));
