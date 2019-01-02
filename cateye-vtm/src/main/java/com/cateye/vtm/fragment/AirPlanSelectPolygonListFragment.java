@@ -9,15 +9,18 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.beardedhen.androidbootstrap.AwesomeTextView;
 import com.beardedhen.androidbootstrap.BootstrapButton;
+import com.canyinghao.candialog.CanDialog;
+import com.canyinghao.candialog.CanDialogInterface;
 import com.cateye.android.entity.AirPlanDBEntity;
 import com.cateye.android.vtm.MainActivity;
 import com.cateye.android.vtm.R;
 import com.cateye.vtm.fragment.base.BaseDrawFragment;
 import com.cateye.vtm.fragment.base.BaseFragment;
+import com.cateye.vtm.util.AirPlanMultiPolygonLayer;
 import com.cateye.vtm.util.CatEyeMapManager;
 import com.cateye.vtm.util.LayerUtils;
 import com.desmond.ripple.RippleCompat;
@@ -29,7 +32,6 @@ import com.scwang.smartrefresh.layout.listener.OnLoadMoreListener;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vondear.rxtool.RxRecyclerViewDividerTool;
 import com.vondear.rxtool.view.RxToast;
-import com.vtm.library.layers.MultiPolygonLayer;
 import com.vtm.library.tools.GeometryTools;
 
 import org.oscim.core.GeoPoint;
@@ -42,6 +44,7 @@ import java.util.List;
 
 /**
  * Created by xiaoxiao on 2018/8/31.
+ * 从数据库中选择polygon的列表fragment
  */
 
 public class AirPlanSelectPolygonListFragment extends BaseDrawFragment {
@@ -55,8 +58,8 @@ public class AirPlanSelectPolygonListFragment extends BaseDrawFragment {
     private final int PAGE_SIZE = 10;
     private int page = 0;
 
-    private MultiPolygonLayer airPlanDrawLayer;
-    private AwesomeTextView tv_back;
+    private AirPlanMultiPolygonLayer airPlanDrawLayer;
+    private ImageView img_back;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -86,6 +89,7 @@ public class AirPlanSelectPolygonListFragment extends BaseDrawFragment {
         recyclerView.setAdapter(adapter);
         //设置 Footer 为 球脉冲 样式
         refreshLayout.setRefreshFooter(new BallPulseFooter(getActivity()).setSpinnerStyle(SpinnerStyle.Scale));
+        refreshLayout.setEnableRefresh(false);
         recyclerView.addItemDecoration(new RxRecyclerViewDividerTool(0, 0, 2, 2));
         //默认加载前20条数据
         try {
@@ -131,8 +135,9 @@ public class AirPlanSelectPolygonListFragment extends BaseDrawFragment {
             RxToast.info("已自动清除绘制层所有polygon，请在右侧面板选择要显示的polygon");
         }
 
-        tv_back = (AwesomeTextView) findViewById(R.id.tv_air_plan_list_back);
-        tv_back.setOnClickListener(new View.OnClickListener() {
+        img_back = (ImageView) findViewById(R.id.tv_air_plan_list_back);
+        RippleCompat.apply(img_back, R.color.gray);
+        img_back.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 onBackPressedSupport();
@@ -161,7 +166,7 @@ public class AirPlanSelectPolygonListFragment extends BaseDrawFragment {
 
         @Override
         public void onBindViewHolder(@NonNull AirPlanPolygonAdapter.ViewHolder viewHolder, final int i) {
-            viewHolder.chk_name.setText(listData.get(i).getName());
+            viewHolder.tv_polygonName.setText(listData.get(i).getName());
             viewHolder.chk_name.setChecked(false);
             viewHolder.tv_updateTime.setText(listData.get(i).getLastUpdate());
             viewHolder.chk_name.setOnClickListener(new View.OnClickListener() {
@@ -172,7 +177,7 @@ public class AirPlanSelectPolygonListFragment extends BaseDrawFragment {
                         CheckBox chk = (CheckBox) v;
                         if (chk.isChecked()) {
                             //选中指定polygon，将其添加到地图图层上
-                            airPlanDrawLayer.addPolygonDrawable(polygon);
+                            airPlanDrawLayer.addPolygon(listData.get(i));
                         } else {
                             //取消选中，将指定polygon从地图移除
                             airPlanDrawLayer.removePolygonDrawable(polygon);
@@ -186,6 +191,29 @@ public class AirPlanSelectPolygonListFragment extends BaseDrawFragment {
                     }
                 }
             });
+            viewHolder.btn_delete.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    new CanDialog.Builder(getActivity()).setMessage("确定删除该polygon吗?").setPositiveButton("确定", true, new CanDialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(CanDialog dialog, int checkItem, CharSequence text, boolean[] checkItems) {
+                            try {
+                                ((MainActivity) getActivity()).getDbManager().deleteById(AirPlanDBEntity.class, listData.get(i).getId());
+                                listData.remove(i);//移除当前数据
+
+                                //图层上删除已添加的polygon数据
+                                Polygon polygon = (Polygon) GeometryTools.createGeometry(listData.get(i).getGeometry());
+                                LayerUtils.getAirPlanDrawLayer(mMap).removePolygonDrawable(polygon);
+                                //删除成功，提示用户
+                                RxToast.info(getActivity(), "删除成功！");
+                                AirPlanPolygonAdapter.this.notifyDataSetChanged();
+                            } catch (DbException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }).setNegativeButton("取消", true, null).show();
+                }
+            });
         }
 
         @Override
@@ -196,15 +224,17 @@ public class AirPlanSelectPolygonListFragment extends BaseDrawFragment {
             return 0;
         }
 
-        public class ViewHolder extends RecyclerView.ViewHolder {
-            public CheckBox chk_name;//polygon的名称
+        protected class ViewHolder extends RecyclerView.ViewHolder {
+            public CheckBox chk_name;//polygon的勾选状态
             public TextView tv_updateTime;//最后更新时间
+            public TextView tv_polygonName;//polygon名称
             public BootstrapButton btn_delete;//删除
 
             public ViewHolder(@NonNull View itemView) {
                 super(itemView);
                 chk_name = itemView.findViewById(R.id.chk_polygon_name);
                 tv_updateTime = itemView.findViewById(R.id.tv_polygon_updatetime);
+                tv_polygonName = itemView.findViewById(R.id.tv_polygon_name);
                 btn_delete = itemView.findViewById(R.id.btn_polygon_delete);
 
                 RippleCompat.apply(btn_delete, R.color.gray);

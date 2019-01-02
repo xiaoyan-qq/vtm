@@ -15,13 +15,13 @@ import com.cateye.android.vtm.MainActivity;
 import com.cateye.android.vtm.R;
 import com.cateye.vtm.fragment.base.BaseDrawFragment;
 import com.cateye.vtm.fragment.base.BaseFragment;
+import com.cateye.vtm.util.AirPlanMultiPolygonLayer;
 import com.cateye.vtm.util.CatEyeMapManager;
 import com.cateye.vtm.util.LayerUtils;
 import com.litesuits.common.assist.Check;
 import com.vondear.rxtool.RxLogTool;
 import com.vondear.rxtool.RxTimeTool;
 import com.vondear.rxtool.view.RxToast;
-import com.vtm.library.layers.MultiPolygonLayer;
 
 import org.oscim.map.Map;
 import org.xutils.ex.DbException;
@@ -35,7 +35,7 @@ public class AirPlanDrawFragment extends BaseDrawFragment {
 
     private ImageView img_airplan_draw/*绘制按钮*/, img_airplan_previous/*上一笔*/, img_airplan_clear/*清空*/;
     protected MapEventsReceiver mapEventsReceiver;//用户操作的回调
-    private MultiPolygonLayer multiPolygonLayer;//用于展示用户绘制的polygon
+    private AirPlanMultiPolygonLayer multiPolygonLayer;//用于展示用户绘制的polygon
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -199,11 +199,11 @@ public class AirPlanDrawFragment extends BaseDrawFragment {
                         entity.setGeometry(polygonOverlay.getPolygon().toString());
 
                         try {
-                            ((MainActivity) AirPlanDrawFragment.this.getActivity()).getDbManager().save(entity);
+                            ((MainActivity) AirPlanDrawFragment.this.getActivity()).getDbManager().saveBindingId(entity);
                             RxToast.success("保存polygon成功!");
 
                             //绘制结束，将绘制的数据添加到airplan的图层内
-                            multiPolygonLayer.addPolygonDrawable(polygonOverlay.getPoints());
+                            multiPolygonLayer.addPolygon(entity);
                             //复制点位到展示图层，则清除绘制面的所有数据
                             clearDrawLayers();
                             if (isPop) {

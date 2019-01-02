@@ -19,9 +19,9 @@ public class LayerUtils {
      * @param mMap
      * @return 被加载的图层
      */
-    public static MultiPolygonLayer getAirPlanDrawLayer(Map mMap) {
+    public static AirPlanMultiPolygonLayer getAirPlanDrawLayer(Map mMap) {
         //如果当前地图不存在multiPolygon的图层，则自动生成添加到地图上
-        MultiPolygonLayer multiPolygonLayer = (MultiPolygonLayer) OverlayerManager.getInstance(mMap).getLayerByName(SystemConstant.AIR_PLAN_MULTI_POLYGON_DRAW);
+        AirPlanMultiPolygonLayer multiPolygonLayer = (AirPlanMultiPolygonLayer) OverlayerManager.getInstance(mMap).getLayerByName(SystemConstant.AIR_PLAN_MULTI_POLYGON_DRAW);
         if (multiPolygonLayer == null) {
             //向主界面添加polygon显示的overlayer
             int c = Color.GREEN;
@@ -34,14 +34,14 @@ public class LayerUtils {
                     .fixed(true)
                     .randomOffset(false)
                     .build();
-            multiPolygonLayer = new MultiPolygonLayer(mMap, polygonStyle, SystemConstant.AIR_PLAN_MULTI_POLYGON_DRAW);
+            multiPolygonLayer = new AirPlanMultiPolygonLayer(mMap, polygonStyle, SystemConstant.AIR_PLAN_MULTI_POLYGON_DRAW);
             mMap.layers().add(multiPolygonLayer, MainActivity.LAYER_GROUP_ENUM.OPERTOR_GROUP.orderIndex);
         }
         return multiPolygonLayer;
     }
 
-    public static MultiPolygonLayer getAirPlanParamLayer(Map mMap) {
-        MultiPolygonLayer multiPolygonLayer = (MultiPolygonLayer) OverlayerManager.getInstance(mMap).getLayerByName(SystemConstant.AIR_PLAN_MULTI_POLYGON_PARAM);
+    public static AirPlanMultiPolygonLayer getAirPlanParamLayer(Map mMap) {
+        AirPlanMultiPolygonLayer multiPolygonLayer = (AirPlanMultiPolygonLayer) OverlayerManager.getInstance(mMap).getLayerByName(SystemConstant.AIR_PLAN_MULTI_POLYGON_PARAM);
         if (multiPolygonLayer == null) {
             //开始编辑参数，增加编辑参数layer，和用户点击layer
             int c = Color.YELLOW;
@@ -54,7 +54,7 @@ public class LayerUtils {
                     .fixed(true)
                     .randomOffset(false)
                     .build();
-            multiPolygonLayer = new MultiPolygonLayer(mMap, polygonStyle, SystemConstant.AIR_PLAN_MULTI_POLYGON_PARAM);
+            multiPolygonLayer = new AirPlanMultiPolygonLayer(mMap, polygonStyle, SystemConstant.AIR_PLAN_MULTI_POLYGON_PARAM);
             mMap.layers().add(multiPolygonLayer, MainActivity.LAYER_GROUP_ENUM.OPERTOR_GROUP.orderIndex);
         }
         return multiPolygonLayer;
