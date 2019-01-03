@@ -45,6 +45,7 @@ public class AirPlanParamListFragment extends BaseDrawFragment {
     private SlideAndDragListView slideAndDragListView;
     private AirPlanParamAdapter adapter;
     private List<AirPlanDBEntity> listData;
+    private AirPlanDBEntity dragDBEntity;
 
     private ImageView img_back;
 
@@ -74,6 +75,23 @@ public class AirPlanParamListFragment extends BaseDrawFragment {
         Menu menu = new Menu(true, 0);//第1个参数表示滑动 item 是否能滑的过头，像弹簧那样( true 表示过头，就像 Gif 中显示的那样；false 表示不过头，就像 Android QQ 中的那样)
         slideAndDragListView.setMenu(menu);
         slideAndDragListView.setAdapter(adapter);
+        slideAndDragListView.setOnDragDropListener(new SlideAndDragListView.OnDragDropListener() {//用户拖动listview的item上下滑动
+            @Override
+            public void onDragViewStart(int beginPosition) {
+                dragDBEntity=listData.get(beginPosition);
+            }
+
+            @Override
+            public void onDragDropViewMoved(int fromPosition, int toPosition) {
+                AirPlanDBEntity removeEntity = listData.remove(fromPosition);
+                listData.add(toPosition, removeEntity);
+            }
+
+            @Override
+            public void onDragViewDown(int finalPosition) {
+                listData.set(finalPosition, dragDBEntity);
+            }
+        });
 
         img_back = (ImageView) findViewById(R.id.tv_air_plan_list_back);
         RippleCompat.apply(img_back, R.color.gray);
@@ -199,7 +217,7 @@ public class AirPlanParamListFragment extends BaseDrawFragment {
             Iterator iterator = listData.iterator();
             while (iterator.hasNext()) {
                 AirPlanDBEntity entity = (AirPlanDBEntity) iterator.next();
-                if (entity != null && airPlanDBEntity.getId().equals(entity.getId())) {
+                if (entity != null && airPlanDBEntity.getId()==entity.getId()) {
                     iterator.remove();
                     adapter.notifyDataSetChanged();
                     break;

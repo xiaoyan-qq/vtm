@@ -5,22 +5,25 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <android.support.constraint.ConstraintLayout
+    <RelativeLayout
         style="@style/headStyle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
         <ImageView
             android:id="@+id/tv_air_plan_list_back"
+            android:layout_alignParentLeft="true"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:src="@drawable/selector_back" />
 
-    </android.support.constraint.ConstraintLayout>
+    </RelativeLayout>
 
     <com.yydcdut.sdlv.SlideAndDragListView
         android:id="@+id/sadLv_paramPolygonList"
         android:layout_width="match_parent"
+        android:divider="@color/gray"
+        android:dividerHeight="@dimen/default_bmb_shareLineWidth"
         android:layout_height="match_parent">
     </com.yydcdut.sdlv.SlideAndDragListView>
 </LinearLayout>

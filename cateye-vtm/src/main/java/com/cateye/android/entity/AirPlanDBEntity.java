@@ -10,7 +10,7 @@ import org.xutils.db.annotation.Table;
 @Table(name = "AirPlanDBEntity")
 public class AirPlanDBEntity {
     @Column(name = "_id", isId = true, autoGen = true)
-    private String id;//id
+    private int id;//id
     @Column(name = "name")
     private String name;//航区名称，方便用户再次查找
     @Column(name = "lastUpdate")
@@ -24,11 +24,11 @@ public class AirPlanDBEntity {
     @Column(name = "geometry")
     private String geometry;//geometry
 
-    public String getId() {
+    public int getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(int id) {
         this.id = id;
     }
 
