@@ -30,6 +30,12 @@ public class MainApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+
+        //加载航飞轨迹生成的so
+        System.loadLibrary("geos");
+        System.loadLibrary("proj");
+        System.loadLibrary("AirPhotoPlanner");
+
         RxTool.init(this);
 
         Fragmentation.builder()

@@ -9,7 +9,9 @@ android {
         versionName "1.0"
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
-
+        ndk {
+            abiFilters "armeabi-v7a", "armeabi"
+        }
     }
     sourceSets {
         main {

@@ -228,10 +228,10 @@ public class AirPlanUtils {
                                 AirPlanDBEntity airPlanDBEntity = drawPolygonLayer.getAirPlanDBEntityMap().get(addPolygon.toString());
                                 if (airPlanDBEntity!=null){
                                     paramPolygonLayer.addPolygon(airPlanDBEntity);
+                                    mMap.updateMap(true);
                                 }else {
                                     RxToast.error(mainFragment.getContext().getString(R.string.error_info_cant_find_tap_polygon));
                                 }
-                                mMap.updateMap(true);
 
                                 //向侧边栏list添加entity
                                 airPlanParamListFragment.addData(airPlanDBEntity);
@@ -244,7 +244,7 @@ public class AirPlanUtils {
                                     //如果已经存在点击对应的polygon，则存在此polygon，跳到下一个polygon判断
                                     if (paramPolygon.equals(tapPolygon)) {
                                         //右侧面板移除此polygon对应的数据
-                                        AirPlanDBEntity airPlanDBEntity = paramPolygonLayer.getAirPlanDBEntityMap().get(tapPolygon);
+                                        AirPlanDBEntity airPlanDBEntity = paramPolygonLayer.getAirPlanDBEntityMap().get(tapPolygon.toString());
                                         airPlanParamListFragment.removeData(airPlanDBEntity);
 
                                         //！！！！曾添加过该polygon，移除polygon
@@ -255,13 +255,15 @@ public class AirPlanUtils {
                                 }
                             }
                         } else {//不存在参数设置polygon，则直接添加第一个点击的polygon到参数设置layer上
-                            paramPolygonLayer.addPolygonDrawable(tapPolygonList.get(0));
-                            mMap.updateMap(true);
 
                             //向侧边栏list添加entity
                             AirPlanDBEntity airPlanDBEntity = drawPolygonLayer.getAirPlanDBEntityMap().get(tapPolygonList.get(0).toString());
                             if (airPlanDBEntity!=null){
                                 paramPolygonLayer.addPolygon(airPlanDBEntity);
+                                mMap.updateMap(true);
+
+                                //向侧边栏list添加entity
+                                airPlanParamListFragment.addData(airPlanDBEntity);
                             }else {
                                 RxToast.error(mainFragment.getContext().getString(R.string.error_info_cant_find_tap_polygon));
                             }

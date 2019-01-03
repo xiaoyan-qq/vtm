@@ -9,7 +9,7 @@ import org.xutils.db.annotation.Table;
 
 @Table(name = "AirPlanDBEntity")
 public class AirPlanDBEntity {
-    @Column(name = "_id",isId = true)
+    @Column(name = "_id", isId = true, autoGen = true)
     private String id;//id
     @Column(name = "name")
     private String name;//航区名称，方便用户再次查找
