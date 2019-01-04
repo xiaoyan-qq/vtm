@@ -35,7 +35,6 @@ import com.tencent.map.geolocation.TencentLocationListener;
 import com.tencent.map.geolocation.TencentLocationManager;
 import com.tencent.map.geolocation.TencentLocationRequest;
 import com.umeng.analytics.MobclickAgent;
-import com.vondear.rxtool.RxBarTool;
 import com.vondear.rxtool.RxLogTool;
 import com.vondear.rxtool.view.RxToast;
 import com.vondear.rxui.view.dialog.RxDialogLoading;
@@ -155,8 +154,8 @@ public class MainActivity extends SupportActivity implements TencentLocationList
         locationManager.setCoordinateType(TencentLocationManager.COORDINATE_TYPE_WGS84);//使用wgs84坐标系
         int error = locationManager.requestLocationUpdates(request, this);
 
-        //处理ActionBar
-        RxBarTool.transparencyBar(this);
+//        //处理ActionBar
+//        RxBarTool.transparencyBar(this);
 
         setCurrentProject();//设置当前正在作业的项目
 

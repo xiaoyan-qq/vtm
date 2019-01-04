@@ -136,7 +136,7 @@ public class AirPlanSelectPolygonListFragment extends BaseDrawFragment {
         }
 
         img_back = (ImageView) findViewById(R.id.tv_air_plan_list_back);
-        RippleCompat.apply(img_back, R.color.gray);
+//        RippleCompat.apply(img_back, R.color.gray);
         img_back.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

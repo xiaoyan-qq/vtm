@@ -5,18 +5,22 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <android.support.constraint.ConstraintLayout
+    <RelativeLayout
         style="@style/headStyle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <ImageView
+        <com.rey.material.widget.ImageView
             android:id="@+id/tv_air_plan_list_back"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:padding="@dimen/button_padding_default"
+            android:scaleType="fitCenter"
             android:src="@drawable/selector_back" />
 
-    </android.support.constraint.ConstraintLayout>
+    </RelativeLayout>
 
     <com.scwang.smartrefresh.layout.SmartRefreshLayout
         android:id="@+id/refreshLayout"
