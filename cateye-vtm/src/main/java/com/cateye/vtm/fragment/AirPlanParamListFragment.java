@@ -94,7 +94,7 @@ public class AirPlanParamListFragment extends BaseDrawFragment {
         });
 
         img_back = (ImageView) findViewById(R.id.tv_air_plan_list_back);
-        RippleCompat.apply(img_back, R.color.gray);
+//        RippleCompat.apply(img_back, R.color.gray);
         img_back.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -234,7 +234,7 @@ public class AirPlanParamListFragment extends BaseDrawFragment {
     @Override
     public boolean onBackPressedSupport() {
         pop();
-        ((MainActivity) getActivity()).hiddenSlidingLayout();//同时隐藏右侧面板
+        ((MainActivity) getActivity()).hiddenSlidingLayout(true);//同时隐藏右侧面板
         return true;
     }
 }

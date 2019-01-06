@@ -24,6 +24,7 @@ import com.cateye.vtm.util.AirPlanMultiPolygonLayer;
 import com.cateye.vtm.util.CatEyeMapManager;
 import com.cateye.vtm.util.LayerUtils;
 import com.desmond.ripple.RippleCompat;
+import com.desmond.ripple.RippleConfig;
 import com.rey.material.widget.CheckBox;
 import com.scwang.smartrefresh.layout.api.RefreshLayout;
 import com.scwang.smartrefresh.layout.constant.SpinnerStyle;
@@ -136,7 +137,11 @@ public class AirPlanSelectPolygonListFragment extends BaseDrawFragment {
         }
 
         img_back = (ImageView) findViewById(R.id.tv_air_plan_list_back);
-//        RippleCompat.apply(img_back, R.color.gray);
+//        RippleConfig config = new RippleConfig();
+//        config.setIsEnablePalette(true);
+//        config.setIsFull(true);
+//        config.setIsSpin(true);
+//        RippleCompat.apply(img_back, config);
         img_back.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -251,7 +256,7 @@ public class AirPlanSelectPolygonListFragment extends BaseDrawFragment {
     @Override
     public boolean onBackPressedSupport() {
         pop();
-        ((MainActivity) getActivity()).hiddenSlidingLayout();//同时隐藏右侧面板
+        ((MainActivity) getActivity()).hiddenSlidingLayout(true);//同时隐藏右侧面板
         return true;
     }
 }

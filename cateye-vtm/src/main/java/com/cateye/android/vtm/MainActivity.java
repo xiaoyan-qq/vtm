@@ -414,12 +414,19 @@ public class MainActivity extends SupportActivity implements TencentLocationList
         layoutParams.width = (int) (pecent * screenWidth);
         slidingDrawer.setLayoutParams(layoutParams);
         slidingDrawer.setVisibility(View.VISIBLE);
-        slidingDrawer.animateOpen();//动画打开右侧面板
-        //内容界面显示用户指定的fragment
-        loadRootFragment(R.id.layer_slideing_content,fragment);
+        if (!slidingDrawer.isOpened()){
+            slidingDrawer.animateOpen();//动画打开右侧面板
+        }
+        if (!getTopFragment().getClass().equals(fragment.getClass())){
+            //内容界面显示用户指定的fragment
+            loadRootFragment(R.id.layer_slideing_content,fragment);
+        }
     }
 
-    public void hiddenSlidingLayout() {
+    public void hiddenSlidingLayout(boolean removeAllFragment) {
+        if (removeAllFragment){
+            popTo(CatEyeMainFragment.class,false);
+        }
         slidingDrawer.setVisibility(View.GONE);
     }
 }

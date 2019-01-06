@@ -163,8 +163,8 @@ public class AirPlanDrawFragment extends BaseDrawFragment {
                 new CanDialog.Builder(getActivity()).setView(airPlanRootView).setNeutralButton("取消", true, new CanDialogInterface.OnClickListener() {
                     @Override
                     public void onClick(CanDialog dialog, int checkItem, CharSequence text, boolean[] checkItems) {
+                        clearDrawLayers();
                         if (isPop) {
-                            clearDrawLayers();
                             pop();
                         }
                     }
@@ -213,9 +213,9 @@ public class AirPlanDrawFragment extends BaseDrawFragment {
                             e.printStackTrace();
                             RxToast.error("保存polygon失败!");
                             RxLogTool.saveLogFile("保存航线polygon到数据库失败：" + e.toString());
-                            //保存失败，不清除图层
+                            //保存失败
+                            clearDrawLayers();
                             if (isPop) {
-                                clearDrawLayers();
                                 pop();
                             }
                         }
@@ -224,6 +224,11 @@ public class AirPlanDrawFragment extends BaseDrawFragment {
 
             } else {
                 RxToast.warning("绘制的点无法组成面！");
+            }
+        }else {
+            clearDrawLayers();
+            if (isPop) {
+                pop();
             }
         }
     }

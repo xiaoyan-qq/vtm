@@ -12,18 +12,28 @@
 
         <ImageView
             android:id="@+id/tv_air_plan_list_back"
-            android:layout_alignParentLeft="true"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/selector_back" />
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:src="@drawable/icon_back_ripple" />
 
+        <com.beardedhen.androidbootstrap.BootstrapButton
+            android:id="@+id/btn_air_plan_param_set_ok"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:text="OK"
+            app:bootstrapSize="sm"
+            app:roundedCorners="true"
+            app:showOutline="true" />
     </RelativeLayout>
 
     <com.yydcdut.sdlv.SlideAndDragListView
         android:id="@+id/sadLv_paramPolygonList"
         android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:divider="@color/gray"
-        android:dividerHeight="@dimen/default_bmb_shareLineWidth"
-        android:layout_height="match_parent">
-    </com.yydcdut.sdlv.SlideAndDragListView>
+        android:dividerHeight="@dimen/default_bmb_shareLineWidth"></com.yydcdut.sdlv.SlideAndDragListView>
 </LinearLayout>

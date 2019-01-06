@@ -3,4 +3,9 @@
     android:shape="rectangle">
     <solid android:color="@color/white" />
     <corners android:radius="0dp" />
+    <padding
+        android:bottom="@dimen/button_padding_default"
+        android:left="@dimen/button_padding_default"
+        android:right="@dimen/button_padding_default"
+        android:top="@dimen/button_padding_default"></padding>
 </shape>

@@ -15,5 +15,7 @@
         <item name="android:background">@drawable/ripple_bg</item>
     </style>
     <style name="headStyle">
+        <item name="android:background">@color/white</item>
+        <item name="android:padding">@dimen/button_padding_default</item>
     </style>
 </resources>
