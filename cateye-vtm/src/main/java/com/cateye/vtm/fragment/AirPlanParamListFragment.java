@@ -12,26 +12,37 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.alibaba.fastjson.JSON;
 import com.beardedhen.androidbootstrap.BootstrapButton;
 import com.cateye.android.entity.AirPlanDBEntity;
+import com.cateye.android.entity.Airport;
+import com.cateye.android.entity.DigitalCameraInfo;
+import com.cateye.android.entity.FlightParameter;
 import com.cateye.android.vtm.MainActivity;
 import com.cateye.android.vtm.R;
 import com.cateye.vtm.fragment.base.BaseDrawFragment;
 import com.cateye.vtm.fragment.base.BaseFragment;
 import com.cateye.vtm.util.CatEyeMapManager;
 import com.cateye.vtm.util.LayerUtils;
+import com.cateye.vtm.util.SystemConstant;
 import com.desmond.ripple.RippleCompat;
+import com.vividsolutions.jts.geom.Polygon;
 import com.vondear.rxtool.view.RxToast;
 import com.vtm.library.layers.MultiPolygonLayer;
+import com.vtm.library.tools.GeometryTools;
+import com.vtm.library.tools.OverlayerManager;
 import com.yydcdut.sdlv.Menu;
 import com.yydcdut.sdlv.SlideAndDragListView;
 
+import org.oscim.core.GeoPoint;
+import org.oscim.layers.marker.ItemizedLayer;
 import org.oscim.map.Map;
 import org.xutils.DbManager;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Vector;
 
 /**
  * Created by xiaoxiao on 2018/8/31.
@@ -48,6 +59,7 @@ public class AirPlanParamListFragment extends BaseDrawFragment {
     private AirPlanDBEntity dragDBEntity;
 
     private ImageView img_back;
+    private BootstrapButton btn_ok;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -99,6 +111,58 @@ public class AirPlanParamListFragment extends BaseDrawFragment {
             @Override
             public void onClick(View v) {
                 onBackPressedSupport();
+            }
+        });
+
+        btn_ok= (BootstrapButton) findViewById(R.id.btn_air_plan_param_set_ok);
+        //用户点击确定，开始航区规划
+        btn_ok.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //首先获取用户规划航区的layer，获取起飞位置
+                ItemizedLayer markerLayer=LayerUtils.getAirPlanMarkerLayer(mContext,mMap);
+                if (markerLayer==null||markerLayer.getItemList()==null||markerLayer.getItemList().isEmpty()){
+                    RxToast.error("没有选择起飞点，请在地图上非规划区域选择起飞点");
+                    return;
+                }
+                if (listData==null||listData.isEmpty()){
+                    RxToast.error("没有选择飞行区域，请在地图上点选航飞区域");
+                    return;
+                }
+
+                //显示参数设置对话框，用户填写完参数后调用底层接口
+
+
+                //判断当前参数设置图层是否有polygon，如果存在，则弹出对话框提示用户设置参数
+                MultiPolygonLayer airplanParamOverlayer = (MultiPolygonLayer) OverlayerManager.getInstance(mMap).getLayerByName(SystemConstant.AIR_PLAN_MULTI_POLYGON_PARAM);
+                if (airplanParamOverlayer != null) {
+                    List<Polygon> polygonList = airplanParamOverlayer.getAllPolygonList();
+                    FlightParameter parameter = new FlightParameter();
+                    Airport airport = new Airport();
+                    airport.setGeoJson(GeometryTools.getGeoJson(GeometryTools.createGeometry(new GeoPoint(40.077974, 116.251979))));
+                    airport.setAltitude(800);
+                    parameter.setAirport(airport);
+                    DigitalCameraInfo cameraInfo = new DigitalCameraInfo();
+                    cameraInfo.setF(55);
+                    cameraInfo.setHeight(7760);
+                    cameraInfo.setWidth(10328);
+                    cameraInfo.setPixelsize(5.2);
+                    parameter.setCameraInfo(cameraInfo);
+                    parameter.setAverageElevation(1000);//航区平均地面高程
+                    parameter.setGuidanceEntrancePointsDistance(100);//引导点距离
+                    parameter.setOverlap(70);//航向重叠度
+                    parameter.setOverlap_crossStrip(30);//旁向重叠度
+                    Vector<String> flightRegionList = new Vector<>();
+                    Vector<Double> flightHeightVector = new Vector<>();
+                    for (Polygon polygon : polygonList) {
+                        flightRegionList.add(GeometryTools.getGeoJson(polygon));
+                        flightHeightVector.add(600d);
+                    }
+                    parameter.setFightRegion(flightRegionList);
+                    parameter.setFightHeight_Vec(flightHeightVector);
+                    String jsonResult = JSON.toJSONString(parameter);
+                    System.out.print(jsonResult);
+                }
             }
         });
     }

@@ -4,11 +4,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
 
-import com.alibaba.fastjson.JSON;
 import com.cateye.android.entity.AirPlanDBEntity;
-import com.cateye.android.entity.Airport;
-import com.cateye.android.entity.DigitalCameraInfo;
-import com.cateye.android.entity.FlightParameter;
 import com.cateye.android.vtm.MainActivity;
 import com.cateye.android.vtm.R;
 import com.cateye.vtm.fragment.AirPlanDrawFragment;
@@ -22,7 +18,6 @@ import com.vtm.library.layers.MultiPolygonLayer;
 import com.vtm.library.tools.GeometryTools;
 import com.vtm.library.tools.OverlayerManager;
 
-import org.oscim.backend.canvas.Bitmap;
 import org.oscim.core.GeoPoint;
 import org.oscim.event.Gesture;
 import org.oscim.event.GestureListener;
@@ -30,14 +25,10 @@ import org.oscim.event.MotionEvent;
 import org.oscim.layers.Layer;
 import org.oscim.layers.marker.ItemizedLayer;
 import org.oscim.layers.marker.MarkerItem;
-import org.oscim.layers.marker.MarkerSymbol;
 import org.oscim.map.Map;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Vector;
-
-import static org.oscim.android.canvas.AndroidGraphics.drawableToBitmap;
 
 /**
  * Created by xiaoxiao on 2018/12/19.
@@ -104,14 +95,7 @@ public class AirPlanUtils {
                     if (airplanDrawOverlayer != null) {
                         //绘制多个polygon的图层
                         MultiPolygonLayer airPlanParamLayer = LayerUtils.getAirPlanParamLayer(mMap);
-                        if (OverlayerManager.getInstance(mMap).getLayerByName(SystemConstant.AIR_PLAN_MARKER_PARAM) == null) {
-                            //添加绘制marker的图层，用来绘制无人机起飞的位置
-                            Bitmap bitmapPoi = drawableToBitmap(mainFragment.getResources().getDrawable(R.drawable.marker_poi));
-                            MarkerSymbol defaultMarkerSymbol = new MarkerSymbol(bitmapPoi, MarkerSymbol.HotspotPlace.CENTER);
-                            ItemizedLayer markerLayer = new ItemizedLayer<MarkerItem>(mMap, defaultMarkerSymbol);
-                            markerLayer.setName(SystemConstant.AIR_PLAN_MARKER_AIR_PORT);
-                            mMap.layers().add(markerLayer, MainActivity.LAYER_GROUP_ENUM.OPERTOR_GROUP.orderIndex);
-                        }
+                        ItemizedLayer<MarkerItem> airPlanMarkerLayer=LayerUtils.getAirPlanMarkerLayer(mainFragment.getContext(),mMap);
 
                         if (OverlayerManager.getInstance(mMap).getLayerByName(SystemConstant.AIR_PLAN_MULTI_POLYGON_PARAM_EVENT) == null) {
                             mMap.layers().add(new MapEventsReceiver(mMap, SystemConstant.AIR_PLAN_MULTI_POLYGON_PARAM_EVENT), MainActivity.LAYER_GROUP_ENUM.OPERTOR_GROUP.orderIndex);
@@ -129,36 +113,7 @@ public class AirPlanUtils {
                     }
                 }
             } else if (view.getId() == R.id.img_save_airplan) {//保存航区数据
-                //判断当前参数设置图层是否有polygon，如果存在，则弹出对话框提示用户设置参数
-                MultiPolygonLayer airplanParamOverlayer = (MultiPolygonLayer) OverlayerManager.getInstance(mMap).getLayerByName(SystemConstant.AIR_PLAN_MULTI_POLYGON_PARAM);
-                if (airplanParamOverlayer != null) {
-                    List<Polygon> polygonList = airplanParamOverlayer.getAllPolygonList();
-                    FlightParameter parameter = new FlightParameter();
-                    Airport airport = new Airport();
-                    airport.setGeoJson(GeometryTools.getGeoJson(GeometryTools.createGeometry(new GeoPoint(40.077974, 116.251979))));
-                    airport.setAltitude(800);
-                    parameter.setAirport(airport);
-                    DigitalCameraInfo cameraInfo = new DigitalCameraInfo();
-                    cameraInfo.setF(55);
-                    cameraInfo.setHeight(7760);
-                    cameraInfo.setWidth(10328);
-                    cameraInfo.setPixelsize(5.2);
-                    parameter.setCameraInfo(cameraInfo);
-                    parameter.setAverageElevation(1000);//航区平均地面高程
-                    parameter.setGuidanceEntrancePointsDistance(100);//引导点距离
-                    parameter.setOverlap(70);//航向重叠度
-                    parameter.setOverlap_crossStrip(30);//旁向重叠度
-                    Vector<String> flightRegionList = new Vector<>();
-                    Vector<Double> flightHeightVector = new Vector<>();
-                    for (Polygon polygon : polygonList) {
-                        flightRegionList.add(GeometryTools.getGeoJson(polygon));
-                        flightHeightVector.add(600d);
-                    }
-                    parameter.setFightRegion(flightRegionList);
-                    parameter.setFightHeight_Vec(flightHeightVector);
-                    String jsonResult = JSON.toJSONString(parameter);
-                    System.out.print(jsonResult);
-                }
+
             } else if (view.getId() == R.id.img_open_airplan) {//打开航区数据
                 AirPlanSelectPolygonListFragment airPlanSelectPolygonListFragment = (AirPlanSelectPolygonListFragment) AirPlanSelectPolygonListFragment.newInstance(new Bundle());
                 ((MainActivity) mainFragment.getActivity()).showSlidingLayout(0.4f, airPlanSelectPolygonListFragment);
