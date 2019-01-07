@@ -12,7 +12,7 @@ public class FlightParameter {
     private Vector<Double> FightHeight_Vec; //摄区航高, m,in WGS84
 
     private double GuidanceEntrancePointsDistance;  // 引导点,进入点距离,m
-    private double overlap;                         // (0,1)
+    private double overlap;                         // (0,1) 航向重叠率
     private double overlap_crossStrip;              // 旁向重叠度
 
     private int RedudantBaselines;         // 冗余基线

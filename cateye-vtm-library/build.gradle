@@ -109,7 +109,7 @@ dependencies {
     compile 'com.github.rey5137:material:1.2.5'
     compile 'com.alibaba:fastjson:1.1.68.android'
 
-    //对话框样式https://github.com/canyinghao/CanDialog
+    //对话框样式 https://github.com/canyinghao/CanDialog
     compile 'com.canyinghao:candialog:1.0.9'
     compile files('libs/TencentLocationSdk_v6.2.5.3.jar')
 
