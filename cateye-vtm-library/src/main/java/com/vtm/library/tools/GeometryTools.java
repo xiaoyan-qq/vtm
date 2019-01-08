@@ -16,6 +16,8 @@ import com.vividsolutions.jts.io.WKTReader;
 import com.vividsolutions.jts.io.geojson.GeoJsonWriter;
 import com.vividsolutions.jts.operation.linemerge.LineMerger;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.oscim.core.GeoPoint;
 
 import java.math.BigDecimal;
@@ -1295,10 +1297,16 @@ public class GeometryTools {
 
     private static GeoJsonWriter geoJsonWriter = new GeoJsonWriter();
 
-    public static String getGeoJson(Geometry geometry) {
+    public static String getGeoJsonStr(Geometry geometry) {
         geoJsonWriter.setEncodeCRS(false);
         String geoJSONObject = geoJsonWriter.write(geometry);
         return geoJSONObject;
+    }
+
+    public static JSONObject getGeoJson(Geometry geometry) throws JSONException {
+        geoJsonWriter.setEncodeCRS(false);
+        String geoJSONObject = geoJsonWriter.write(geometry);
+        return new JSONObject(geoJSONObject);
     }
 
     public static GeoPoint createOSCGeoPoint(com.vividsolutions.jts.geom.Point point) {

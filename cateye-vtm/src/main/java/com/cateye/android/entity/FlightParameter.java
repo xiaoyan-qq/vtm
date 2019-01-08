@@ -1,5 +1,7 @@
 package com.cateye.android.entity;
 
+import org.json.JSONObject;
+
 import java.util.Vector;
 
 /**
@@ -17,7 +19,7 @@ public class FlightParameter {
 
     private int RedudantBaselines;         // 冗余基线
 
-    private Vector<String> FightRegion; // 摄区, 面状或者线状
+    private Vector<JSONObject> FightRegion; // 摄区, 面状或者线状
 
     private Airport airport;// 机场中心,in WGS84
 
@@ -78,11 +80,11 @@ public class FlightParameter {
         RedudantBaselines = redudantBaselines;
     }
 
-    public Vector<String> getFightRegion() {
+    public Vector<JSONObject> getFightRegion() {
         return FightRegion;
     }
 
-    public void setFightRegion(Vector<String> fightRegion) {
+    public void setFightRegion(Vector<JSONObject> fightRegion) {
         FightRegion = fightRegion;
     }
 
