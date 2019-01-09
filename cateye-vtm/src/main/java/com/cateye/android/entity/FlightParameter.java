@@ -1,6 +1,7 @@
 package com.cateye.android.entity;
 
-import org.json.JSONObject;
+
+import com.alibaba.fastjson.JSONObject;
 
 import java.util.Vector;
 

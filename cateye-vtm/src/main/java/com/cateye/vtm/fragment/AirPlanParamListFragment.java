@@ -16,6 +16,7 @@ import android.widget.TextView;
 
 import com.AirPhotoPlanner.JNINativeApi;
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.beardedhen.androidbootstrap.BootstrapButton;
 import com.canyinghao.candialog.CanDialog;
 import com.canyinghao.candialog.CanDialogInterface;
@@ -41,7 +42,6 @@ import com.yydcdut.sdlv.Menu;
 import com.yydcdut.sdlv.SlideAndDragListView;
 
 import org.json.JSONException;
-import org.json.JSONObject;
 import org.oscim.core.GeoPoint;
 import org.oscim.layers.marker.ItemizedLayer;
 import org.oscim.map.Map;
@@ -187,7 +187,7 @@ public class AirPlanParamListFragment extends BaseDrawFragment {
                                     parameter.setFightHeight_Vec(flightHeightVector);
                                     String jsonResult = JSON.toJSONString(parameter);
                                     System.out.print(jsonResult);
-                                    JNINativeApi.airPlannerOutput(jsonResult, SystemConstant.AIR_PLAN_PATH + File.separator + ((EditText) rootView.findViewById(R.id.edt_air_plan_save_name)).getText().toString());
+                                    JNINativeApi.airPlannerOutput(jsonResult, SystemConstant.AIR_PLAN_PATH + File.separator + ((EditText) rootView.findViewById(R.id.edt_air_plan_save_name)).getText().toString()+".skw");
                                 }
                             } catch (JSONException e) {
                                 e.printStackTrace();
