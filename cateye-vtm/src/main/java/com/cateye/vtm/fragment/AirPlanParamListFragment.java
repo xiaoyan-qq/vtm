@@ -4,6 +4,7 @@ import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputLayout;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -33,7 +34,6 @@ import com.cateye.vtm.util.LayerUtils;
 import com.cateye.vtm.util.SystemConstant;
 import com.desmond.ripple.RippleCompat;
 import com.github.lazylibrary.util.StringUtils;
-import com.vividsolutions.jts.geom.Polygon;
 import com.vondear.rxtool.view.RxToast;
 import com.vtm.library.layers.MultiPolygonLayer;
 import com.vtm.library.tools.GeometryTools;
@@ -44,6 +44,7 @@ import com.yydcdut.sdlv.SlideAndDragListView;
 import org.json.JSONException;
 import org.oscim.core.GeoPoint;
 import org.oscim.layers.marker.ItemizedLayer;
+import org.oscim.layers.marker.MarkerItem;
 import org.oscim.map.Map;
 import org.xutils.DbManager;
 
@@ -129,7 +130,7 @@ public class AirPlanParamListFragment extends BaseDrawFragment {
             @Override
             public void onClick(View view) {
                 //首先获取用户规划航区的layer，获取起飞位置
-                ItemizedLayer markerLayer = LayerUtils.getAirPlanMarkerLayer(getContext(), mMap);
+                final ItemizedLayer markerLayer = LayerUtils.getAirPlanMarkerLayer(getContext(), mMap);
                 if (markerLayer == null || markerLayer.getItemList() == null || markerLayer.getItemList().isEmpty()) {
                     RxToast.error("没有选择起飞点，请在地图上非规划区域选择起飞点");
                     return;
@@ -142,55 +143,130 @@ public class AirPlanParamListFragment extends BaseDrawFragment {
                 //显示参数设置对话框，用户填写完参数后调用底层接口
                 new CanDialog.Builder(getActivity()).setView(R.layout.dialog_air_plan_set_fly).setNegativeButton("取消", true, null).setPositiveButton("确定", false, new CanDialogInterface.OnClickListener() {
                     @Override
-                    public void onClick(CanDialog dialog, int checkItem, CharSequence text, boolean[] checkItems) {
+                    public void onClick(final CanDialog dialog, int checkItem, CharSequence text, boolean[] checkItems) {
                         //获取对话框中用户输入的参数，如果有输入错误，提示用户
                         View rootView = dialog.getRootView();
                         if (rootView != null) {
+
+                            //检查焦距
                             EditText edt_F = rootView.findViewById(R.id.edt_air_plan_F);
-                            String air_plan_f = edt_F.getText().toString();
-                            if (StringUtils.isBlank(air_plan_f)) {
-                                ((TextInputLayout) rootView.findViewById(R.id.til_F)).setError("焦距不能为空");
-                                ((TextInputLayout) rootView.findViewById(R.id.til_F)).setErrorEnabled(true);
-                            } else {
-                                ((TextInputLayout) rootView.findViewById(R.id.til_F)).setErrorEnabled(false);
-                            }
+                            TextInputLayout til_F = rootView.findViewById(R.id.til_F);
+                            boolean camera_f_result = checkAirPlanParamWidget(edt_F, til_F, "焦距不能为空");
 
-                            try {
-                                //判断当前参数设置图层是否有polygon，如果存在，则弹出对话框提示用户设置参数
-                                MultiPolygonLayer airplanParamOverlayer = (MultiPolygonLayer) OverlayerManager.getInstance(mMap).getLayerByName(SystemConstant.AIR_PLAN_MULTI_POLYGON_PARAM);
-                                if (airplanParamOverlayer != null) {
-                                    List<Polygon> polygonList = airplanParamOverlayer.getAllPolygonList();
-                                    FlightParameter parameter = new FlightParameter();
-                                    Airport airport = new Airport();
-                                    airport.setGeoJson(GeometryTools.getGeoJson(GeometryTools.createGeometry(new GeoPoint(40.077974, 116.251979))));
+                            //检查照片高
+                            EditText edt_PicHeight = rootView.findViewById(R.id.edt_air_plan_picHeight);
+                            TextInputLayout til_PicHeight = rootView.findViewById(R.id.til_PicHeight);
+                            boolean camera_PicHeight_result = checkAirPlanParamWidget(edt_PicHeight, til_PicHeight, "照片高度不能为空");
 
-                                    airport.setAltitude(800);
-                                    parameter.setAirport(airport);
-                                    DigitalCameraInfo cameraInfo = new DigitalCameraInfo();
-                                    cameraInfo.setF(55);
-                                    cameraInfo.setHeight(7760);
-                                    cameraInfo.setWidth(10328);
-                                    cameraInfo.setPixelsize(5.2);
-                                    parameter.setCameraInfo(cameraInfo);
+                            //检查照片宽
+                            EditText edt_PicWidth = rootView.findViewById(R.id.edt_air_plan_picWidth);
+                            TextInputLayout til_PicWidth = rootView.findViewById(R.id.til_picWidth);
+                            boolean camera_PicWidth_result = checkAirPlanParamWidget(edt_PicWidth, til_PicWidth, "照片宽度不能为空");
 
-                                    parameter.setAverageElevation(1000);//航区平均地面高程
-                                    parameter.setGuidanceEntrancePointsDistance(100);//引导点距离
-                                    parameter.setOverlap(70);//航向重叠度
-                                    parameter.setOverlap_crossStrip(30);//旁向重叠度
-                                    Vector<JSONObject> flightRegionList = new Vector<>();
-                                    Vector<Double> flightHeightVector = new Vector<>();
-                                    for (Polygon polygon : polygonList) {
-                                        flightRegionList.add(GeometryTools.getGeoJson(polygon));
-                                        flightHeightVector.add(600d);
+                            //检查相元大小
+                            EditText edt_pixelSize = rootView.findViewById(R.id.edt_air_plan_pixelSize);
+                            TextInputLayout til_pixelSize = rootView.findViewById(R.id.til_pixelSize);
+                            boolean camera_pixelSize_result = checkAirPlanParamWidget(edt_pixelSize, til_pixelSize, "相元大小不能为空");
+
+
+                            //检查地面分辨率
+                            EditText edt_ratio = rootView.findViewById(R.id.edt_air_plan_ratio);
+                            TextInputLayout til_ratio = rootView.findViewById(R.id.til_ratio);
+                            boolean ratio_result = checkAirPlanParamWidget(edt_ratio, til_ratio, "地面分辨率不能为空");
+
+                            //检查航向重叠率
+                            EditText edt_overlap = rootView.findViewById(R.id.edt_air_plan_overlap);
+                            TextInputLayout til_overlap = rootView.findViewById(R.id.til_overlap);
+                            boolean overlap_result = checkAirPlanParamWidget(edt_overlap, til_overlap, "航向重叠率不能为空");
+
+                            //检查旁向重叠率
+                            EditText edt_overlap_crossStrip = rootView.findViewById(R.id.edt_air_plan_overlap_crossStrip);
+                            TextInputLayout til_overlap_crossStrip = rootView.findViewById(R.id.til_overlap_crossStrip);
+                            boolean overlap_crossStrip_result = checkAirPlanParamWidget(edt_overlap_crossStrip, til_overlap_crossStrip, "旁向重叠率不能为空");
+
+                            //检查引导点距离
+                            EditText edt_guidePointDistance = rootView.findViewById(R.id.edt_air_plan_guidePointDistance);
+                            TextInputLayout til_guidePointDistance = rootView.findViewById(R.id.til_guidePointDistance);
+                            boolean guidePointDistance_result = checkAirPlanParamWidget(edt_guidePointDistance, til_guidePointDistance, "引导点距离不能为空");
+
+                            //保存名称
+                            EditText edt_save_name = rootView.findViewById(R.id.edt_air_plan_save_name);
+                            TextInputLayout til_save_name = rootView.findViewById(R.id.til_save_name);
+                            boolean save_name_result = checkAirPlanParamWidget(edt_save_name, til_save_name, "文件保存名称不能为空");
+
+                            //基准面高度
+                            String baseLineStr = ((EditText) rootView.findViewById(R.id.edt_air_plan_base_altitude)).getText().toString();
+
+                            if (camera_f_result && camera_PicHeight_result && camera_PicWidth_result && camera_pixelSize_result && ratio_result && overlap_result && overlap_crossStrip_result && guidePointDistance_result && save_name_result) {
+                                try {
+                                    //判断当前参数设置图层是否有polygon，如果存在，则弹出对话框提示用户设置参数
+                                    MultiPolygonLayer airplanParamOverlayer = (MultiPolygonLayer) OverlayerManager.getInstance(mMap).getLayerByName(SystemConstant.AIR_PLAN_MULTI_POLYGON_PARAM);
+                                    if (airplanParamOverlayer != null) {
+                                        Vector<JSONObject> flightRegionList = new Vector<>();
+                                        Vector<Double> flightHeightVector = new Vector<>();
+                                        if (listData!=null&&!listData.isEmpty()){
+                                            for (AirPlanDBEntity dbEntity:listData){
+                                                flightRegionList.add(GeometryTools.getGeoJson(GeometryTools.createGeometry(dbEntity.getGeometry())));
+                                                flightHeightVector.add((double)dbEntity.getAltitude());
+                                            }
+                                        }
+
+                                        FlightParameter parameter = new FlightParameter();
+                                        //设置机场参数
+                                        GeoPoint airPlanStartPoint = ((MarkerItem) markerLayer.getItemList().get(0)).getPoint();
+                                        Airport airport = new Airport();
+                                        airport.setGeoJson(GeometryTools.getGeoJson(GeometryTools.createGeometry(airPlanStartPoint)));
+                                        airport.setAltitude(StringUtils.isBlank(baseLineStr) ? 0 : Double.parseDouble(baseLineStr));
+                                        parameter.setAirport(airport);
+
+                                        DigitalCameraInfo cameraInfo = new DigitalCameraInfo();
+                                        String cameraF=edt_F.getText().toString();
+                                        cameraInfo.setF(StringUtils.isBlank(cameraF) ? 0 : Double.parseDouble(cameraF));
+                                        String cameraHeight=edt_PicHeight.getText().toString();
+                                        cameraInfo.setHeight(StringUtils.isBlank(cameraHeight) ? 0 : Long.parseLong(cameraHeight));
+                                        String cameraWidth=edt_PicWidth.getText().toString();
+                                        cameraInfo.setWidth(StringUtils.isBlank(cameraWidth) ? 0 : Long.parseLong(cameraWidth));
+                                        String cameraPixel=edt_pixelSize.getText().toString();
+                                        cameraInfo.setPixelsize(StringUtils.isBlank(cameraPixel) ? 0 : Double.parseDouble(cameraPixel));
+                                        parameter.setCameraInfo(cameraInfo);
+
+                                        parameter.setAverageElevation(StringUtils.isBlank(baseLineStr) ? 0 : Double.parseDouble(baseLineStr));//航区平均地面高程
+
+                                        String guidePointDistance=edt_guidePointDistance.getText().toString();
+                                        parameter.setGuidanceEntrancePointsDistance(StringUtils.isBlank(guidePointDistance) ? 0 : Double.parseDouble(guidePointDistance));//引导点距离
+
+                                        String overlap=edt_overlap.getText().toString();
+                                        parameter.setOverlap(StringUtils.isBlank(overlap) ? 0 : Double.parseDouble(overlap));//航向重叠度
+                                        String overlap_crossStrip=edt_overlap_crossStrip.getText().toString();
+                                        parameter.setOverlap_crossStrip(StringUtils.isBlank(overlap_crossStrip) ? 0 : Double.parseDouble(overlap_crossStrip));//旁向重叠度
+
+
+                                        parameter.setFightRegion(flightRegionList);
+                                        parameter.setFightHeight_Vec(flightHeightVector);
+                                        final String jsonResult = JSON.toJSONString(parameter);
+                                        final File outputDirectory=new File(SystemConstant.AIR_PLAN_OUTPUT_PATH+ File.separator + ((EditText) rootView.findViewById(R.id.edt_air_plan_save_name)).getText().toString() + ".skw");
+                                        if (!outputDirectory.getParentFile().exists()){
+                                            outputDirectory.getParentFile().mkdirs();
+                                        }
+                                        if (outputDirectory.exists()){
+                                            //如果已经存在该文件名称，提示用户
+                                            Snackbar.make(AirPlanParamListFragment.this.rootView,"存在同名文件，是否覆盖？",5000).setAction("是", new View.OnClickListener() {
+                                                @Override
+                                                public void onClick(View view) {
+                                                    JNINativeApi.airPlannerOutput(jsonResult, outputDirectory.getAbsolutePath());
+                                                    dialog.dismiss();
+                                                }
+                                            }).setAction("否", null);
+                                        }else {
+                                            JNINativeApi.airPlannerOutput(jsonResult, outputDirectory.getAbsolutePath());
+                                            dialog.dismiss();
+                                        }
                                     }
-                                    parameter.setFightRegion(flightRegionList);
-                                    parameter.setFightHeight_Vec(flightHeightVector);
-                                    String jsonResult = JSON.toJSONString(parameter);
-                                    System.out.print(jsonResult);
-                                    JNINativeApi.airPlannerOutput(jsonResult, SystemConstant.AIR_PLAN_PATH + File.separator + ((EditText) rootView.findViewById(R.id.edt_air_plan_save_name)).getText().toString()+".skw");
+                                } catch (JSONException e) {
+                                    e.printStackTrace();
+                                }finally {
+
                                 }
-                            } catch (JSONException e) {
-                                e.printStackTrace();
                             }
                         }
                     }
@@ -333,5 +409,19 @@ public class AirPlanParamListFragment extends BaseDrawFragment {
         pop();
         ((MainActivity) getActivity()).hiddenSlidingLayout(true);//同时隐藏右侧面板
         return true;
+    }
+
+    private boolean checkAirPlanParamWidget(EditText edt, TextInputLayout til, String errorMessage) {
+        boolean checkResult = true;
+        String edt_value = edt.getText().toString();
+        if (StringUtils.isBlank(edt_value)) {
+            til.setError(errorMessage);
+            til.setErrorEnabled(true);
+            checkResult = false;
+        } else {
+            til.setError("");
+            til.setErrorEnabled(false);
+        }
+        return checkResult;
     }
 }
