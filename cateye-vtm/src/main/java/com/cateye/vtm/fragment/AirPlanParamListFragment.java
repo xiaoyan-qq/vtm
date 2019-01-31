@@ -4,7 +4,6 @@ import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputLayout;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -250,13 +249,12 @@ public class AirPlanParamListFragment extends BaseDrawFragment {
                                         }
                                         if (outputDirectory.exists()){
                                             //如果已经存在该文件名称，提示用户
-                                            Snackbar.make(AirPlanParamListFragment.this.rootView,"存在同名文件，是否覆盖？",5000).setAction("是", new View.OnClickListener() {
+                                            new CanDialog.Builder(getActivity()).setTitle("提示!").setMessage("存在同名文件，是否覆盖？").setPositiveButton("是", true, new CanDialogInterface.OnClickListener() {
                                                 @Override
-                                                public void onClick(View view) {
+                                                public void onClick(CanDialog dialog, int checkItem, CharSequence text, boolean[] checkItems) {
                                                     JNINativeApi.airPlannerOutput(jsonResult, outputDirectory.getAbsolutePath());
-                                                    dialog.dismiss();
                                                 }
-                                            }).setAction("否", null);
+                                            }).setNegativeButton("否",true,null).show();
                                         }else {
                                             JNINativeApi.airPlannerOutput(jsonResult, outputDirectory.getAbsolutePath());
                                             dialog.dismiss();
@@ -268,43 +266,6 @@ public class AirPlanParamListFragment extends BaseDrawFragment {
 
                                 }
 
-//                                try {
-//                                    //判断当前参数设置图层是否有polygon，如果存在，则弹出对话框提示用户设置参数
-//                                    MultiPolygonLayer airplanParamOverlayer = (MultiPolygonLayer) OverlayerManager.getInstance(mMap).getLayerByName(SystemConstant.AIR_PLAN_MULTI_POLYGON_PARAM);
-//                                    if (airplanParamOverlayer != null) {
-//                                        List<Polygon> polygonList = airplanParamOverlayer.getAllPolygonList();
-//                                        FlightParameter parameter = new FlightParameter();
-//                                        Airport airport = new Airport();
-//                                        airport.setGeoJson(GeometryTools.getGeoJson(GeometryTools.createGeometry(new GeoPoint(40.077974, 116.251979))));
-//
-//                                        airport.setAltitude(800);
-//                                        parameter.setAirport(airport);
-//                                        DigitalCameraInfo cameraInfo = new DigitalCameraInfo();
-//                                        cameraInfo.setF(55);
-//                                        cameraInfo.setHeight(7760);
-//                                        cameraInfo.setWidth(10328);
-//                                        cameraInfo.setPixelsize(5.2);
-//                                        parameter.setCameraInfo(cameraInfo);
-//
-//                                        parameter.setAverageElevation(1000);//航区平均地面高程
-//                                        parameter.setGuidanceEntrancePointsDistance(100);//引导点距离
-//                                        parameter.setOverlap(30);//航向重叠度
-//                                        parameter.setOverlap_crossStrip(70);//旁向重叠度
-//                                        Vector<JSONObject> flightRegionList = new Vector<>();
-//                                        Vector<Double> flightHeightVector = new Vector<>();
-//                                        for (Polygon polygon : polygonList) {
-//                                            flightRegionList.add(GeometryTools.getGeoJson(polygon));
-//                                            flightHeightVector.add(600d);
-//                                        }
-//                                        parameter.setFightRegion(flightRegionList);
-//                                        parameter.setFightHeight_Vec(flightHeightVector);
-//                                        String jsonResult = JSON.toJSONString(parameter);
-//                                        System.out.print(jsonResult);
-//                                        JNINativeApi.airPlannerOutput(jsonResult, SystemConstant.AIR_PLAN_PATH + File.separator + ((EditText) rootView.findViewById(R.id.edt_air_plan_save_name)).getText().toString()+".skw");
-//                                    }
-//                                } catch (JSONException e) {
-//                                    e.printStackTrace();
-//                                }
                             }
                         }
                     }
@@ -461,5 +422,12 @@ public class AirPlanParamListFragment extends BaseDrawFragment {
             til.setErrorEnabled(false);
         }
         return checkResult;
+    }
+
+    /**
+     * 显示航线飞行的轨迹
+     */
+    private void showAirPlanLine(){
+
     }
 }
