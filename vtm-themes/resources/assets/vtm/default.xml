@@ -95,6 +95,11 @@
     <!--building-->
     <style-area fade="15" fill="#f2f0eb" id="building" stroke="#b7b6b3" stroke-width="1.0" />
 
+    <!--六盘水自定义区域显示-->
+    <style-area fade="15" fill="#f2f0eb" id="liupanshui" stroke="#EE9A49" stroke-width="1.0" />
+    <!--自定义区域显示-->
+    <style-area fade="15" fill="#f2f0eb" id="customer" stroke="#EED8AE" stroke-width="1.0" />
+
     <!--water-->
     <!--<style-area id="water" fill="#97b7e5" afc5e3 /> -->
     <!-- src="assets:textures/water.png" -->
@@ -124,6 +129,10 @@
     <style-line id="highway-service" use="residential" width="-0.6" />
     <!--等高线显示-->
     <style-line id="contour" use="residential" width="-0.6" stroke="#ff0000" fade="0" outline="0"/>
+    <!--六盘水自定义线-->
+    <style-line id="liupanshui" use="residential" width="-0.6" stroke="#CD96CD" fade="0" outline="0"/>
+    <!--自定义线-->
+    <style-line id="customer" use="residential" width="-0.6" stroke="#CD00CD" fade="0" outline="0"/>
 
     <!-- track|footway|path|cycleway -->
     <style-line cap="butt" fix="true" id="footway" stipple="2" stipple-stroke="#d35c48"
@@ -173,6 +182,18 @@
     <m k="contour">
         <line use="contour" />
         <text use="contour" />
+    </m>
+
+    <m k="name" v="liupanshui">
+        <area use="liupanshui"/>
+        <line use="liupanshui"/>
+        <symbol src="assets:symbols/place_of_worship/unknown.svg" />
+    </m>
+
+    <m k="customer_geometry">
+        <area use="customer"/>
+        <line use="customer"/>
+        <symbol src="assets:symbols/place_of_worship/unknown.svg" />
     </m>
 
     <!-- all closed ways that are not 'highway' or 'building' -->

@@ -40,7 +40,7 @@ import java.util.zip.GZIPInputStream;
  */
 public class LwHttp implements HttpEngine {
     static final Logger log = LoggerFactory.getLogger(LwHttp.class);
-    static final boolean dbg = false;
+    static final boolean dbg = true;
 
     private final static byte[] HEADER_HTTP_OK = "200".getBytes();
     private final static byte[] HEADER_CONTENT_LENGTH = "Content-Length".getBytes();
@@ -371,8 +371,11 @@ public class LwHttp implements HttpEngine {
         System.arraycopy(REQUEST_GET_END, 0, mRequestBuffer, pos, len);
         len += pos;
 
-        if (dbg)
+        if (dbg){
             log.debug("request: {}", new String(mRequestBuffer, 0, len));
+            System.out.println("request: {}"+new String(mRequestBuffer, 0, len));
+        }
+
 
         try {
             writeRequest(len);
@@ -526,7 +529,7 @@ public class LwHttp implements HttpEngine {
 
     }
 
-    public static class LwHttpFactory implements HttpEngine.Factory {
+    public static class LwHttpFactory implements Factory {
         private byte[][] mTilePath;
 
         @Override
