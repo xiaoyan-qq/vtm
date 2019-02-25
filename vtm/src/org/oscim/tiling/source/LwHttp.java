@@ -529,7 +529,7 @@ public class LwHttp implements HttpEngine {
 
     }
 
-    public static class LwHttpFactory implements HttpEngine.Factory {
+    public static class LwHttpFactory implements Factory {
         private byte[][] mTilePath;
 
         @Override
