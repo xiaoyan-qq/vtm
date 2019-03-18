@@ -68,7 +68,7 @@ public class LayerUtils {
         return multiPolygonLayer;
     }
     public static ItemizedLayer getAirPlanMarkerLayer(Context mContext,Map mMap) {
-        ItemizedLayer markerLayer= (ItemizedLayer) OverlayerManager.getInstance(mMap).getLayerByName(SystemConstant.AIR_PLAN_MARKER_PARAM);
+        ItemizedLayer markerLayer= (ItemizedLayer) OverlayerManager.getInstance(mMap).getLayerByName(SystemConstant.AIR_PLAN_MARKER_AIR_PORT);
         if (markerLayer == null) {
             //添加绘制marker的图层，用来绘制无人机起飞的位置
             Bitmap bitmapPoi = drawableToBitmap(mContext.getResources().getDrawable(R.drawable.marker_poi));

@@ -9,6 +9,7 @@ public class SystemConstant {
     public static final int DB_VERSION=1;
     public static final String APP_ROOT_DATA_PATH = SdCardUtil.getSDCardPath() + File.separator + "CatEye";
     public static final String AIR_PLAN_PATH = APP_ROOT_DATA_PATH + File.separator + "AirPlan";
+    public static final String AIR_PLAN_OUTPUT_PATH = APP_ROOT_DATA_PATH + File.separator + "AirPlan"+ File.separator+"Output";
 
     public static final int MSG_WHAT_DRAW_POINT_LINE_POLYGON_DESTROY = 0x1001;//绘制点线面
     public static final int MSG_WHAT_LOCATION_UPDATE = 0x1002;//位置更新

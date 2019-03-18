@@ -3,6 +3,7 @@ package com.vtm.library.tools;
 import android.graphics.Point;
 import android.util.Log;
 
+import com.alibaba.fastjson.JSONObject;
 import com.litesuits.common.assist.Check;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
@@ -16,6 +17,7 @@ import com.vividsolutions.jts.io.WKTReader;
 import com.vividsolutions.jts.io.geojson.GeoJsonWriter;
 import com.vividsolutions.jts.operation.linemerge.LineMerger;
 
+import org.json.JSONException;
 import org.oscim.core.GeoPoint;
 
 import java.math.BigDecimal;
@@ -1295,10 +1297,17 @@ public class GeometryTools {
 
     private static GeoJsonWriter geoJsonWriter = new GeoJsonWriter();
 
-    public static String getGeoJson(Geometry geometry) {
+    public static String getGeoJsonStr(Geometry geometry) {
         geoJsonWriter.setEncodeCRS(false);
         String geoJSONObject = geoJsonWriter.write(geometry);
         return geoJSONObject;
+    }
+
+    public static JSONObject getGeoJson(Geometry geometry) throws JSONException {
+        geoJsonWriter.setEncodeCRS(false);
+        String geoJSONObject = geoJsonWriter.write(geometry);
+        Object obj= JSONObject.parse(geoJSONObject);
+        return (JSONObject) obj;
     }
 
     public static GeoPoint createOSCGeoPoint(com.vividsolutions.jts.geom.Point point) {
