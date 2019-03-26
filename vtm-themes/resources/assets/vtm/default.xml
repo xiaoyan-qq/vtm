@@ -44,6 +44,10 @@
     <style-text caption="true" dy="0" fill="#ff0000" font-family="medium" id="contour"
         k="contour" size="14" stroke="#ffffff" stroke-width="2.0" />
 
+    <!--六盘水文字-->
+    <style-text caption="true" dy="0" fill="#ff0000" font-family="medium" id="liupanshui"
+        k="tv_value" size="14" stroke="#ffffff" stroke-width="2.0" />
+
     <!--###### AREA styles ######-->
 
     <!--residential-->
@@ -96,7 +100,7 @@
     <style-area fade="15" fill="#f2f0eb" id="building" stroke="#b7b6b3" stroke-width="1.0" />
 
     <!--六盘水自定义区域显示-->
-    <style-area fade="15" fill="#f2f0eb" id="liupanshui" stroke="#EE9A49" stroke-width="1.0" />
+    <style-area fade="80" fill="#EE4000" id="liupanshui" stroke="#EE9A49" stroke-width="3.0" />
     <!--自定义区域显示-->
     <style-area fade="15" fill="#f2f0eb" id="customer" stroke="#EED8AE" stroke-width="1.0" />
 
@@ -130,7 +134,7 @@
     <!--等高线显示-->
     <style-line id="contour" use="residential" width="-0.6" stroke="#ff0000" fade="0" outline="0"/>
     <!--六盘水自定义线-->
-    <style-line id="liupanshui" use="residential" width="-0.6" stroke="#CD96CD" fade="0" outline="0"/>
+    <style-line id="liupanshui" use="residential" width="-0.6" stroke="#00ff00" fade="80" outline="0"/>
     <!--自定义线-->
     <style-line id="customer" use="residential" width="-0.6" stroke="#CD00CD" fade="0" outline="0"/>
 
@@ -187,6 +191,7 @@
     <m k="name" v="liupanshui">
         <area use="liupanshui"/>
         <line use="liupanshui"/>
+        <text use="liupanshui"/>
         <symbol src="assets:symbols/place_of_worship/unknown.svg" />
     </m>
 

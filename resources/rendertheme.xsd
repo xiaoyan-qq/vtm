@@ -93,6 +93,7 @@
             <xs:enumeration value="housenumber" /> <!-- OpenMapTiles -->
             <xs:enumeration value="name" />
             <xs:enumeration value="contour" /><!--等高线-->
+            <xs:enumeration value="tv_value" /><!--六盘水-->
             <xs:enumeration value="ref" />
         </xs:restriction>
     </xs:simpleType>
