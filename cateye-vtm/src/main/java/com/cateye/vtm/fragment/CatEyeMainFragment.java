@@ -51,6 +51,7 @@ import com.vondear.rxtool.RxTimeTool;
 import com.vondear.rxtool.view.RxToast;
 import com.vondear.rxui.view.dialog.RxDialog;
 import com.vondear.rxui.view.dialog.RxDialogLoading;
+import com.vtm.library.layers.GeoJsonLayer;
 import com.vtm.library.layers.MultiPolygonLayer;
 import com.vtm.library.tools.GeometryTools;
 import com.vtm.library.tools.OverlayerManager;
@@ -76,10 +77,12 @@ import org.oscim.event.Gesture;
 import org.oscim.event.GestureListener;
 import org.oscim.event.MotionEvent;
 import org.oscim.layers.ContourLineLayer;
+import org.oscim.layers.JeoVectorLayer;
 import org.oscim.layers.Layer;
 import org.oscim.layers.LocationLayer;
 import org.oscim.layers.MapEventLayer;
 import org.oscim.layers.MapEventLayer2;
+import org.oscim.layers.OSMIndoorLayer;
 import org.oscim.layers.tile.MapTile;
 import org.oscim.layers.tile.bitmap.BitmapTileLayer;
 import org.oscim.layers.tile.buildings.BuildingLayer;
@@ -640,13 +643,23 @@ public class CatEyeMainFragment extends BaseFragment {
         layerManagerAdapter = new LayerManagerAdapter(getActivity(), dataBeanList);
         expandableListView.setAdapter(layerManagerAdapter);
 
-        //增加按钮
+        //增加map按钮
         TextView tv_add = (TextView) layerManagerRootView.findViewById(R.id.tv_layerlist_add);
         tv_add.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 startActivityForResult(new Intent(getActivity(), MainActivity.MapFilePicker.class),
                         SELECT_MAP_FILE);
+            }
+        });
+
+        //增加geojson按钮
+        TextView tv_geojson = (TextView) layerManagerRootView.findViewById(R.id.tv_layerlist_geojson);
+        tv_geojson.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startActivityForResult(new Intent(getActivity(), MainActivity.ContourFilePicker.class),
+                        SELECT_GEOJSON_FILE);
             }
         });
         new CanDialog.Builder(getActivity()).setView(layerManagerRootView).setNegativeButton("取消", true, null).setPositiveButton("确定", true, new CanDialogInterface.OnClickListener() {
@@ -659,14 +672,17 @@ public class CatEyeMainFragment extends BaseFragment {
                 for (MapSourceFromNet.DataBean dataBean : dataBeanList) {
                     boolean isShow = dataBean.isShow();
                     if (isShow) {//设置为选中可显示状态
-                        if (dataBean.getMaps().get(0).getExtension().contains("json")) {
+                        if (dataBean.getMaps().get(0).getHref().startsWith("http")&&dataBean.getMaps().get(0).getExtension().contains("json")) {
                             ContourGeojsonTileSource mTileSource = ContourGeojsonTileSource.builder()
                                     .url(dataBean.getMaps().get(0).getHref()).tilePath("/{X}/{Y}/{Z}.json" /*+ stringDataBeanMap.get(key).getExtension()*/)
                                     .zoomMax(18).build();
                             mTileSource.setOption(SystemConstant.LAYER_KEY_ID, dataBean.getId() + "");
                             createGeoJsonTileLayer(getActivity(), mTileSource, true, dataBean.getGroup());
-                        } else if (dataBean.getMaps().get(0).getExtension().contains(".map")) {
+                        } else if (!dataBean.getMaps().get(0).getHref().startsWith("http")&&dataBean.getMaps().get(0).getExtension().contains(".map")) {
                             addLocalMapFileLayer(dataBean.getMaps().get(0).getHref());
+                        }else if (!dataBean.getMaps().get(0).getHref().startsWith("http")&&dataBean.getMaps().get(0).getExtension().contains("json")) {
+                            File geoJsonFile=new File(dataBean.getMaps().get(0).getHref());
+                            loadJson(geoJsonFile);
                         } else {
                             BitmapTileSource mTileSource = BitmapTileSource.builder()
                                     .url(dataBean.getMaps().get(0).getHref()).tilePath("/{X}/{Y}/{Z}." + dataBean.getMaps().get(0).getExtension())
@@ -756,7 +772,7 @@ public class CatEyeMainFragment extends BaseFragment {
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent intent) {
 
-        if (requestCode == SELECT_MAP_FILE) {//选择本地地图文件显示
+        if (requestCode == SELECT_MAP_FILE || requestCode == SELECT_GEOJSON_FILE) {//选择本地地图文件显示
             if (resultCode != getActivity().RESULT_OK || intent == null || intent.getStringExtra(FilePicker.SELECTED_FILE) == null) {
 //                finish();
                 return;
@@ -784,22 +800,27 @@ public class CatEyeMainFragment extends BaseFragment {
                     MapSourceFromNet.DataBean.MapsBean mapFileDataBean = new MapSourceFromNet.DataBean.MapsBean();
                     mapFileDataBean.setAbstractX(mapFile.getName());
                     mapFileDataBean.setHref(file);
-                    mapFileDataBean.setGroup(LAYER_GROUP_ENUM.BASE_VECTOR_GROUP.name);
-                    mapFileDataBean.setExtension(".map");
-
-                    MapSourceFromNet.DataBean localDataBean = new MapSourceFromNet.DataBean();
-                    localDataBean.setGroup(LAYER_GROUP_ENUM.BASE_VECTOR_GROUP.name);
-                    localDataBean.setMemo(mapFile.getName());
-//                    localDataBean.setKind(-1);
-//                    localDataBean.setId(-1);
-//                    localDataBean.setType(-1);
-                    localDataBean.setMaps(new ArrayList<MapSourceFromNet.DataBean.MapsBean>());
-                    localDataBean.getMaps().add(mapFileDataBean);
-                    if (layerDataBeanList != null) {
-                        layerDataBeanList.add(localDataBean);
-                        if (layerManagerAdapter != null) {
-                            layerManagerAdapter.sortListDataAndGroup(layerDataBeanList);
-                            layerManagerAdapter.notifyDataSetChanged();
+                    String fileName = mapFile.getName();
+                    String suffix = fileName.substring(fileName.lastIndexOf("."));
+                    mapFileDataBean.setExtension(suffix);
+                    if (suffix!=null){
+                        MapSourceFromNet.DataBean localDataBean = new MapSourceFromNet.DataBean();
+                        if (suffix.toLowerCase().endsWith("map")){
+                            mapFileDataBean.setGroup(LAYER_GROUP_ENUM.BASE_VECTOR_GROUP.name);
+                            localDataBean.setGroup(LAYER_GROUP_ENUM.BASE_VECTOR_GROUP.name);
+                        }else if (suffix.toLowerCase().endsWith("json")){
+                            mapFileDataBean.setGroup(LAYER_GROUP_ENUM.PROJ_VECTOR_GROUP.name);
+                            localDataBean.setGroup(LAYER_GROUP_ENUM.PROJ_VECTOR_GROUP.name);
+                        }
+                        localDataBean.setMemo(mapFile.getName());
+                        localDataBean.setMaps(new ArrayList<MapSourceFromNet.DataBean.MapsBean>());
+                        localDataBean.getMaps().add(mapFileDataBean);
+                        if (layerDataBeanList != null) {
+                            layerDataBeanList.add(localDataBean);
+                            if (layerManagerAdapter != null) {
+                                layerManagerAdapter.sortListDataAndGroup(layerDataBeanList);
+                                layerManagerAdapter.notifyDataSetChanged();
+                            }
                         }
                     }
                 }
@@ -837,22 +858,7 @@ public class CatEyeMainFragment extends BaseFragment {
 
             }
             mMap.setTheme(externalRenderTheme);
-        } else if (requestCode == SELECT_GEOJSON_FILE) {
-            if (resultCode != getActivity().RESULT_OK || intent == null || intent.getStringExtra(FilePicker.SELECTED_FILE) == null) {
-                return;
-            }
-            String filePath = intent.getStringExtra(FilePicker.SELECTED_FILE);
-            File geoJsonFile = new File(filePath);
-            if (geoJsonFile.exists() && geoJsonFile.isFile()) {
-                FileInputStream geoInputStream = null;
-                try {
-                    geoInputStream = new FileInputStream(geoJsonFile);
-                    loadJson(geoInputStream);
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                }
-            }
-        } else if (requestCode == SELECT_CONTOUR_FILE) {
+        }  else if (requestCode == SELECT_CONTOUR_FILE) {
             try {
                 if (resultCode != getActivity().RESULT_OK || intent == null || intent.getStringExtra(FilePicker.SELECTED_FILE) == null) {
                     return;
@@ -1004,42 +1010,51 @@ public class CatEyeMainFragment extends BaseFragment {
     /**
      * 加载指定的GeoJsonlayer
      */
-    void loadJson(InputStream is) {
-        RxToast.info("got data");
+    void loadJson(File geoJsonFile) {
+        if (geoJsonFile.exists() && geoJsonFile.isFile()) {
+            FileInputStream geoInputStream = null;
+            try {
+                geoInputStream = new FileInputStream(geoJsonFile);
 
-        VectorDataset data = JeoTest.readGeoJson(is);
+                RxToast.info("got data");
 
-        Style style = null;
+                VectorDataset data = JeoTest.readGeoJson(geoInputStream);
 
-        try {
-            style = Carto.parse("" +
-                    "#qqq {" +
-                    "  line-width: 2;" +
-                    "  line-color: #f09;" +
-                    "  polygon-fill: #44111111;" +
-                    "  " +
-                    "}" +
-                    "#states {" +
-                    "  line-width: 2.2;" +
-                    "  line-color: #c80;" +
-                    "  polygon-fill: #44111111;" +
-                    "  " +
-                    "}"
-            );
-        } catch (IOException e) {
-            e.printStackTrace();
+                Style style = null;
+
+                try {
+                    style = Carto.parse("" +
+//                    "#qqq {" +
+//                    "  line-width: 2;" +
+//                    "  line-color: #f09;" +
+//                    "  polygon-fill: #44111111;" +
+//                    "  " +
+//                    "}" +
+                                    "#states {" +
+                                    "  line-width: 2.2;" +
+                                    "  line-color: #CD3278;" +
+                                    "  polygon-fill: #99CD3278;" +
+                                    "  " +
+                                    "}"
+                    );
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                TextStyle textStyle = TextStyle.builder()
+                        .isCaption(true)
+                        .fontSize(16 * CanvasAdapter.getScale()).color(Color.BLACK)
+                        .strokeWidth(2.2f * CanvasAdapter.getScale()).strokeColor(Color.WHITE)
+                        .build();
+                GeoJsonLayer jeoVectorLayer = new GeoJsonLayer(mMap, data, style,textStyle);
+                mMap.layers().add(jeoVectorLayer, LAYER_GROUP_ENUM.OTHER_GROUP.orderIndex);
+
+                RxToast.info("data ready");
+                mMap.updateMap(true);
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
         }
-
-        TextStyle textStyle = TextStyle.builder()
-                .isCaption(true)
-                .fontSize(16 * CanvasAdapter.getScale()).color(Color.BLACK)
-                .strokeWidth(2.2f * CanvasAdapter.getScale()).strokeColor(Color.WHITE)
-                .build();
-        ContourLineLayer contourLineLayer = new ContourLineLayer(mMap, data, style, textStyle);
-        mMap.layers().add(contourLineLayer, LAYER_GROUP_ENUM.OTHER_GROUP.orderIndex);
-
-        RxToast.info("data ready");
-        mMap.updateMap(true);
     }
 
     @Override

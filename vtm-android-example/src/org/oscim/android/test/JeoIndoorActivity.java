@@ -84,8 +84,8 @@ public class JeoIndoorActivity extends BaseMapActivity {
 
         mMap.setTheme(VtmThemes.DEFAULT);
 
-        mMap.layers().add(new BuildingLayer(mMap, mBaseLayer));
-        mMap.layers().add(new LabelLayer(mMap, mBaseLayer));
+//        mMap.layers().add(new BuildingLayer(mMap, mBaseLayer));
+//        mMap.layers().add(new LabelLayer(mMap, mBaseLayer));
 
         //    String file = Environment.getExternalStorageDirectory().getAbsolutePath();
         //    VectorDataset data = (VectorDataset) JeoTest.getJsonData(file + "/states.json", true);
